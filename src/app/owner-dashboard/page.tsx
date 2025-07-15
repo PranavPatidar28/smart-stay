@@ -1907,7 +1907,7 @@ export default function OwnerDashboard() {
     useState<Property | null>(null);
   // Add state for delete confirmation
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsData, setAnalyticsData] = useState<unknown>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
@@ -1955,7 +1955,7 @@ export default function OwnerDashboard() {
     };
 
     fetchProperties();
-  }, [session?.user?.id]);
+  }, [session?.user?.id, setProperties, setLoading, setError]);
 
   const totalProperties = properties.length;
   const activeProperties = properties.filter(
@@ -2268,7 +2268,7 @@ export default function OwnerDashboard() {
         setAnalyticsError('Failed to load analytics');
         setAnalyticsLoading(false);
       });
-  }, []);
+  }, [setAnalyticsLoading, setAnalyticsData, setAnalyticsError]);
 
   // 1. Add skeleton loader components at the top of the file:
   function StatsOverviewSkeleton() {

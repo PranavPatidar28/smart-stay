@@ -2,9 +2,10 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
-import { User, LogOut, Settings, Heart, Home, ChevronDown } from "lucide-react";
+import { LogOut, Settings, Heart, Home, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from 'next/image';
 
 export default function UserMenu() {
   const { data: session } = useSession();
@@ -90,9 +91,11 @@ export default function UserMenu() {
     if (session?.user?.image) {
       return (
         <div style={avatarStyle} className="flex-shrink-0">
-          <img
+          <Image
             src={session.user.image}
             alt={session.user.name || "User"}
+            width={size}
+            height={size}
             style={{
               width: '100%',
               height: '100%',

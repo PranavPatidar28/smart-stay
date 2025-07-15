@@ -127,7 +127,7 @@ export async function PUT(
       console.log("Updating property...");
       
       // Remove images and amenities from validatedData before update
-      const { images: imageUrls, amenities: amenityNames, id, ownerId, ...updateData } = validatedData;
+      const { images: imageUrls, amenities: amenityNames, ...updateData } = validatedData;
       
       // Prepare update data with proper handling of nullable fields
       const updateFields: any = {

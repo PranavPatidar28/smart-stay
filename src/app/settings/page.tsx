@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
+import Image from 'next/image';
 
 // Form validation
 import { useForm } from "react-hook-form";
@@ -599,10 +600,12 @@ export default function SettingsPage() {
                     <div className="relative">
                       <div className="w-24 h-24 rounded-full bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] flex items-center justify-center">
                         {session?.user?.image ? (
-                          <img
+                          <Image
                             src={session.user.image}
                             alt={session.user.name || "User"}
                             className="w-24 h-24 rounded-full object-cover"
+                            width={96}
+                            height={96}
                           />
                         ) : (
                           <span className="text-2xl font-bold text-white">

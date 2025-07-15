@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, Search, User, Home, Building2, Heart } from "lucide-react";
+import { Menu, X, Search, Heart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import UserMenu from "./UserMenu";
 import { useSession } from "next-auth/react";
@@ -23,7 +23,7 @@ export default function Navbar() {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [setIsScrolled]);
 
   // Handle navigation with role check
   const handleNavigation = (href: string, requiresRole?: string | null) => {

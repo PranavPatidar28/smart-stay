@@ -6,29 +6,13 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { useSession } from "next-auth/react";
 import {
   Heart,
-  MapPin,
-  Star,
-  Users,
   Home,
-  Building2,
-  Trash2,
-  Eye,
-  Share2,
-  Bed,
-  Bath,
-  Phone,
-  Mail,
-  Calendar,
   Wifi,
   Car,
   Utensils,
   Shield,
   BookOpen,
   Dumbbell,
-  X,
-  ChevronDown,
-  User,
-  CheckCircle,
 } from "lucide-react";
 import FavoritesListSkeleton from "@/components/ui/FavoritesListSkeleton";
 import ViewPropertyModal from '@/components/ui/ViewPropertyModal';
@@ -176,7 +160,7 @@ export default function FavoritesPage() {
         if (!response.ok) throw new Error('Failed to fetch favorites');
         
         const data = await response.json();
-        setFavorites(data.favorites.map((favorite: any) => ({
+        setFavorites(data.favorites.map((favorite: { property: FavoriteProperty }) => ({
           id: favorite.property.id,
           title: favorite.property.title,
           location: favorite.property.location,
@@ -187,12 +171,10 @@ export default function FavoritesPage() {
           distance: favorite.property.location.split(" ")[1] || "1.0 km",
           rating: favorite.property.rating || 0,
           image: favorite.property.images[0]?.url || '',
-          amenities: favorite.property.amenities.map((a: any) => {
-            // The API returns amenities in the structure: { id, propertyId, amenityId, amenity: { id, name, category } }
+          amenities: favorite.property.amenities.map((a: { amenity?: { name?: string }; name?: string } ) => {
             if (a.amenity && a.amenity.name) {
               return a.amenity.name;
             }
-            // Fallback for other structures
             if (typeof a === 'string') return a;
             if (a.name) return a.name;
             console.warn('Could not extract amenity name from:', a);

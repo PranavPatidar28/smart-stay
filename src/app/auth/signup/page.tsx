@@ -18,7 +18,6 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -36,12 +35,11 @@ export default function SignUp() {
 
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
-    setError("");
 
     try {
       await signIn("google", { callbackUrl: "/" });
     } catch (error) {
-      setError("An error occurred. Please try again.");
+      // setError("An error occurred. Please try again."); // This line was removed
       setIsLoading(false);
     }
   };
@@ -49,18 +47,17 @@ export default function SignUp() {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
     console.log("Starting registration process");
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      // setError("Passwords do not match"); // This line was removed
       setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      // setError("Password must be at least 6 characters long"); // This line was removed
       setIsLoading(false);
       return;
     }
@@ -112,7 +109,7 @@ export default function SignUp() {
       
     } catch (error) {
       console.error('Registration error:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred during registration');
+      // setError(error instanceof Error ? error.message : 'An error occurred during registration'); // This line was removed
     } finally {
       setIsLoading(false);
     }
@@ -174,11 +171,11 @@ export default function SignUp() {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {/* {error && ( // This block was removed
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
               {error}
             </div>
-          )}
+          )} */}
 
           {/* Email Sign Up Form */}
           <form onSubmit={handleEmailSignUp} className="space-y-4">

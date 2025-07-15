@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { trackAnalyticsEvent } from '@/lib/api-client';
 import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast';
+import Image from 'next/image';
 
 // Define custom CSS for scrollbars
 const customScrollbarStyles = `
@@ -393,10 +394,12 @@ const MobilePropertyModal = ({ property, toggleFavorite, closePropertyModal }: M
       </div>
       {/* Image Gallery */}
       <div className="relative w-full h-64 bg-gray-100 flex items-center justify-center">
-        <img
+        <Image
           src={property.images[currentImageIndex]?.url || '/images/placeholder.png'}
           alt={property.title}
           className="w-full h-full object-cover"
+          width={600}
+          height={400}
           onError={e => (e.currentTarget.src = '/images/placeholder.png')}
         />
         {/* Image navigation */}
@@ -753,7 +756,7 @@ export default function ListingsPage() {
         const response = await fetch(`/api/properties?${params.toString()}`);
         if (!response.ok) throw new Error('Failed to fetch properties');
         const data = await response.json();
-        let properties = data.properties.map((property: any) => ({
+        let properties = data.properties.map((property: Property) => ({
           ...property,
           image: property.images[0]?.url || '',
           isFavorite: false, // Default to false, will update with user favorites

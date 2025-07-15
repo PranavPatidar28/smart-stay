@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       }
       acc[amenity.category].push(amenity)
       return acc
-    }, {} as Record<string, typeof amenities>)
+    }, {} as Record<string, unknown[]>)
 
     return NextResponse.json({
       amenities,

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Heart, MapPin, Star, Home, Shield, Car, Wifi, Calendar, Bath, Bed, Mail, Phone, Map } from "lucide-react";
+import { Property } from '@/lib/api-client';
+import Image from 'next/image';
 
 // Accept a superset of property fields for compatibility
 export interface PropertyCardProps {
-  property: any;
+  property: Property;
   isListView?: boolean;
   onFavoriteToggle?: (id: string) => void;
-  onViewDetails?: (property: any) => void;
+  onViewDetails?: (property: Property) => void;
 }
 
 export default function PropertyCard({ property, isListView = false, onFavoriteToggle, onViewDetails }: PropertyCardProps) {
@@ -31,10 +33,12 @@ export default function PropertyCard({ property, isListView = false, onFavoriteT
     >
       {/* Image Section */}
       <div className={`relative ${isListView ? "lg:w-80 h-64 lg:h-auto" : "h-56"}`}>
-        <img
+        <Image
           src={property.images?.[0]?.url || property.image}
           alt={property.title}
           className="w-full h-full object-cover rounded-3xl group-hover:scale-105 transition-transform duration-500"
+          width={380}
+          height={224}
         />
         {/* Mini-gallery thumbnails on hover (desktop only) */}
         {property.images && property.images.length > 1 && (

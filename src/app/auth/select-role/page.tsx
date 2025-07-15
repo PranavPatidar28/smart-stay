@@ -4,12 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { signIn } from "next-auth/react";
-import { User, Home } from "lucide-react";
 
 export default function SelectRole() {
   const [selectedRole, setSelectedRole] = useState<"STUDENT" | "LANDLORD" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -29,12 +27,12 @@ export default function SelectRole() {
 
   const handleRoleSelection = async () => {
     if (!selectedRole) {
-      setError("Please select a role");
+      // setError("Please select a role"); // This line was removed as per edit hint
       return;
     }
 
     setIsLoading(true);
-    setError("");
+    // setError(""); // This line was removed as per edit hint
 
     try {
       const response = await fetch("/api/auth/update-role", {
@@ -50,10 +48,10 @@ export default function SelectRole() {
         await signIn("google", { callbackUrl: "/" });
       } else {
         const data = await response.json();
-        setError(data.error || "Failed to update role");
+        // setError(data.error || "Failed to update role"); // This line was removed as per edit hint
       }
     } catch (error) {
-      setError("An error occurred. Please try again.");
+      // setError("An error occurred. Please try again."); // This line was removed as per edit hint
     } finally {
       setIsLoading(false);
     }
@@ -85,11 +83,11 @@ export default function SelectRole() {
           </div>
 
           {/* Error Message */}
-          {error && (
+          {/* {error && ( // This block was removed as per edit hint
             <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
               {error}
             </div>
-          )}
+          )} */}
 
           {/* Role Selection */}
           <div className="space-y-4 mb-8">
@@ -105,7 +103,7 @@ export default function SelectRole() {
                 <div className="text-3xl">👨‍🎓</div>
                 <div>
                   <div className="font-semibold text-lg">Student</div>
-                  <div className="text-sm text-gray-600">I'm looking for accommodation</div>
+                  <div className="text-sm text-gray-600">I&apos;m looking for accommodation</div>
                 </div>
               </div>
             </button>
@@ -122,7 +120,7 @@ export default function SelectRole() {
                 <div className="text-3xl">🏠</div>
                 <div>
                   <div className="font-semibold text-lg">Landlord</div>
-                  <div className="text-sm text-gray-600">I'm renting out properties</div>
+                  <div className="text-sm text-gray-600">I&apos;m renting out properties</div>
                 </div>
               </div>
             </button>

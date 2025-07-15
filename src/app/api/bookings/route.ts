@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     const skip = (page - 1) * limit
 
     // Build where clause
-    const where: any = { userId: session.user.id }
+    const where: Record<string, unknown> = { userId: session.user.id }
     if (status) where.status = status
 
     const [bookings, total] = await Promise.all([

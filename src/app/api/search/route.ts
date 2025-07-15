@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const utilities = searchParams.get('utilities')
 
     // Build where clause
-    const where: any = {
+    const where: Record<string, unknown> = {
       status: 'ACTIVE',
     }
 
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build order by clause
-    const orderBy: any = {}
+    const orderBy: Record<string, unknown> = {}
     switch (sortBy) {
       case 'price':
         orderBy.price = sortOrder

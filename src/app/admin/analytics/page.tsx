@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/components/ui/Card"; // If you have a Card component, otherwise use divs
 // import { Line } from 'react-chartjs-2'; // Uncomment if using chart.js
 
 export default function AdminAnalyticsPage() {
