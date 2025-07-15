@@ -448,4 +448,4 @@ export async function trackAnalyticsEvent(eventType: string, propertyId: string,
 }
 
 // Export singleton instance
-export const apiClient = new ApiClient()
+export const apiClient = new ApiClient();
