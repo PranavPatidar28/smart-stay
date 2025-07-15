@@ -449,15 +449,3 @@ export async function trackAnalyticsEvent(eventType: string, propertyId: string,
 
 // Export singleton instance
 export const apiClient = new ApiClient()
-
-// Export types
-export type {
-  Property,
-  Booking,
-  Review,
-  Inquiry,
-  Notification,
-  User,
-  SearchFilters,
-  DashboardAnalytics,
-} 

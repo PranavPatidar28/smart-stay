@@ -127,16 +127,31 @@ export async function PUT(
       console.log("Updating property...");
       
       // Remove images and amenities from validatedData before update
-      const { images: imageUrls, amenities: amenityNames, ...updateData } = validatedData;
+      const { images: imageUrls, amenities: amenityNames, id, ownerId, ...updateData } = validatedData;
+      
+      // Prepare update data with proper handling of nullable fields
+      const updateFields: any = {
+        ...updateData,
+        lastUpdated: new Date(),
+      };
+
+      // Handle nullable fields properly
+      if (updateData.availableFrom !== undefined) {
+        updateFields.availableFrom = updateData.availableFrom ? new Date(updateData.availableFrom) : null;
+      }
+      
+      if (updateData.bedrooms !== undefined) {
+        updateFields.bedrooms = updateData.bedrooms ?? 1; // Use default if null
+      }
+      
+      if (updateData.bathrooms !== undefined) {
+        updateFields.bathrooms = updateData.bathrooms ?? 1; // Use default if null
+      }
       
       // Update property
       let updatedProperty = await prisma.property.update({
         where: { id: params.id },
-        data: {
-          ...updateData,
-          availableFrom: updateData.availableFrom ? new Date(updateData.availableFrom) : undefined,
-          lastUpdated: new Date(),
-        },
+        data: updateFields,
         include: {
           owner: {
             select: {
@@ -220,7 +235,7 @@ export async function PUT(
       if (validatedData.images || validatedData.amenities) {
         console.log("Fetching updated property...");
         try {
-          updatedProperty = await prisma.property.findUnique({
+          const refreshedProperty = await prisma.property.findUnique({
             where: { id: params.id },
             include: {
               owner: {
@@ -240,6 +255,10 @@ export async function PUT(
               },
             },
           });
+          
+          if (refreshedProperty) {
+            updatedProperty = refreshedProperty;
+          }
         } catch (fetchError) {
           console.error("Error fetching updated property:", fetchError);
           throw new Error(`Fetch updated property failed: ${(fetchError as Error).message}`);

@@ -162,7 +162,7 @@ export async function GET(request: NextRequest) {
       },
       select: { timestamp: true },
     });
-    const viewsByDay = {};
+    const viewsByDay: Record<string, number> = {};
     viewEvents.forEach(e => {
       const day = e.timestamp.toISOString().slice(0, 10);
       viewsByDay[day] = (viewsByDay[day] || 0) + 1;
@@ -176,7 +176,7 @@ export async function GET(request: NextRequest) {
       },
       select: { timestamp: true },
     });
-    const bookingsByDay = {};
+    const bookingsByDay: Record<string, number> = {};
     bookingEvents.forEach(e => {
       const day = e.timestamp.toISOString().slice(0, 10);
       bookingsByDay[day] = (bookingsByDay[day] || 0) + 1;
@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
       },
       select: { timestamp: true },
     });
-    const inquiriesByDay = {};
+    const inquiriesByDay: Record<string, number> = {};
     inquiryEvents.forEach(e => {
       const day = e.timestamp.toISOString().slice(0, 10);
       inquiriesByDay[day] = (inquiriesByDay[day] || 0) + 1;

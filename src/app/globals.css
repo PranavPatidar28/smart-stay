@@ -41,36 +41,36 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: light) {
+@media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #F6F6F6;
     
-        /* Primary Colors - Dark Mode Adjusted */
-  --color-primary-50: #1e1b4b;
-  --color-primary-100: #312e81;
-  --color-primary-200: #3730a3;
-  --color-primary-300: #4338ca;
-  --color-primary-400: #4f46e5;
-  --color-primary-500: #6366f1;
-  --color-primary-600: #7c8eff;
-  --color-primary-700: #a5b8ff;
-  --color-primary-800: #c7d6ff;
-  --color-primary-900: #e0e9ff;
-  --color-primary-950: #f0f4ff;
-  
-  /* Secondary Colors - Dark Mode Adjusted */
-  --color-secondary-50: #042f2e;
-  --color-secondary-100: #134e4a;
-  --color-secondary-200: #115e59;
-  --color-secondary-300: #0f766e;
-  --color-secondary-400: #0d9488;
-  --color-secondary-500: #14b8a6;
-  --color-secondary-600: #2dd4bf;
-  --color-secondary-700: #5eead4;
-  --color-secondary-800: #99f6e4;
-  --color-secondary-900: #ccfbf1;
-  --color-secondary-950: #f0fdfa;
+    /* Primary Colors - Dark Mode Adjusted */
+    --color-primary-50: #1e1b4b;
+    --color-primary-100: #312e81;
+    --color-primary-200: #3730a3;
+    --color-primary-300: #4338ca;
+    --color-primary-400: #4f46e5;
+    --color-primary-500: #6366f1;
+    --color-primary-600: #7c8eff;
+    --color-primary-700: #a5b8ff;
+    --color-primary-800: #c7d6ff;
+    --color-primary-900: #e0e9ff;
+    --color-primary-950: #f0f4ff;
+    
+    /* Secondary Colors - Dark Mode Adjusted */
+    --color-secondary-50: #042f2e;
+    --color-secondary-100: #134e4a;
+    --color-secondary-200: #115e59;
+    --color-secondary-300: #0f766e;
+    --color-secondary-400: #0d9488;
+    --color-secondary-500: #14b8a6;
+    --color-secondary-600: #2dd4bf;
+    --color-secondary-700: #5eead4;
+    --color-secondary-800: #99f6e4;
+    --color-secondary-900: #ccfbf1;
+    --color-secondary-950: #f0fdfa;
   }
 }
 
@@ -126,7 +126,7 @@ html {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
+  color: transparent;
   filter: drop-shadow(0 1px 6px rgba(80, 80, 180, 0.12));
 }
 
@@ -147,8 +147,12 @@ html {
   justify-content: center;
   opacity: 0;
   animation: flower-in 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  transform: translate(140%, 40%) !important;
+  transform: translate(-50%, -50%) scale(var(--flower-scale, 1)) rotate(var(--flower-rotate, 0deg));
   will-change: opacity, transform;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s, opacity 0.5s;
+  /* These are set via JS for scroll effect */
+  --flower-rotate: 0deg;
+  --flower-scale: 1;
   /* DEBUG: Uncomment the next line to see the bounding box */
   /* border: 2px solid red; */
 }
@@ -315,18 +319,6 @@ html {
     transform: translate(-50%, -50%) scale(1);
     filter: blur(0.5px);
   }
-}
-
-/* Animate on scroll: update transform via inline style */
-.hero-flower-bg {
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s, opacity 0.5s;
-}
-
-.hero-flower-bg {
-  /* These are set via JS for scroll effect */
-  --flower-rotate: 0deg;
-  --flower-scale: 1;
-  transform: translate(-50%, -50%) scale(var(--flower-scale, 1)) rotate(var(--flower-rotate, 0deg));
 }
 
 .hero-content-fade-in {

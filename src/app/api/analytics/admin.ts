@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       where: { timestamp: { gte: startDate } },
       select: { timestamp: true },
     });
-    const viewsByDay = {};
+    const viewsByDay: Record<string, number> = {};
     viewEvents.forEach(e => {
       const day = e.timestamp.toISOString().slice(0, 10);
       viewsByDay[day] = (viewsByDay[day] || 0) + 1;
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       where: { timestamp: { gte: startDate } },
       select: { timestamp: true },
     });
-    const bookingsByDay = {};
+    const bookingsByDay: Record<string, number> = {};
     bookingEvents.forEach(e => {
       const day = e.timestamp.toISOString().slice(0, 10);
       bookingsByDay[day] = (bookingsByDay[day] || 0) + 1;
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       where: { timestamp: { gte: startDate } },
       select: { timestamp: true },
     });
-    const inquiriesByDay = {};
+    const inquiriesByDay: Record<string, number> = {};
     inquiryEvents.forEach(e => {
       const day = e.timestamp.toISOString().slice(0, 10);
       inquiriesByDay[day] = (inquiriesByDay[day] || 0) + 1;
