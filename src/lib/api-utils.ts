@@ -21,7 +21,7 @@ export class ApiError extends Error {
   constructor(
     public statusCode: number,
     message: string,
-    public details?: any
+    public details?: unknown
   ) {
     super(message)
     this.name = 'ApiError'
@@ -38,7 +38,7 @@ export function createApiResponse<T>(
 export function createErrorResponse(
   error: string,
   statusCode: number = 500,
-  details?: any
+  details?: unknown
 ): NextResponse<ApiResponse> {
   return NextResponse.json(
     { error, details },
@@ -96,7 +96,7 @@ export function validatePaginationParams(searchParams: URLSearchParams) {
 }
 
 export function createPaginationResponse(
-  data: any[],
+  data: unknown[],
   total: number,
   page: number,
   limit: number
@@ -155,7 +155,12 @@ export function isValidPhone(phone: string): boolean {
   return phoneRegex.test(phone)
 }
 
-export function validatePropertyData(data: any) {
+export function validatePropertyData(data: {
+  title: string;
+  location: string;
+  price: number;
+  type: string;
+}) {
   const requiredFields = ['title', 'location', 'price', 'type']
   const missingFields = requiredFields.filter(field => !data[field])
   
@@ -176,7 +181,12 @@ export function validatePropertyData(data: any) {
   }
 }
 
-export function validateBookingData(data: any) {
+export function validateBookingData(data: {
+  startDate: string;
+  endDate?: string;
+  amount: number;
+  deposit?: number;
+}) {
   if (!data.startDate) {
     throw new ApiError(400, 'Start date is required')
   }
@@ -194,7 +204,10 @@ export function validateBookingData(data: any) {
   }
 }
 
-export function validateReviewData(data: any) {
+export function validateReviewData(data: {
+  rating: number;
+  comment?: string;
+}) {
   if (data.rating < 1 || data.rating > 5) {
     throw new ApiError(400, 'Rating must be between 1 and 5')
   }
@@ -204,7 +217,9 @@ export function validateReviewData(data: any) {
   }
 }
 
-export function validateInquiryData(data: any) {
+export function validateInquiryData(data: {
+  message: string;
+}) {
   if (!data.message || data.message.length < 10 || data.message.length > 1000) {
     throw new ApiError(400, 'Message must be between 10 and 1000 characters')
   }

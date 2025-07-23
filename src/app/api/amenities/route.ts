@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
 
     // Build where clause
-    const where: any = {}
+    const where: Record<string, unknown> = {}
     if (category) where.category = category
     if (search) {
       where.name = { contains: search, mode: 'insensitive' }

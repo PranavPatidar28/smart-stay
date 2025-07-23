@@ -10,7 +10,7 @@ const updateProfileSchema = z.object({
   role: z.enum(['STUDENT', 'LANDLORD', 'ADMIN']).optional(),
 })
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions)
     

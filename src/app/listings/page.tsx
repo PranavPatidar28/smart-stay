@@ -1,8 +1,7 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Navbar from "@/components/ui/Navbar";
 import { useSession } from "next-auth/react";
-import dynamic from 'next/dynamic';
 import {
   Search,
   MapPin,
@@ -34,7 +33,7 @@ import {
   User,
 } from "lucide-react";
 import { trackAnalyticsEvent } from '@/lib/api-client';
-import { showSuccess, showError, showLoading, dismissToast } from '@/lib/toast';
+import { showSuccess, showError } from '@/lib/toast';
 import Image from 'next/image';
 
 // Define custom CSS for scrollbars
@@ -104,7 +103,7 @@ interface Coordinates {
 }
 
 // Define the PropertyMarker type to match MapFullScreen expectations
-interface PropertyMarker {
+/* interface PropertyMarker {
   id: string;
   coordinates: Coordinates;
   title: string;
@@ -114,7 +113,7 @@ interface PropertyMarker {
   isAvailable?: boolean;
   bedrooms?: number;
   bathrooms?: number;
-}
+} */
 
 interface Property {
   id: string;
@@ -139,6 +138,7 @@ interface Property {
       category: string;
     };
   }>;
+  status: string;
   isFavorite: boolean;
   isAvailable: boolean;
   availableFrom?: string;
@@ -161,7 +161,7 @@ interface Property {
     inquiries: number;
   };
 }
-
+/* 
 interface SearchFilters {
   search?: string;
   type?: string;
@@ -182,7 +182,7 @@ interface SearchFilters {
   page?: number;
   limit?: number;
 }
-
+ */
 // 1. Add skeleton loader components at the top of the file:
 function PropertiesListSkeleton({ isMobile = false }: { isMobile?: boolean } = {}) {
   if (isMobile) {
@@ -313,7 +313,7 @@ function PropertiesListSkeleton({ isMobile = false }: { isMobile?: boolean } = {
     </div>
   );
 }
-
+/* 
 function SidebarSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
@@ -337,7 +337,7 @@ function SidebarSkeleton() {
       </div>
     </div>
   );
-}
+} */
 
 // Define MobilePropertyModal after ListingsPage, passing required props
 interface MobilePropertyModalProps {
@@ -589,8 +589,6 @@ export default function ListingsPage() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  // Add state for map view
-  const [showMapView, setShowMapView] = useState(false);
   
   // Add state for detecting mobile devices
   const [isMobile, setIsMobile] = useState(false);
@@ -876,15 +874,15 @@ export default function ListingsPage() {
   };
 
   // Toggle quick filter function
-  const toggleQuickFilter = (filter: keyof typeof quickFilters) => {
+ /*  const toggleQuickFilter = (filter: keyof typeof quickFilters) => {
     setQuickFilters(prev => ({
       ...prev,
       [filter]: !prev[filter]
     }));
-  };
+  }; */
 
   // Clear all filters function
-  const clearFilters = () => {
+/*   const clearFilters = () => {
     setSearchTerm("");
     setDebouncedSearchTerm("");
     setSelectedType("All");
@@ -897,7 +895,7 @@ export default function ListingsPage() {
       petFriendly: false,
       availableNow: false
     });
-  };
+  }; */
 
   const openPropertyModal = (property: Property) => {
     setSelectedProperty(property);
@@ -952,7 +950,7 @@ export default function ListingsPage() {
           {/* Mini-gallery thumbnails on hover (desktop only) */}
           {property.images.length > 1 && (
             <div className={`hidden lg:flex absolute bottom-4 right-4 gap-2 z-10 ${hovered ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}> 
-              {property.images.slice(1, 4).map((img, idx) => (
+              {property.images.slice(1, 4).map((img: any) => (
                 <img
                   key={img.id}
                   src={img.url}

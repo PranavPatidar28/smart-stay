@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Heart, Eye, MapIcon } from "lucide-react";
+import { X, Heart, MapIcon } from "lucide-react";
 
 interface Property {
   id: string;

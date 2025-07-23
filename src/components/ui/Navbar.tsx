@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, Search, Heart } from "lucide-react";
+import { Menu, X, Search, Heart, Building2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import UserMenu from "./UserMenu";
 import { useSession } from "next-auth/react";
@@ -33,7 +33,7 @@ export default function Navbar() {
     }
     
     // Check if user has the required role
-    if (session.user?.role === requiresRole) {
+    if ((session?.user as { role?: string | null })?.role === requiresRole) {
       return href;
     } else {
       // Don't navigate, show the modal instead
@@ -45,7 +45,7 @@ export default function Navbar() {
   const handleLinkClick = (e: React.MouseEvent, requiresRole?: string | null) => {
     if (!requiresRole || !session) return;
     
-    if (session.user?.role !== requiresRole) {
+    if ((session?.user as { role?: string | null })?.role !== requiresRole) {
       e.preventDefault();
       setShowRoleModal(true);
     }
@@ -228,7 +228,7 @@ export default function Navbar() {
         isOpen={showRoleModal}
         onClose={() => setShowRoleModal(false)}
         requiredRole="LANDLORD"
-        currentRole={session?.user?.role}
+        currentRole={(session?.user as { role?: string | null })?.role || ""}
         actionType="list properties"
       />
     </>

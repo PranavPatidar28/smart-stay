@@ -36,50 +36,10 @@ export default function SettingsPage() {
   const [roleLoading, setRoleLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletePassword, setDeletePassword] = useState("");
-  const [deleteError, setDeleteError] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleToChange, setRoleToChange] = useState<string | null>(null);
   
-  // Handle account deletion
-  const handleAccountDeletion = async () => {
-    setDeleteError("");
-    setLoading(true);
-
-    try {
-      const response = await fetch('/api/user/delete-account', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: deletePassword }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setDeleteError(data.error || "Failed to delete account. Please try again.");
-        setLoading(false);
-        return;
-      }
-
-      // Success - sign out and redirect
-      setDeleteModalOpen(false);
-      
-      // Show success message briefly before redirect
-      setSuccessMessage("Your account has been deleted successfully. Redirecting...");
-      setTimeout(() => {
-        signOut({ callbackUrl: "/" });
-      }, 1500);
-    } catch (err) {
-      console.error("Error deleting account:", err);
-      setDeleteError("An unexpected error occurred. Please try again.");
-      setLoading(false);
-    }
-  };
-
   // New role modal component
   const RoleChangeModal = () => {
     if (!showRoleModal) return null;

@@ -30,14 +30,12 @@ export async function POST(request: NextRequest) {
     }
     
     if (!role || !allowedRoles.includes(role)) {
-      console.log(`Invalid role update attempt: ${role}`);
       return NextResponse.json(
         { error: "Invalid role" },
         { status: 400 }
       );
     }
 
-    console.log(`Updating user ${session.user.email} role to: ${role}`);
     
     // Update the user's role
     const updatedUser = await prisma.user.update({
@@ -45,7 +43,6 @@ export async function POST(request: NextRequest) {
       data: { role },
     });
 
-    console.log(`Role updated successfully to: ${updatedUser.role}`);
     
     return NextResponse.json({
       success: true,

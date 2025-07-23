@@ -71,9 +71,6 @@ export async function GET(request: NextRequest) {
     else if (sortBy === 'rating') orderBy = { rating: 'desc' };
     else if (sortBy === 'newest') orderBy = { createdAt: 'desc' };
 
-    // Debug log
-    console.log('sortBy:', sortBy, 'orderBy:', orderBy);
-
     const [properties, total] = await Promise.all([
       prisma.property.findMany({
         where,

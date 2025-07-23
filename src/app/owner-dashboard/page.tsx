@@ -742,11 +742,6 @@ function PropertyModal({
             occupancy: 0,
           };
 
-        console.log(
-          "Form data to be submitted:",
-          JSON.stringify(cleanData, null, 2)
-        );
-
         // Call onSave and don't reset isSubmitting here - let parent component control this
         onSave(cleanData);
 
@@ -2081,11 +2076,6 @@ export default function OwnerDashboard() {
         images: imageUrls.filter(Boolean),
       };
 
-      console.log(
-        "Sending property to API:",
-        JSON.stringify(cleanData, null, 2)
-      );
-
       const response = await fetch("/api/properties", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2101,7 +2091,6 @@ export default function OwnerDashboard() {
       }
 
       const createdProperty = await response.json();
-      console.log("API success response:", createdProperty);
 
       // Process amenities from the API response to extract names
       const amenityNames = Array.isArray(createdProperty.amenities)
@@ -2175,8 +2164,6 @@ export default function OwnerDashboard() {
         images: imageUrls.filter(Boolean),
       };
 
-      console.log("Sending update to API:", JSON.stringify(cleanData, null, 2));
-
       const response = await fetch(`/api/properties/${updatedProperty.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -2192,7 +2179,6 @@ export default function OwnerDashboard() {
       }
 
       const updatedPropertyData = await response.json();
-      console.log("API success response:", updatedPropertyData);
 
       // Safely access nested properties with optional chaining
       const propertyImage =

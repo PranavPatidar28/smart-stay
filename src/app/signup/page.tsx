@@ -79,8 +79,6 @@ export default function SignUpPage() {
     setTimeout(() => {
       setIsLoading(false);
       // Here you would typically handle the sign-up logic
-      console.log("Sign up attempt:", formData);
-      alert(`Account created successfully! Welcome ${formData.firstName}!`);
     }, 2000);
   };
 

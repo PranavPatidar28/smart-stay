@@ -6,13 +6,6 @@ import CustomSelect from "@/components/ui/CustomSelect";
 import { useSession } from "next-auth/react";
 import {
   Heart,
-  Home,
-  Wifi,
-  Car,
-  Utensils,
-  Shield,
-  BookOpen,
-  Dumbbell,
 } from "lucide-react";
 import FavoritesListSkeleton from "@/components/ui/FavoritesListSkeleton";
 import ViewPropertyModal from '@/components/ui/ViewPropertyModal';
@@ -38,51 +31,6 @@ interface FavoriteProperty {
   };
 }
 
-const mockFavorites: FavoriteProperty[] = [
-  {
-    id: "1",
-    title: "Modern Student Apartment",
-    location: "Near University Campus",
-    price: 8000,
-    type: "APARTMENT",
-    bedrooms: 2,
-    bathrooms: 1,
-    distance: "0.5 km",
-    rating: 4.8,
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-    amenities: ["WiFi", "Kitchen", "Laundry", "Gym"],
-    addedDate: "2024-01-15",
-  },
-  {
-    id: "2",
-    title: "Cozy Studio Room",
-    location: "Downtown Area",
-    price: 6000,
-    type: "STUDIO",
-    bedrooms: 1,
-    bathrooms: 1,
-    distance: "1.2 km",
-    rating: 4.6,
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-    amenities: ["WiFi", "Kitchen", "Furnished"],
-    addedDate: "2024-01-10",
-  },
-  {
-    id: "3",
-    title: "Luxury Student Complex",
-    location: "Premium Location",
-    price: 12000,
-    type: "LUXURY",
-    bedrooms: 2,
-    bathrooms: 2,
-    distance: "0.8 km",
-    rating: 4.9,
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-    amenities: ["WiFi", "Pool", "Gym", "Security", "Study Room"],
-    addedDate: "2024-01-08",
-  },
-];
-
 const propertyTypes = [
   "All",
   "APARTMENT",
@@ -93,26 +41,6 @@ const propertyTypes = [
   "FAMILY_HOME",
 ];
 
-// Helper to get amenity icon (copied from listings page)
-const getAmenityIcon = (amenity: string) => {
-  switch (amenity) {
-    case "WiFi":
-      return <Wifi className="w-4 h-4" />;
-    case "Parking":
-      return <Car className="w-4 h-4" />;
-    case "Gym":
-      return <Dumbbell className="w-4 h-4" />;
-    case "Kitchen":
-      return <Utensils className="w-4 h-4" />;
-    case "Security":
-      return <Shield className="w-4 h-4" />;
-    case "Study Room":
-      return <BookOpen className="w-4 h-4" />;
-    default:
-      return <Home className="w-4 h-4" />;
-  }
-};
-
 export default function FavoritesPage() {
   const { data: session } = useSession();
   const [favorites, setFavorites] = useState<FavoriteProperty[]>([]);
@@ -122,28 +50,15 @@ export default function FavoritesPage() {
   const [sortBy, setSortBy] = useState("date");
   const [modalProperty, setModalProperty] = useState<FavoriteProperty | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [modalFavorite, setModalFavorite] = useState(false);
 
   // Open modal with mapped property
   const openPropertyModal = (property: FavoriteProperty) => {
     setModalProperty(property);
     setShowModal(true);
-    setCurrentImageIndex(0);
-    setModalFavorite(true); // All favorites are true here
   };
   const closePropertyModal = () => {
     setShowModal(false);
     setModalProperty(null);
-    setCurrentImageIndex(0);
-  };
-  // Favorite toggle in modal
-  const handleModalFavoriteToggle = () => {
-    if (modalProperty) {
-      setModalFavorite(!modalFavorite);
-      removeFavorite(modalProperty.id);
-      closePropertyModal();
-    }
   };
 
   // Fetch user's favorites from API
@@ -177,7 +92,6 @@ export default function FavoritesPage() {
             }
             if (typeof a === 'string') return a;
             if (a.name) return a.name;
-            console.warn('Could not extract amenity name from:', a);
             return null;
           }).filter(Boolean),
           addedDate: favorite.createdAt,
@@ -222,21 +136,6 @@ export default function FavoritesPage() {
       setFavorites(favorites.filter((fav) => fav.id !== id));
     } catch (error) {
       console.error('Error removing favorite:', error);
-      alert('Failed to remove favorite');
-    }
-  };
-
-  const shareProperty = (property: FavoriteProperty) => {
-    const shareText = `Check out this amazing student accommodation: ${property.title} - ₹${property.price.toLocaleString()}/month`;
-    if (navigator.share) {
-      navigator.share({
-        title: property.title,
-        text: shareText,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(shareText);
-      alert("Property details copied to clipboard!");
     }
   };
 

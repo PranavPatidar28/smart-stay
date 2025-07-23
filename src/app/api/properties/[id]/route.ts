@@ -104,13 +104,10 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    console.log("PUT Request for property ID:", params.id);
     const body = await request.json();
-    console.log("Request body:", JSON.stringify(body, null, 2));
     
     try {
       const validatedData = updatePropertySchema.parse(body);
-      console.log("Validated data:", JSON.stringify(validatedData, null, 2));
 
       // Check if property exists
       const existingProperty = await prisma.property.findUnique({
@@ -124,13 +121,11 @@ export async function PUT(
         );
       }
 
-      console.log("Updating property...");
-      
       // Remove images and amenities from validatedData before update
       const { images: imageUrls, amenities: amenityNames, ...updateData } = validatedData;
       
       // Prepare update data with proper handling of nullable fields
-      const updateFields: any = {
+      const updateFields: Record<string, unknown> = {
         ...updateData,
         lastUpdated: new Date(),
       };
@@ -171,11 +166,8 @@ export async function PUT(
         },
       });
       
-      console.log("Property updated, handling images and amenities...");
-
       // Update images if provided
       if (imageUrls && imageUrls.length > 0) {
-        console.log("Updating images:", imageUrls);
         try {
           // Delete existing images
           await prisma.propertyImage.deleteMany({
@@ -192,14 +184,12 @@ export async function PUT(
             })),
           });
         } catch (imageError) {
-          console.error("Error updating images:", imageError);
           throw new Error(`Image update failed: ${(imageError as Error).message}`);
         }
       }
 
       // Update amenities if provided
       if (amenityNames && amenityNames.length > 0) {
-        console.log("Updating amenities:", amenityNames);
         try {
           // Delete existing amenities
           await prisma.propertyAmenity.deleteMany({
@@ -226,14 +216,12 @@ export async function PUT(
             });
           }
         } catch (amenityError) {
-          console.error("Error updating amenities:", amenityError);
           throw new Error(`Amenity update failed: ${(amenityError as Error).message}`);
         }
       }
 
       // Fetch the updated property with fresh data
       if (validatedData.images || validatedData.amenities) {
-        console.log("Fetching updated property...");
         try {
           const refreshedProperty = await prisma.property.findUnique({
             where: { id: params.id },
@@ -260,16 +248,13 @@ export async function PUT(
             updatedProperty = refreshedProperty;
           }
         } catch (fetchError) {
-          console.error("Error fetching updated property:", fetchError);
           throw new Error(`Fetch updated property failed: ${(fetchError as Error).message}`);
         }
       }
 
-      console.log("Update completed successfully");
       return NextResponse.json(updatedProperty);
     } catch (validationError) {
       if (validationError instanceof z.ZodError) {
-        console.error("Validation error:", validationError.errors);
         return NextResponse.json(
           { error: 'Validation error', details: validationError.errors },
           { status: 400 }

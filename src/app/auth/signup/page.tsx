@@ -39,7 +39,6 @@ export default function SignUp() {
     try {
       await signIn("google", { callbackUrl: "/" });
     } catch (error) {
-      // setError("An error occurred. Please try again."); // This line was removed
       setIsLoading(false);
     }
   };
@@ -47,29 +46,19 @@ export default function SignUp() {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    console.log("Starting registration process");
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      // setError("Passwords do not match"); // This line was removed
       setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      // setError("Password must be at least 6 characters long"); // This line was removed
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log("Sending registration request with data:", {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone || undefined,
-        role: formData.role
-      });
-      
       // Call the registration API endpoint
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -82,34 +71,21 @@ export default function SignUp() {
           role: formData.role
         }),
       });
-      
-      console.log("Registration API response status:", response.status);
       const data = await response.json();
-      console.log("Registration API response data:", data);
-      
       if (!response.ok) {
         throw new Error(data.error || 'Registration failed');
       }
-      
-      console.log("Registration successful, attempting sign in");
       // Registration successful, now sign in with credentials
       const result = await signIn('credentials', {
         email: formData.email,
         password: formData.password,
         redirect: false,
       });
-      
-      console.log("Sign in result:", result);
       if (result?.error) {
         throw new Error(result.error);
       }
-      
       // Redirect to home or role selection if needed
       router.push('/');
-      
-    } catch (error) {
-      console.error('Registration error:', error);
-      // setError(error instanceof Error ? error.message : 'An error occurred during registration'); // This line was removed
     } finally {
       setIsLoading(false);
     }

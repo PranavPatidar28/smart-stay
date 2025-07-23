@@ -51,8 +51,6 @@ export default function SignInPage() {
     setTimeout(() => {
       setIsLoading(false);
       // Here you would typically handle the sign-in logic
-      console.log("Sign in attempt:", formData);
-      alert("Sign in functionality would be implemented here!");
     }, 2000);
   };
 

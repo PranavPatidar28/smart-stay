@@ -4,7 +4,8 @@ import { useState } from 'react';
 
 export default function ApiTest() {
   const [status, setStatus] = useState<string>('idle');
-  const [data, setData] = useState<any>(null);
+  // Replace 'any' with 'unknown' for better type safety
+  const [data, setData] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
 
   const testApi = async () => {

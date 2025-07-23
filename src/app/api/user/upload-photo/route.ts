@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
     // Check if this is an actual file upload or just a test/placeholder request
     if (body.placeholder) {
       // For testing purposes only - should be removed in production
-      console.log('Received placeholder request without actual file upload');
       
       // Return the current user image without changing it
       const currentUser = await prisma.user.findUnique({

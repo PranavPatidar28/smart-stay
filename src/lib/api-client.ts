@@ -16,6 +16,7 @@ export interface Property {
   bathrooms: number
   availableFrom?: string
   virtualTourUrl?: string
+  isAvailable: boolean
   seoKeywords?: string
   contactPhone?: string
   contactEmail?: string
@@ -417,7 +418,7 @@ class ApiClient {
       category: string
       icon?: string
     }>
-    groupedAmenities: Record<string, any[]>
+    groupedAmenities: Record<string, unknown[]>
   }> {
     const params = new URLSearchParams()
     if (category) params.append('category', category)
@@ -432,7 +433,7 @@ class ApiClient {
   }
 }
 
-export async function trackAnalyticsEvent(eventType: string, propertyId: string, options: any = {}) {
+export async function trackAnalyticsEvent(eventType: string, propertyId: string, options: Record<string, unknown> = {}) {
   try {
     const res = await fetch('/api/analytics/track', {
       method: 'POST',

@@ -17,12 +17,10 @@ export async function POST(request: Request) {
   try {
     // Parse request body
     const body = await request.json();
-    console.log("Registration request body:", JSON.stringify(body, null, 2));
     
     // Validate input
     const validationResult = registerSchema.safeParse(body);
     if (!validationResult.success) {
-      console.error("Validation error:", validationResult.error.errors);
       return NextResponse.json(
         { error: validationResult.error.errors[0].message },
         { status: 400 }
@@ -30,7 +28,6 @@ export async function POST(request: Request) {
     }
     
     const { name, email, password, phone, role } = validationResult.data;
-    console.log("Validated data:", { name, email, phone, role });
     
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -38,7 +35,6 @@ export async function POST(request: Request) {
     });
     
     if (existingUser) {
-      console.log("User already exists with email:", email);
       return NextResponse.json(
         { error: "A user with this email already exists" },
         { status: 409 }
@@ -47,10 +43,8 @@ export async function POST(request: Request) {
     
     // Hash password
     const hashedPassword = await hashPassword(password);
-    console.log("Password hashed successfully");
     
     // Create user
-    console.log("Creating user with data:", { name, email, phone, role });
     const user = await prisma.user.create({
       data: {
         name,
@@ -71,14 +65,12 @@ export async function POST(request: Request) {
       },
     });
     
-    console.log("User created successfully:", user.id);
     return NextResponse.json({ 
       message: "User registered successfully",
       user
     }, { status: 201 });
     
   } catch (error) {
-    console.error("Registration error:", error);
     
     // Handle Prisma errors
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -97,8 +89,6 @@ export async function POST(request: Request) {
     
     // Handle other errors
     if (error instanceof Error) {
-      console.error("Error details:", error.message);
-      console.error("Error stack:", error.stack);
       return NextResponse.json(
         { error: `Registration failed: ${error.message}` },
         { status: 500 }

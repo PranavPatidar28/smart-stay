@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Heart, MapPin, Star, Home, Shield, Car, Wifi, Calendar, Bath, Bed, Mail, Phone, Map } from "lucide-react";
 import { Property } from '@/lib/api-client';
 import Image from 'next/image';
@@ -13,11 +13,10 @@ export interface PropertyCardProps {
 
 export default function PropertyCard({ property, isListView = false, onFavoriteToggle, onViewDetails }: PropertyCardProps) {
   const [hovered, setHovered] = useState(false);
-  const [localFavorite, setLocalFavorite] = useState(property.isFavorite || false);
+  // Remove isFavorite from property, use localFavorite only if provided as prop or default to false
+  const [localFavorite, setLocalFavorite] = useState(false);
 
-  useEffect(() => {
-    setLocalFavorite(property.isFavorite || false);
-  }, [property.isFavorite]);
+  // Remove useEffect for property.isFavorite
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -34,7 +33,7 @@ export default function PropertyCard({ property, isListView = false, onFavoriteT
       {/* Image Section */}
       <div className={`relative ${isListView ? "lg:w-80 h-64 lg:h-auto" : "h-56"}`}>
         <Image
-          src={property.images?.[0]?.url || property.image}
+          src={property.images?.[0]?.url || "/images/hostel-img.jpg"}
           alt={property.title}
           className="w-full h-full object-cover rounded-3xl group-hover:scale-105 transition-transform duration-500"
           width={380}
@@ -43,7 +42,7 @@ export default function PropertyCard({ property, isListView = false, onFavoriteT
         {/* Mini-gallery thumbnails on hover (desktop only) */}
         {property.images && property.images.length > 1 && (
           <div className={`hidden lg:flex absolute bottom-4 right-4 gap-2 z-10 ${hovered ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}>
-            {property.images.slice(1, 4).map((img: any, idx: number) => (
+            {property.images.slice(1, 4).map((img: { id: string | number; url: string }, idx: number) => (
               <img
                 key={img.id || idx}
                 src={img.url}
@@ -127,7 +126,7 @@ export default function PropertyCard({ property, isListView = false, onFavoriteT
             <div className="flex flex-col items-center">
               <Calendar className="w-5 h-5 text-[var(--color-primary-500)] mb-1" />
               <span className="text-xs text-gray-500">Available</span>
-              <span className="font-semibold text-gray-900">{property.availableFrom ? new Date(property.availableFrom).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : property.addedDate ? new Date(property.addedDate).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : 'Available now'}</span>
+              <span className="font-semibold text-gray-900">{property.availableFrom ? new Date(property.availableFrom).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : 'Available now'}</span>
             </div>
           </div>
           {/* Features */}
@@ -139,11 +138,19 @@ export default function PropertyCard({ property, isListView = false, onFavoriteT
           </div>
           {/* Amenities */}
           <div className="flex flex-wrap gap-2 mb-2">
-            {(property.amenities || []).slice(0, 4).map((amenity: any, idx: number) => (
-              <span key={`${property.id}-amenity-${idx}-${amenity.amenity?.name || amenity}`} className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                {amenity.amenity?.name || amenity}
-              </span>
-            ))}
+            {(property.amenities || []).slice(0, 4).map((amenity: { amenity?: { name: string } } | string, idx: number) => {
+              let label: string = '';
+              if (typeof amenity === 'object' && 'amenity' in amenity && amenity.amenity?.name) {
+                label = amenity.amenity.name;
+              } else if (typeof amenity === 'string') {
+                label = amenity;
+              }
+              return (
+                <span key={`${property.id}-amenity-${idx}-${label}`} className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                  {label}
+                </span>
+              );
+            })}
             {property.amenities && property.amenities.length > 4 && <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">+{property.amenities.length - 4} more</span>}
           </div>
           {/* Landlord Chip */}
@@ -154,7 +161,7 @@ export default function PropertyCard({ property, isListView = false, onFavoriteT
               </div>
               <span className="font-semibold text-gray-900 text-xs">{property.owner.name}</span>
               {property.owner.verified && <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium">✓ Verified</span>}
-              <span className="flex items-center gap-1 text-xs text-gray-500 ml-2"><Star className="w-3 h-3 text-yellow-400 fill-current" />{property.owner.rating}</span>
+              {/* Remove property.owner.rating as it's not in the type */}
             </div>
           )}
         </div>

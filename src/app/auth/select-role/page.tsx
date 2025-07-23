@@ -27,12 +27,10 @@ export default function SelectRole() {
 
   const handleRoleSelection = async () => {
     if (!selectedRole) {
-      // setError("Please select a role"); // This line was removed as per edit hint
       return;
     }
 
     setIsLoading(true);
-    // setError(""); // This line was removed as per edit hint
 
     try {
       const response = await fetch("/api/auth/update-role", {
@@ -46,12 +44,7 @@ export default function SelectRole() {
       if (response.ok) {
         // Force session refresh by re-signing in (triggers session update)
         await signIn("google", { callbackUrl: "/" });
-      } else {
-        const data = await response.json();
-        // setError(data.error || "Failed to update role"); // This line was removed as per edit hint
       }
-    } catch (error) {
-      // setError("An error occurred. Please try again."); // This line was removed as per edit hint
     } finally {
       setIsLoading(false);
     }
