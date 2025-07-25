@@ -81,8 +81,11 @@ export default function Navbar() {
           ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg' 
           : 'bg-transparent',
         logo: isScrolled 
-          ? 'text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)]' 
-          : 'text-white drop-shadow-lg hover:text-[var(--color-primary-300)]',
+          ? 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent' 
+          : 'text-white drop-shadow-lg',
+        logoHover: isScrolled
+          ? 'hover:opacity-80'
+          : 'hover:text-[var(--color-primary-300)]',
         links: isScrolled
           ? 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
           : 'text-white/90 hover:text-white hover:bg-white/10',
@@ -98,7 +101,8 @@ export default function Navbar() {
       // Other pages: always solid white background with dark text
       return {
         nav: 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg',
-        logo: 'text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)]',
+        logo: 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent',
+        logoHover: 'hover:opacity-80',
         links: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50',
         mobileMenu: 'bg-white/95 backdrop-blur-xl',
         mobileLinks: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50',
@@ -118,9 +122,11 @@ export default function Navbar() {
             <div className="flex items-center">
               <Link 
                 href="/" 
-                className={`text-2xl font-bold transition-all duration-300 ${styles.logo}`}
+                className={`transition-all duration-300 ${styles.logoHover}`}
               >
-                SmartStay
+                <span className={`text-2xl font-extrabold tracking-tight ${styles.logo} transition-all duration-300 transform hover:scale-105`}>
+                  Smart<span className="font-black">Stay</span>
+                </span>
               </Link>
             </div>
 
@@ -177,10 +183,11 @@ export default function Navbar() {
           <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
             <Link
               href="/"
-              className="text-2xl font-bold text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)]"
               onClick={() => setIsMenuOpen(false)}
             >
-              SmartStay
+              <span className="text-2xl font-extrabold bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent">
+                Smart<span className="font-black">Stay</span>
+              </span>
             </Link>
             <button
               aria-label="Close menu"
