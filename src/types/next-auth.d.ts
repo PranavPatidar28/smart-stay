@@ -1,9 +1,11 @@
 declare module "next-auth" {
   interface User {
     role?: string | null;
+    id?: string;
   }
   interface Session {
     user: {
+      id?: string;
       name?: string | null;
       email?: string | null;
       image?: string | null;

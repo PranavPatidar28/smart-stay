@@ -173,7 +173,7 @@ export default function PropertyCard({ property, isListView = false, onFavoriteT
           >
             View Details
           </button>
-          <button className="px-4 py-3 border-2 border-[var(--color-primary-200)] text-[var(--color-primary-600)] rounded-xl hover:bg-[var(--color-primary-50)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium">
+          <button className="px-4 py-3 border-2 border-[var(--color-primary-200)] text-[var(--color-primary-600)] rounded-xl hover:bg-[var(--color-primary-50)] hover:text-[var(--color-primary-700)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium">
             <Phone className="w-4 h-4" />Contact
           </button>
           {isListView && (

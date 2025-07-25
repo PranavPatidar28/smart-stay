@@ -31,7 +31,11 @@ import {
   Eye,
   MapIcon,
   User,
+  Clock,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
+import { FaRupeeSign as Rupee } from "react-icons/fa";
 import { trackAnalyticsEvent } from '@/lib/api-client';
 import { showSuccess, showError } from '@/lib/toast';
 import Image from 'next/image';
@@ -582,6 +586,7 @@ export default function ListingsPage() {
   const prevCountRef = useRef(0);
   const [selectedType, setSelectedType] = useState("All");
   const [priceRange, setPriceRange] = useState([0, 75000]);
+  const [priceRangeText, setPriceRangeText] = useState(['₹0', '₹75,000+']);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -589,6 +594,10 @@ export default function ListingsPage() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // State for custom dropdowns
+  const [showPropertyTypeModal, setShowPropertyTypeModal] = useState(false);
+  const [showSortByModal, setShowSortByModal] = useState(false);
   
   // Add state for detecting mobile devices
   const [isMobile, setIsMobile] = useState(false);
@@ -600,6 +609,151 @@ export default function ListingsPage() {
     petFriendly: false,
     availableNow: false
   });
+
+  // Refs for clicking outside detection
+  const propertyTypeRef = useRef<HTMLDivElement>(null);
+  const sortByRef = useRef<HTMLDivElement>(null);
+  const priceRangeRef = useRef<HTMLDivElement>(null);
+  
+  // Define property types with icons and descriptions
+  const PROPERTY_TYPE_OPTIONS = [
+    {
+      value: "All",
+      label: "All Types",
+      icon: "🏠",
+      description: "Show all property types",
+      color: "gray"
+    },
+    {
+      value: "APARTMENT",
+      label: "Apartment",
+      icon: "🏢",
+      description: "Modern apartments with amenities",
+      color: "blue"
+    },
+    {
+      value: "STUDIO",
+      label: "Studio",
+      icon: "🛋️",
+      description: "Compact single room units",
+      color: "purple"
+    },
+    {
+      value: "SHARED_HOUSE",
+      label: "Shared House",
+      icon: "🏘️",
+      description: "Shared accommodations with common areas",
+      color: "green"
+    },
+    {
+      value: "LUXURY",
+      label: "Luxury",
+      icon: "✨",
+      description: "Premium properties with high-end amenities",
+      color: "yellow"
+    },
+    {
+      value: "ROOM",
+      label: "Room",
+      icon: "🛏️",
+      description: "Single rooms in shared properties",
+      color: "pink"
+    },
+    {
+      value: "FAMILY_HOME",
+      label: "Family Home",
+      icon: "🏡",
+      description: "Full homes for families",
+      color: "orange"
+    },
+    {
+      value: "HOSTEL",
+      label: "Hostel",
+      icon: "🏨",
+      description: "Budget-friendly shared accommodation",
+      color: "teal"
+    }
+  ];
+  
+  // Sort options with icons and descriptions
+  const SORT_OPTIONS = [
+    {
+      value: "relevance",
+      label: "Most Relevant",
+      icon: <Star className="w-4 h-4 text-[var(--color-primary-500)]" />,
+      description: "Default sorting by relevance to your search"
+    },
+    {
+      value: "price-low",
+      label: "Price: Low to High",
+      icon: <Rupee className="w-4 h-4 text-[var(--color-primary-500)]" />,
+      description: "Cheapest properties first"
+    },
+    {
+      value: "price-high",
+      label: "Price: High to Low",
+      icon: <Rupee className="w-4 h-4 text-[var(--color-primary-500)]" />,
+      description: "Luxury properties first"
+    },
+    {
+      value: "rating",
+      label: "Highest Rated",
+      icon: <Star className="w-4 h-4 text-[var(--color-primary-500)]" />,
+      description: "Best-rated properties first"
+    },
+    {
+      value: "distance",
+      label: "Nearest First",
+      icon: <MapIcon className="w-4 h-4 text-[var(--color-primary-500)]" />,
+      description: "Closest to your location"
+    },
+    {
+      value: "newest",
+      label: "Newest First",
+      icon: <Clock className="w-4 h-4 text-[var(--color-primary-500)]" />,
+      description: "Recently added properties"
+    }
+  ];
+
+  // Close modals when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      // Close property type modal when clicking outside
+      if (showPropertyTypeModal && 
+          propertyTypeRef.current && 
+          !propertyTypeRef.current.contains(event.target as Node)) {
+        setShowPropertyTypeModal(false);
+      }
+      
+      // Close sort by modal when clicking outside
+      if (showSortByModal && 
+          sortByRef.current && 
+          !sortByRef.current.contains(event.target as Node)) {
+        setShowSortByModal(false);
+      }
+    }
+
+    // Add event listener when either modal is shown
+    if (showPropertyTypeModal || showSortByModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPropertyTypeModal, showSortByModal]);
+
+  // Update price range text when price range changes
+  useEffect(() => {
+    const formatPrice = (price: number) => {
+      if (price === 0) return '₹0';
+      if (price >= 75000) return '₹75,000+';
+      return `₹${price.toLocaleString()}`;
+    };
+    
+    setPriceRangeText([formatPrice(priceRange[0]), formatPrice(priceRange[1])]);
+  }, [priceRange]);
 
   // Read search parameter from URL on component mount
   useEffect(() => {
@@ -1201,7 +1355,7 @@ export default function ListingsPage() {
               <div className="bg-white rounded-2xl shadow-2xl p-6">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {/* Search Input */}
-                  <div className="relative">
+                  <div className="relative col-span-2">
                     {isSearching ? (
                       <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-primary-500)] w-5 h-5 animate-spin" />
                     ) : (
@@ -1224,34 +1378,65 @@ export default function ListingsPage() {
                     )}
                   </div>
 
-                  {/* Property Type */}
-                  <div>
-                    <select
-                      value={selectedType}
-                      onChange={handleTypeChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900"
+                  {/* Property Type Custom Dropdown */}
+                  <div ref={propertyTypeRef} className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowPropertyTypeModal(!showPropertyTypeModal)}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900 bg-white flex items-center justify-between"
                     >
-                      {propertyTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Price Range */}
-                  <div>
-                    <select
-                      value={`${priceRange[0]}-${priceRange[1]}`}
-                      onChange={handlePriceRangeChange}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900"
-                    >
-                      <option value="0-75000">Any Price</option>
-                      <option value="0-15000">Under ₹15,000</option>
-                      <option value="15000-25000">₹15,000 - ₹25,000</option>
-                      <option value="25000-40000">₹25,000 - ₹40,000</option>
-                      <option value="40000-75000">Over ₹40,000</option>
-                    </select>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const typeOption = PROPERTY_TYPE_OPTIONS.find(t => t.value === selectedType);
+                          return (
+                            <>
+                              <span className={`text-xl flex items-center justify-center w-7 h-7 rounded-md text-gray-700`}>
+                                {typeOption?.icon}
+                              </span>
+                              <span>{typeOption?.label}</span>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <span>{showPropertyTypeModal ? "▲" : "▼"}</span>
+                    </button>
+                    
+                    {/* Dropdown Modal */}
+                    <div className={`absolute z-40 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden transition-all duration-200 origin-top ${showPropertyTypeModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                      <div className="max-h-[320px] overflow-y-auto p-2 custom-scrollbar">
+                        {PROPERTY_TYPE_OPTIONS.map(type => (
+                          <button
+                            key={type.value}
+                            onClick={() => {
+                              setSelectedType(type.value);
+                              setShowPropertyTypeModal(false);
+                              setLoading(true);
+                            }}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg  flex items-center  ${selectedType === type.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"} `}
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
+                                type.color === 'blue' ? 'bg-blue-200 text-blue-800' : 
+                                type.color === 'purple' ? 'bg-purple-200 text-purple-800' : 
+                                type.color === 'green' ? 'bg-green-200 text-green-800' :
+                                type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
+                                type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
+                                type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
+                                type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
+                                'bg-gray-200 text-black'
+                              }`}>{type.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{type.label}</div>
+                                <div className="text-xs truncate">{type.description}</div>
+                              </div>
+                              {selectedType === type.value && (
+                                <span className="ml-auto text-[var(--color-primary-600)]">O</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Filter Toggle */}
@@ -1349,94 +1534,210 @@ export default function ListingsPage() {
 
         {/* Content Area */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Advanced Filter Panel */}
+          {/* Advanced Filter Panel - Improved Design */}
           {showFilters && (
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100 animate-fade-in-up">
+              <h3 className="text-lg font-semibold text-gray-900 mb-5 flex items-center gap-2">
+                <Filter className="w-5 h-5 text-[var(--color-primary-600)]" />
+                Advanced Filters
+              </h3>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Price Range Slider */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Price Range: ₹{priceRange[0].toLocaleString()} - ₹{priceRange[1].toLocaleString()}
-                  </label>
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="75000"
-                      step="1000"
-                      value={priceRange[0]}
-                      onChange={(e) =>
-                        setPriceRange([parseInt(e.target.value), priceRange[1]])
-                      }
-                      className="w-full"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="75000"
-                      step="1000"
-                      value={priceRange[1]}
-                      onChange={(e) =>
-                        setPriceRange([priceRange[0], parseInt(e.target.value)])
-                      }
-                      className="w-full"
-                    />
+                {/* Custom Price Range Slider */}
+                <div ref={priceRangeRef} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="flex justify-between mb-3">
+                    <label className="flex items-center gap-2 font-medium text-gray-800">
+                      <span className="text-[var(--color-primary-600)] font-bold">₹</span>
+                      Price Range
+                    </label>
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <span className="bg-[var(--color-primary-50)] text-[var(--color-primary-700)] px-2 py-1 rounded-md border border-[var(--color-primary-200)]">
+                        {priceRangeText[0]} - {priceRangeText[1]}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Custom dual handle slider */}
+                  <div className="relative pt-5 pb-10">
+                    {/* Background track */}
+                    <div className="absolute w-full h-2 bg-gray-200 rounded-full top-6"></div>
+                    
+                    {/* Colored track between handles */}
+                    <div 
+                      className="absolute h-2 bg-gradient-to-r from-[var(--color-primary-400)] to-[var(--color-secondary-400)] rounded-full top-6"
+                      style={{
+                        left: `${(priceRange[0] / 75000) * 100}%`,
+                        width: `${((priceRange[1] - priceRange[0]) / 75000) * 100}%`
+                      }}
+                    ></div>
+                    
+                    {/* Min Price Handle */}
+                    <div className="relative w-full h-2">
+                      <input
+                        type="range"
+                        min="0"
+                        max="75000"
+                        step="1000"
+                        value={priceRange[0]}
+                        onChange={(e) => {
+                          const newMinPrice = parseInt(e.target.value);
+                          // Ensure min price doesn't exceed max price
+                          if (newMinPrice <= priceRange[1]) {
+                            setPriceRange([newMinPrice, priceRange[1]]);
+                            setLoading(true);
+                          }
+                        }}
+                        className="absolute w-full h-2 opacity-0 cursor-pointer z-30"
+                      />
+                      <div 
+                        className="absolute h-7 w-7 bg-white border-2 border-[var(--color-primary-500)] rounded-full -top-2.5 shadow-md z-20 pointer-events-none flex items-center justify-center hover:scale-110 transition-transform"
+                        style={{ left: `calc(${(priceRange[0] / 75000) * 100}% - 14px)` }}
+                      >
+                        <div className="w-2 h-2 bg-[var(--color-primary-500)] rounded-full"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Max Price Handle */}
+                    <div className="relative w-full h-2">
+                      <input
+                        type="range"
+                        min="0"
+                        max="75000"
+                        step="1000"
+                        value={priceRange[1]}
+                        onChange={(e) => {
+                          const newMaxPrice = parseInt(e.target.value);
+                          // Ensure max price doesn't go below min price
+                          if (newMaxPrice >= priceRange[0]) {
+                            setPriceRange([priceRange[0], newMaxPrice]);
+                            setLoading(true);
+                          }
+                        }}
+                        className="absolute w-full h-2 opacity-0 cursor-pointer z-30"
+                      />
+                      <div 
+                        className="absolute h-7 w-7 bg-white border-2 border-[var(--color-secondary-500)] rounded-full -top-2.5 shadow-md z-20 pointer-events-none flex items-center justify-center hover:scale-110 transition-transform"
+                        style={{ left: `calc(${(priceRange[1] / 75000) * 100}% - 14px)` }}
+                      >
+                        <div className="w-2 h-2 bg-[var(--color-secondary-500)] rounded-full"></div>
+                      </div>
+                    </div>
+                    
+                    {/* Price markers */}
+                    <div className="absolute w-full flex justify-between text-xs text-gray-500 mt-5 px-1">
+                      <div className="flex flex-col items-center">
+                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
+                        <span>₹0</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
+                        <span>₹25K</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
+                        <span>₹50K</span>
+                      </div>
+                      <div className="flex flex-col items-center">
+                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
+                        <span>₹75K+</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Amenities */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <label className="flex items-center gap-2 font-medium text-gray-800 mb-4">
+                    <Dumbbell className="w-4 h-4 text-[var(--color-primary-600)]" />
                     Amenities
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                     {amenities.map((amenity) => (
                       <label
                         key={amenity}
-                        className="flex items-center gap-2 cursor-pointer"
+                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                          selectedAmenities.includes(amenity)
+                            ? 'bg-[var(--color-primary-50)] border border-[var(--color-primary-200)]'
+                            : 'hover:bg-gray-100 border border-gray-200'
+                        }`}
                       >
                         <input
                           type="checkbox"
                           checked={selectedAmenities.includes(amenity)}
                           onChange={(e) => handleAmenityChange(amenity, e.target.checked)}
-                          className="w-4 h-4 text-[var(--color-primary-500)] border-gray-300 rounded focus:ring-[var(--color-primary-500)]"
+                          className="w-4 h-4 text-[var(--color-primary-500)] border-gray-300 rounded-sm focus:ring-[var(--color-primary-500)]"
                         />
-                        <span className="text-sm text-gray-700">{amenity}</span>
+                        <span className="text-sm text-gray-700 flex items-center gap-1">
+                          {getAmenityIcon(amenity)}
+                          {amenity}
+                        </span>
                       </label>
                     ))}
                   </div>
+                  {selectedAmenities.length > 0 && (
+                    <div className="mt-2 flex justify-end">
+                      <button 
+                        onClick={() => setSelectedAmenities([])} 
+                        className="text-xs text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium"
+                      >
+                        Clear Selection
+                      </button>
+                    </div>
+                  )}
                 </div>
 
-                {/* Sort Options */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Sort By
+                {/* Additional Filters */}
+                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 flex flex-col">
+                  <label className="flex items-center gap-2 font-medium text-gray-800 mb-3">
+                    <Filter className="w-4 h-4 text-[var(--color-primary-600)]" />
+                    More Options
                   </label>
-                  <select
-                    value={sortBy}
-                    onChange={handleSortChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
-                  >
-                    <option value="relevance">Most Relevant</option>
-                    <option value="price-low">Price: Low to High</option>
-                    <option value="price-high">Price: High to Low</option>
-                    <option value="rating">Highest Rated</option>
-                    <option value="distance">Nearest First</option>
-                    <option value="newest">Newest First</option>
-                  </select>
+                  
+                  {/* Property feature toggles */}
+                  <div className="space-y-3 mb-4">
+                    {Object.entries(quickFilters).map(([key, value]) => (
+                      <button
+                        key={key}
+                        onClick={() => handleQuickFilterToggle(key as keyof typeof quickFilters)}
+                        className={`w-full flex items-center justify-between p-2 rounded-lg text-sm ${
+                          value 
+                            ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]" 
+                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          {key === 'nearCampus' && <MapPin className="w-4 h-4" />}
+                          {key === 'furnished' && <Home className="w-4 h-4" />}
+                          {key === 'petFriendly' && <span>🐾</span>}
+                          {key === 'availableNow' && <Calendar className="w-4 h-4" />}
+                          {key === 'nearCampus' ? 'Near Campus' : 
+                           key === 'furnished' ? 'Furnished' :
+                           key === 'petFriendly' ? 'Pet Friendly' :
+                           key === 'availableNow' ? 'Available Now' : key}
+                        </span>
+                        {value ? <CheckCircle className="w-4 h-4" /> : null}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-auto">
+                    <button
+                      onClick={handleClearFilters}
+                      className="w-full py-2 px-4 bg-[var(--color-primary-50)] text-[var(--color-primary-600)] rounded-lg hover:bg-[var(--color-primary-100)] transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-[var(--color-primary-200)]"
+                    >
+                      <X className="w-4 h-4" />
+                      Clear All Filters
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Clear Filters */}
-              <div className="mt-6 flex justify-between items-center">
-                <button
-                  onClick={handleClearFilters}
-                  className="text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium transition-colors"
-                >
-                  Clear All Filters
-                </button>
-                <div className="text-sm text-gray-500">
-                  {filteredProperties.length} properties found
+              {/* Results Counter */}
+              <div className="mt-6 border-t border-gray-200 pt-4 flex justify-end">
+                <div className="bg-[var(--color-primary-50)] text-[var(--color-primary-800)] px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 border border-[var(--color-primary-200)] shadow-sm">
+                  <Search className="w-4 h-4" />
+                  <span>{filteredProperties.length}</span> 
+                  <span>properties found</span>
                 </div>
               </div>
             </div>
@@ -1477,18 +1778,50 @@ export default function ListingsPage() {
             <div className="flex items-center gap-4">
               
               
-              {/* Sort dropdown */}
-              <select
-                value={sortBy}
-                onChange={handleSortChange}
-                className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-sm"
-              >
-                <option value="relevance">Most Relevant</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="rating">Highest Rated</option>
-                <option value="newest">Newest First</option>
-              </select>
+              {/* Sort dropdown - Custom */}
+              <div ref={sortByRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowSortByModal(!showSortByModal)}
+                  className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-sm bg-white flex items-center gap-2 min-w-[150px] text-gray-600"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">
+                      {SORT_OPTIONS.find(s => s.value === sortBy)?.icon || <Star className="w-4 h-4 text-yellow-500" />}
+                    </span>
+                    <span>{SORT_OPTIONS.find(s => s.value === sortBy)?.label || "Most Relevant"}</span>
+                  </div>
+                  <span className="ml-auto">{showSortByModal ? "▲" : "▼"}</span>
+                </button>
+                
+                {/* Sort Options Dropdown */}
+                <div className={`absolute right-0 z-40 mt-2 w-[220px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden transition-all duration-200 origin-top ${showSortByModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                  <div className="max-h-[320px] overflow-y-auto p-2">
+                    {SORT_OPTIONS.map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setShowSortByModal(false);
+                          setLoading(true);
+                        }}
+                        className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${sortBy === option.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
+                      >
+                        <div className="flex items-center gap-3 w-full">
+                          <span className="text-xl flex-shrink-0">{option.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium">{option.label}</div>
+                            <div className="text-xs ">{option.description}</div>
+                          </div>
+                          {sortBy === option.value && (
+                            <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
               {/* View mode toggle */}
               <div className="flex items-center bg-gray-100 rounded-lg p-1">

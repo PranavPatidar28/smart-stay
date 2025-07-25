@@ -481,7 +481,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 text-gray-700">
       <Navbar />
       <div className="pt-24 pb-16 px-4 max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Account Settings</h1>
@@ -686,7 +686,7 @@ export default function SettingsPage() {
                       <div 
                         className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all hover:border-[var(--color-primary-300)] ${
                           selectedRole === "STUDENT" 
-                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]" 
+                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] text-white" 
                             : "border-gray-200"
                         }`}
                         onClick={() => initiateRoleChange("STUDENT")}
@@ -721,7 +721,7 @@ export default function SettingsPage() {
                       <div 
                         className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all hover:border-[var(--color-primary-300)] ${
                           selectedRole === "LANDLORD" 
-                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]" 
+                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] text-white" 
                             : "border-gray-200"
                         }`}
                         onClick={() => initiateRoleChange("LANDLORD")}

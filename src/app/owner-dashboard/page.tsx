@@ -105,115 +105,64 @@ interface Activity {
   propertyTitle?: string;
 }
 
-const mockProperties: Property[] = [
-  {
-    id: "1",
-    title: "Modern Student Apartment",
-    location: "Near University Campus",
-    price: 25000,
-    type: "APARTMENT",
-    status: "ACTIVE",
-    views: 1245,
-    inquiries: 23,
-    rating: 4.8,
-    image:
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-    lastUpdated: "2024-01-15",
-    earnings: 75000,
-    occupancy: 100,
-  },
-  {
-    id: "2",
-    title: "Cozy Studio Room",
-    location: "Downtown Area",
-    price: 18000,
-    type: "STUDIO",
-    status: "RENTED",
-    views: 892,
-    inquiries: 15,
-    rating: 4.6,
-    image:
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop",
-    lastUpdated: "2024-01-10",
-    earnings: 54000,
-    occupancy: 100,
-  },
-  {
-    id: "3",
-    title: "Shared Student House",
-    location: "Residential District",
-    price: 15000,
-    type: "SHARED_HOUSE",
-    status: "PENDING",
-    views: 0,
-    inquiries: 0,
-    rating: 0,
-    image:
-      "https://images.unsplash.com/photo-1560448075-bb485b067938?w=400&h=300&fit=crop",
-    lastUpdated: "2024-01-20",
-    earnings: 0,
-    occupancy: 0,
-  },
-  {
-    id: "4",
-    title: "Luxury Student Complex",
-    location: "Premium Location",
-    price: 45000,
-    type: "LUXURY",
-    status: "ACTIVE",
-    views: 2156,
-    inquiries: 34,
-    rating: 4.9,
-    image:
-      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-    lastUpdated: "2024-01-12",
-    earnings: 135000,
-    occupancy: 85,
-  },
-];
+// No more mock properties - we'll use real data from the API
 
-const mockActivities: Activity[] = [
+// We'll replace mock activities with real data from API in the future
+
+// Status options with icons and descriptions
+const STATUS_OPTIONS = [
   {
-    id: 1,
-    type: "inquiry",
-    message: "New inquiry received for Modern Student Apartment",
-    time: "2 hours ago",
-    propertyId: 1,
-    propertyTitle: "Modern Student Apartment",
+    value: "all",
+    label: "All Statuses",
+    icon: "🔍",
+    description: "Show all properties",
+    color: "gray"
   },
   {
-    id: 2,
-    type: "booking",
-    message: "Booking confirmed for Cozy Studio Room",
-    time: "4 hours ago",
-    propertyId: 2,
-    propertyTitle: "Cozy Studio Room",
+    value: "ACTIVE",
+    label: "Active",
+    icon: "✅",
+    description: "Available for rent",
+    color: "green"
   },
   {
-    id: 3,
-    type: "payment",
-    message: "Payment received: ₹25,000",
-    time: "6 hours ago",
-    propertyId: 1,
-    propertyTitle: "Modern Student Apartment",
+    value: "INACTIVE",
+    label: "Inactive",
+    icon: "⏸️",
+    description: "Temporarily unavailable",
+    color: "gray"
   },
   {
-    id: 4,
-    type: "review",
-    message: "New 5-star review received",
-    time: "1 day ago",
-    propertyId: 4,
-    propertyTitle: "Luxury Student Complex",
+    value: "PENDING",
+    label: "Pending",
+    icon: "⏳",
+    description: "Waiting for approval",
+    color: "yellow"
   },
   {
-    id: 5,
-    type: "view",
-    message: "Property viewed 15 times today",
-    time: "1 day ago",
-    propertyId: 4,
-    propertyTitle: "Luxury Student Complex",
-  },
+    value: "RENTED",
+    label: "Rented",
+    icon: "🔑",
+    description: "Currently occupied",
+    color: "blue"
+  }
 ];
+const generatePlaceholderActivities = (properties: Property[]): Activity[] => {
+  if (!properties.length) return [];
+  
+  return properties.slice(0, 3).map((property, idx) => ({
+    id: idx + 1,
+    type: idx === 0 ? "view" : idx === 1 ? "inquiry" : "payment",
+    message: idx === 0 
+      ? `Property "${property.title}" has been viewed recently`
+      : idx === 1 
+      ? `New inquiry received for "${property.title}"`
+      : `Recent payment activity for "${property.title}"`,
+    time: idx === 0 ? "Today" : idx === 1 ? "Yesterday" : "Last week",
+    propertyId: parseInt(property.id),
+    propertyTitle: property.title
+  }));
+};
 
 const AMENITY_SUGGESTIONS = [
   "WiFi",
@@ -1890,12 +1839,18 @@ function PropertyModal({
   );
 }
 
+
+
 export default function OwnerDashboard() {
   const { data: session } = useSession();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [selectedPropertyType, setSelectedPropertyType] = useState("all");
+  const [showPropertyTypeModal, setShowPropertyTypeModal] = useState(false);
   const [showAddProperty, setShowAddProperty] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedPropertyToEdit, setSelectedPropertyToEdit] =
@@ -1905,22 +1860,70 @@ export default function OwnerDashboard() {
   const [analyticsData, setAnalyticsData] = useState<unknown>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
+  
+  // Extract user ID safely with type assertion
+  const userId = session?.user ? (session.user as any).id : undefined;
 
+  // Reference for the property type dropdown
+  const propertyTypeRef = useRef<HTMLDivElement>(null);
+  // Reference for the status dropdown
+  const statusRef = useRef<HTMLDivElement>(null);
+
+  // Close modals when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      // Close property type modal when clicking outside
+      if (showPropertyTypeModal && 
+          propertyTypeRef.current && 
+          !propertyTypeRef.current.contains(event.target as Node)) {
+        setShowPropertyTypeModal(false);
+      }
+      
+      // Close status modal when clicking outside
+      if (showStatusModal && 
+          statusRef.current && 
+          !statusRef.current.contains(event.target as Node)) {
+        setShowStatusModal(false);
+      }
+    }
+
+    // Add event listener when either modal is shown
+    if (showPropertyTypeModal || showStatusModal) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showPropertyTypeModal, showStatusModal]);
+  
   // Fetch user's properties from API
   useEffect(() => {
     const fetchProperties = async () => {
-      if (!session?.user?.id) return;
+      // If no user is logged in or no user ID is available, show empty state
+      if (!userId) {
+        setLoading(false);
+        setProperties([]);
+        return;
+      }
 
       try {
         setLoading(true);
         const response = await fetch(
-          `/api/properties?ownerId=${session.user.id}`
+          `/api/properties?ownerId=${userId}`
         );
-        if (!response.ok) throw new Error("Failed to fetch properties");
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch properties: ${response.status}`);
+        }
 
         const data = await response.json();
-        setProperties(
-          data.properties.map((property: any) => {
+        
+        if (Array.isArray(data.properties)) {
+          // Map API response to Property type
+          const mappedProperties = data.properties.map((property: any) => {
             // Extract amenity names from the complex amenity objects
             const amenityNames = Array.isArray(property.amenities)
               ? property.amenities
@@ -1930,27 +1933,50 @@ export default function OwnerDashboard() {
                   .filter(Boolean)
               : [];
 
+            // Get first image URL if available
+            const imageUrl = property.images && property.images.length > 0 
+              ? (typeof property.images[0] === 'string' 
+                ? property.images[0] 
+                : property.images[0]?.url || "") 
+              : "";
+
             return {
               ...property,
-              image: property.images[0]?.url || "",
-              status: property.status, // Keep the original enum value
+              image: imageUrl,
+              status: property.status || "INACTIVE", // Ensure valid status
+              views: property.views || 0,
+              inquiries: property.inquiries || 0,
+              rating: property.rating || 0,
               earnings: property.earnings || 0,
               occupancy: property.occupancy || 0,
               amenities: amenityNames,
             };
-          })
-        );
+          });
+          
+          // Update properties state
+          setProperties(mappedProperties);
+          
+          // Generate activity data based on user properties
+          setActivities(generatePlaceholderActivities(mappedProperties));
+        } else {
+          // If no properties are returned or data format is unexpected
+          setProperties([]);
+          setActivities([]);
+        }
       } catch (err) {
+        console.error("Error fetching properties:", err);
         setError(
           err instanceof Error ? err.message : "Failed to fetch properties"
         );
+        // Set properties to empty array on error
+        setProperties([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProperties();
-  }, [session?.user?.id, setProperties, setLoading, setError]);
+  }, [userId]);
 
   const totalProperties = properties.length;
   const activeProperties = properties.filter(
@@ -1960,7 +1986,7 @@ export default function OwnerDashboard() {
     (p) => p.status === "RENTED"
   ).length;
   const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0);
-  const totalInquiries = properties.reduce((sum, p) => sum + p.inquiries, 0);
+  const totalInquiries = properties.reduce((sum, p) => sum + (p.inquiries || 0), 0);
   const totalEarnings = properties.reduce(
     (sum, p) => sum + (p.earnings || 0),
     0
@@ -1977,10 +2003,12 @@ export default function OwnerDashboard() {
   const filteredProperties = properties.filter((property) => {
     const matchesStatus =
       selectedStatus === "all" || property.status === selectedStatus;
+    const matchesType =
+      selectedPropertyType === "all" || property.type === selectedPropertyType;
     const matchesSearch =
       property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesSearch && matchesType;
   });
 
   const getStatusColor = (status: string) => {
@@ -2047,7 +2075,7 @@ export default function OwnerDashboard() {
   const handleAddProperty = async (
     newProperty: Property & { images: string[]; amenities: string[] }
   ) => {
-    if (!session?.user?.id) return;
+    if (!userId) return;
 
     const loadingToastId = showLoading("Adding property...");
 
@@ -2065,7 +2093,7 @@ export default function OwnerDashboard() {
 
       const cleanData = {
         ...newProperty,
-        ownerId: session.user.id,
+        ownerId: userId,
         status: newProperty.status,
         availableFrom: newProperty.availableFrom || new Date().toISOString(),
         virtualTourUrl: newProperty.virtualTourUrl || undefined,
@@ -2234,27 +2262,34 @@ export default function OwnerDashboard() {
   };
 
   useEffect(() => {
-    if (selectedPropertyToEdit) {
+    if (selectedPropertyToEdit && userId) {
+      // Only track events if we have both a property and user ID
       trackAnalyticsEvent('property_view', selectedPropertyToEdit.id);
     }
     // Only fire when modal opens for a new property
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPropertyToEdit?.id]);
+  }, [selectedPropertyToEdit?.id, userId]);
 
   // Fetch analytics data when analytics tab is selected
   useEffect(() => {
+    if (!userId || properties.length === 0) {
+      // Don't try to fetch analytics if we don't have a user or properties
+      return;
+    }
+
     setAnalyticsLoading(true);
-    fetch('/api/dashboard/analytics')
+    fetch(`/api/dashboard/analytics?ownerId=${userId}`)
       .then(res => res.json())
       .then(data => {
         setAnalyticsData(data);
         setAnalyticsLoading(false);
       })
       .catch(err => {
+        console.error("Analytics error:", err);
         setAnalyticsError('Failed to load analytics');
         setAnalyticsLoading(false);
       });
-  }, [setAnalyticsLoading, setAnalyticsData, setAnalyticsError]);
+  }, [userId, properties.length]);
 
   // 1. Add skeleton loader components at the top of the file:
   function StatsOverviewSkeleton() {
@@ -2323,7 +2358,7 @@ export default function OwnerDashboard() {
     );
   }
 
-  // Polish the error state:
+  // Error state with retry option
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col" role="alert">
@@ -2333,12 +2368,29 @@ export default function OwnerDashboard() {
             <div className="text-3xl text-red-500 mb-4">&#9888;</div>
             <div className="text-red-600 text-lg font-semibold mb-2">Something went wrong</div>
             <div className="text-gray-700 mb-6">{error}</div>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-[var(--color-primary-500)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-primary-600)] font-semibold"
-            >
-              Try Again
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => {
+                  setError(null);
+                  setLoading(true);
+                  // Force re-fetch by re-mounting
+                  window.location.reload();
+                }}
+                className="bg-[var(--color-primary-500)] text-white px-4 py-2 rounded-lg hover:bg-[var(--color-primary-600)] font-semibold"
+              >
+                Try Again
+              </button>
+              <button
+                onClick={() => {
+                  // Allow user to see dashboard even with error
+                  setError(null);
+                  setProperties([]);
+                }}
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 font-semibold"
+              >
+                View Dashboard Anyway
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -2427,35 +2479,177 @@ export default function OwnerDashboard() {
         </div>
 
         {/* Content Area */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-gray-800">
           {/* Search and Filters */}
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search properties..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
-                />
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 text-gray-600">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search properties..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        // Focus will trigger any needed UI updates
+                      }
+                    }}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+                  />
+                </div>
+                <button 
+                  className="px-6 py-3 bg-[var(--color-primary-500)] text-white rounded-xl hover:bg-[var(--color-primary-600)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium min-w-[100px]"
+                  onClick={() => {
+                    // This will force a re-render with current filters
+                    // We're already using state for filters so this is enough
+                    const searchInput = document.querySelector('input[placeholder="Search properties..."]');
+                    if (searchInput instanceof HTMLInputElement) {
+                      searchInput.focus();
+                    }
+                  }}
+                >
+                  <Search className="w-4 h-4" />
+                  Search
+                </button>
               </div>
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
-              >
-                <option value="all">All Properties</option>
-                <option value="ACTIVE">Active</option>
-                <option value="INACTIVE">Inactive</option>
-                <option value="PENDING">Pending</option>
-                <option value="RENTED">Rented</option>
-              </select>
-              <button className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors duration-200 flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                Export
-              </button>
+              
+              <div className="flex flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Status:</span>
+                  <div className="relative" ref={statusRef}>
+                    <button
+                      type="button"
+                      onClick={() => setShowStatusModal(!showStatusModal)}
+                      className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent bg-white hover:bg-gray-50 flex items-center gap-2 min-w-[150px]"
+                    >
+                      {(() => {
+                        const statusOption = STATUS_OPTIONS.find(s => s.value === selectedStatus);
+                        const colorClass = 
+                          statusOption?.color === 'green' ? 'bg-green-100 text-green-700' : 
+                          statusOption?.color === 'blue' ? 'bg-blue-100 text-blue-700' : 
+                          statusOption?.color === 'yellow' ? 'bg-amber-100 text-amber-700' : 
+                          'bg-gray-100 text-gray-700';
+                        
+                        return (
+                          <>
+                            <span className={`text-lg flex items-center justify-center w-6 h-6 rounded-md mr-2 ${colorClass}`}>
+                              {statusOption?.icon}
+                            </span>
+                            <span>{statusOption?.label}</span>
+                          </>
+                        );
+                      })()}
+                      <span className="ml-auto">{showStatusModal ? "▲" : "▼"}</span>
+                    </button>
+                    
+                    <div className={`absolute z-40 mt-2 w-[260px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden left-0 transition-all duration-200 origin-top ${showStatusModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                      <div className="max-h-[280px] overflow-y-auto p-2">
+                        {STATUS_OPTIONS.map(status => (
+                          <button
+                            key={status.value}
+                            onClick={() => {
+                              setSelectedStatus(status.value);
+                              setShowStatusModal(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center gap-3 ${selectedStatus === status.value ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" : ""}`}
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
+                                status.color === 'green' ? 'bg-green-100 text-green-700' : 
+                                status.color === 'blue' ? 'bg-blue-100 text-blue-700' : 
+                                status.color === 'yellow' ? 'bg-amber-100 text-amber-700' : 
+                                'bg-gray-100 text-gray-700'
+                              }`}>{status.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{status.label}</div>
+                                <div className="text-xs text-gray-500">{status.description}</div>
+                              </div>
+                              {selectedStatus === status.value && (
+                                <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Type:</span>
+                  <div className="relative" ref={propertyTypeRef}>
+                    <button
+                      type="button"
+                      onClick={() => setShowPropertyTypeModal(!showPropertyTypeModal)}
+                      className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent bg-white hover:bg-gray-50 flex items-center gap-2 min-w-[150px]"
+                    >
+                      {selectedPropertyType === "all" ? (
+                        <span>All Types</span>
+                      ) : (
+                        <>
+                          <span className="text-lg mr-1">
+                            {PROPERTY_TYPES.find(t => t.value === selectedPropertyType)?.icon || "🏠"}
+                          </span>
+                          <span>
+                            {PROPERTY_TYPES.find(t => t.value === selectedPropertyType)?.label || selectedPropertyType}
+                          </span>
+                        </>
+                      )}
+                      <span className="ml-auto">{showPropertyTypeModal ? "▲" : "▼"}</span>
+                    </button>
+                    
+                    <div className={`absolute z-40 mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden right-0 transition-all duration-200 origin-top ${showPropertyTypeModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+                      <div className="p-2 border-b border-gray-100">
+                        <button
+                          onClick={() => {
+                            setSelectedPropertyType("all");
+                            setShowPropertyTypeModal(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${selectedPropertyType === "all" ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" : ""}`}
+                        >
+                          <span className="text-lg">🏠</span>
+                          <span className="font-medium">All Types</span>
+                          {selectedPropertyType === "all" && (
+                            <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                          )}
+                        </button>
+                      </div>
+                      <div className="max-h-[320px] overflow-y-auto p-2">
+                        {PROPERTY_TYPES.map(type => (
+                          <button
+                            key={type.value}
+                            onClick={() => {
+                              setSelectedPropertyType(type.value);
+                              setShowPropertyTypeModal(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${selectedPropertyType === type.value ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" : ""}`}
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <span className="text-2xl flex-shrink-0">{type.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{type.label}</div>
+                                <div className="text-xs text-gray-500 truncate">{type.description}</div>
+                              </div>
+                              {selectedPropertyType === type.value && (
+                                <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="ml-auto flex items-center">
+                  <span className="text-sm bg-[var(--color-primary-50)] text-[var(--color-primary-700)] px-3 py-1.5 rounded-lg">
+                    {filteredProperties.length} properties found
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         
@@ -2549,11 +2743,20 @@ export default function OwnerDashboard() {
             <div className="space-y-6">
               {/* Recent Activity */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Recent Activity
-                </h3>
+                              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Recent Activity
+              </h3>
+              {properties.length === 0 ? (
+                <div className="text-center py-6">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Bell className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm text-gray-600">No recent activity yet</p>
+                </div>
+              ) : (
                 <div className="space-y-4">
-                  {mockActivities.map((activity) => (
+                  {/* Generate placeholder activities from actual user properties */}
+                  {generatePlaceholderActivities(properties).map((activity) => (
                     <div key={activity.id} className="flex items-start gap-3">
                       <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                         {getActivityIcon(activity.type)}
@@ -2567,9 +2770,10 @@ export default function OwnerDashboard() {
                     </div>
                   ))}
                 </div>
-                <button className="w-full mt-4 text-center p-2 text-sm text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium">
-                  View All Activity →
-                </button>
+              )}
+              <button className="w-full mt-4 text-center p-2 text-sm text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium">
+                View All Activity →
+              </button>
               </div>
 
               {/* Quick Actions */}

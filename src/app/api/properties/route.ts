@@ -40,12 +40,22 @@ export async function GET(request: NextRequest) {
     const location = searchParams.get('location')
     const search = searchParams.get('search')
     const sortBy = searchParams.get('sortBy')
+    const ownerId = searchParams.get('ownerId')
 
     const skip = (page - 1) * limit
 
     // Build where clause
-    const where: Record<string, unknown> = {
-      status: 'ACTIVE',
+    const where: Record<string, unknown> = {}
+
+    // Only show ACTIVE properties by default if not filtering by ownerId
+    // When filtering by owner, show all their properties regardless of status
+    if (!ownerId) {
+      where.status = 'ACTIVE'
+    }
+
+    // If ownerId is provided, filter by owner
+    if (ownerId) {
+      where.ownerId = ownerId
     }
 
     if (type) where.type = type
