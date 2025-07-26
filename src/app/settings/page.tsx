@@ -747,7 +747,7 @@ export default function SettingsPage() {
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-400">
                           List and manage your properties for student rental
                         </p>
                       </div>

@@ -1,6 +1,6 @@
-// Optimized modern glass "flower" with reduced complexity for better performance
-const OUTER_PETALS = 6; // Reduced from 10
-const INNER_PETALS = 6; // Reduced from 10
+// Enhanced modern glass "flower" with improved center (SSR-compatible)
+const OUTER_PETALS = 10;
+const INNER_PETALS = 10;
 const OUTER_COLORS = [
   'var(--color-primary-300, #93c5fd)',
   'var(--color-secondary-300, #fbcfe8)',
@@ -19,7 +19,7 @@ const HeroBackgroundArt = () => {
     <div className="hero-flower-bg pointer-events-none" aria-hidden="true">
       {/* Glow background */}
       <div className="hero-flower-glow" />
-      {/* Outer petals - reduced count */}
+      {/* Outer petals */}
       {Array.from({ length: OUTER_PETALS }).map((_, i) => (
         <div
           key={`outer-${i}`}
@@ -27,11 +27,11 @@ const HeroBackgroundArt = () => {
           style={{
             '--petal-rotate': `${i * (360 / OUTER_PETALS)}deg`,
             '--petal-color': OUTER_COLORS[i % OUTER_COLORS.length],
-            '--petal-anim-delay': `${i * 0.2}s` // Increased delay for smoother performance
+            '--petal-anim-delay': `${i * 0.12}s`
           } as React.CSSProperties}
         />
       ))}
-      {/* Inner petals - reduced count */}
+      {/* Inner petals */}
       {Array.from({ length: INNER_PETALS }).map((_, i) => (
         <div
           key={`inner-${i}`}
@@ -39,7 +39,7 @@ const HeroBackgroundArt = () => {
           style={{
             '--petal-rotate': `${i * (360 / INNER_PETALS) + 22.5}deg`,
             '--petal-color': INNER_COLORS[i % INNER_COLORS.length],
-            '--petal-anim-delay': `${i * 0.15 + 0.3}s` // Increased delay
+            '--petal-anim-delay': `${i * 0.10 + 0.3}s`
           } as React.CSSProperties}
         />
       ))}

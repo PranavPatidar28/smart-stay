@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Navbar from "@/components/ui/Navbar";
 import { useSession } from "next-auth/react";
 import {
@@ -37,28 +37,32 @@ import {
   Send,
   MessageSquare,
   Share2,
+  PawPrint,
+  Grid3X3
 } from "lucide-react";
 import { FaRupeeSign as Rupee } from "react-icons/fa";
 import { trackAnalyticsEvent } from '@/lib/api-client';
 import { showSuccess, showError } from '@/lib/toast';
 import Image from 'next/image';
+import { createPortal } from "react-dom";
 
 // Define custom CSS for scrollbars
 const customScrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
-    height: 6px;
   }
+  
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
+    background: transparent;
   }
+  
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 10px;
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
   }
+  
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
+    background: rgba(156, 163, 175, 0.7);
   }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
@@ -411,7 +415,7 @@ const MobilePropertyModal = ({
   
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto"
+              className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto custom-scrollbar"
       role="dialog"
       aria-modal="true"
     >
@@ -650,6 +654,139 @@ interface Review {
   };
 }
 
+// Dropdown Portal Component
+interface DropdownPortalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+  children: React.ReactNode;
+  className?: string;
+}
+
+const DropdownPortal = ({ isOpen, onClose, triggerRef, children, className = "" }: DropdownPortalProps) => {
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Calculate position when dropdown opens
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate available space
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Determine if dropdown should appear above or below
+      const shouldShowAbove = spaceBelow < 320 && spaceAbove > spaceBelow;
+      
+      // Calculate left position to prevent overflow
+      let left = rect.left;
+      const dropdownWidth = rect.width;
+      
+      // Adjust if dropdown would overflow right edge
+      if (left + dropdownWidth > viewportWidth) {
+        left = Math.max(0, viewportWidth - dropdownWidth - 10);
+      }
+      
+      setPosition({
+        top: shouldShowAbove 
+          ? rect.top + window.scrollY - 320
+          : rect.bottom + window.scrollY,
+        left: left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [isOpen, triggerRef]);
+
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  // Handle scroll outside
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isOpen && triggerRef.current) {
+        const triggerRect = triggerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        // Check if trigger is completely outside viewport or if it's moved significantly
+        if (
+          triggerRect.bottom < 0 ||
+          triggerRect.top > viewportHeight ||
+          triggerRect.right < 0 ||
+          triggerRect.left > viewportWidth ||
+          triggerRect.height === 0 || // Element is not visible
+          triggerRect.width === 0 // Element is not visible
+        ) {
+          onClose();
+        }
+      }
+    };
+
+    if (isOpen) {
+      // Use throttled scroll handler for better performance
+      let ticking = false;
+      const throttledScroll = () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            handleScroll();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+
+      window.addEventListener('scroll', throttledScroll, { passive: true });
+      window.addEventListener('resize', handleScroll, { passive: true });
+      
+      return () => {
+        window.removeEventListener('scroll', throttledScroll);
+        window.removeEventListener('resize', handleScroll);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div
+      ref={dropdownRef}
+      className={`absolute z-[9999] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden ${className}`}
+      style={{
+        top: position.top,
+        left: position.left,
+        width: position.width,
+        maxHeight: '320px'
+      }}
+    >
+      {children}
+    </div>,
+    document.body
+  );
+};
+
 export default function ListingsPage() {
   const { data: session } = useSession();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -807,34 +944,7 @@ export default function ListingsPage() {
     }
   ];
 
-  // Close modals when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      // Close property type modal when clicking outside
-      if (showPropertyTypeModal && 
-          propertyTypeRef.current && 
-          !propertyTypeRef.current.contains(event.target as Node)) {
-        setShowPropertyTypeModal(false);
-      }
-      
-      // Close sort by modal when clicking outside
-      if (showSortByModal && 
-          sortByRef.current && 
-          !sortByRef.current.contains(event.target as Node)) {
-        setShowSortByModal(false);
-      }
-    }
 
-    // Add event listener when either modal is shown
-    if (showPropertyTypeModal || showSortByModal) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    
-    // Clean up
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showPropertyTypeModal, showSortByModal]);
 
   // Update price range text when price range changes
   useEffect(() => {
@@ -1762,42 +1872,45 @@ export default function ListingsPage() {
                       <span>{showPropertyTypeModal ? "▲" : "▼"}</span>
                     </button>
                     
-                    {/* Dropdown Modal */}
-                    <div className={`absolute z-40 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden transition-all duration-200 origin-top ${showPropertyTypeModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                      <div className="max-h-[320px] overflow-y-auto p-2 custom-scrollbar">
-                        {PROPERTY_TYPE_OPTIONS.map(type => (
-                          <button
-                            key={type.value}
-                            onClick={() => {
-                              setSelectedType(type.value);
-                              setShowPropertyTypeModal(false);
-                              setLoading(true);
-                            }}
-                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg  flex items-center  ${selectedType === type.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"} `}
-                          >
-                            <div className="flex items-center gap-3 w-full">
-                              <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
-                                type.color === 'blue' ? 'bg-blue-200 text-blue-800' : 
-                                type.color === 'purple' ? 'bg-purple-200 text-purple-800' : 
-                                type.color === 'green' ? 'bg-green-200 text-green-800' :
-                                type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
-                                type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
-                                type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
-                                type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
-                                'bg-gray-200 text-black'
-                              }`}>{type.icon}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium">{type.label}</div>
-                                <div className="text-xs truncate">{type.description}</div>
-                              </div>
-                              {selectedType === type.value && (
-                                <span className="ml-auto text-[var(--color-primary-600)]">O</span>
-                              )}
+                    {/* Dropdown Portal */}
+                    <DropdownPortal
+                      isOpen={showPropertyTypeModal}
+                      onClose={() => setShowPropertyTypeModal(false)}
+                      triggerRef={propertyTypeRef}
+                      className="max-h-[320px] overflow-y-auto p-2 custom-scrollbar"
+                    >
+                      {PROPERTY_TYPE_OPTIONS.map(type => (
+                        <button
+                          key={type.value}
+                          onClick={() => {
+                            setSelectedType(type.value);
+                            setShowPropertyTypeModal(false);
+                            setLoading(true);
+                          }}
+                          className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${selectedType === type.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
+                        >
+                          <div className="flex items-center gap-3 w-full">
+                            <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
+                              type.color === 'blue' ? 'bg-blue-200 text-blue-800' : 
+                              type.color === 'purple' ? 'bg-purple-200 text-purple-800' : 
+                              type.color === 'green' ? 'bg-green-200 text-green-800' :
+                              type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
+                              type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
+                              type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
+                              type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
+                              'bg-gray-200 text-black'
+                            }`}>{type.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium">{type.label}</div>
+                              <div className="text-xs truncate">{type.description}</div>
                             </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                            {selectedType === type.value && (
+                              <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </DropdownPortal>
                   </div>
 
                   {/* Filter Toggle */}
@@ -2155,33 +2268,36 @@ export default function ListingsPage() {
                   <span className="ml-auto">{showSortByModal ? "▲" : "▼"}</span>
                 </button>
                 
-                {/* Sort Options Dropdown */}
-                <div className={`absolute right-0 z-40 mt-2 w-[220px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden transition-all duration-200 origin-top ${showSortByModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
-                  <div className="max-h-[320px] overflow-y-auto p-2">
-                    {SORT_OPTIONS.map(option => (
-                      <button
-                        key={option.value}
-                        onClick={() => {
-                          setSortBy(option.value);
-                          setShowSortByModal(false);
-                          setLoading(true);
-                        }}
-                        className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${sortBy === option.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
-                      >
-                        <div className="flex items-center gap-3 w-full">
-                          <span className="text-xl flex-shrink-0">{option.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium">{option.label}</div>
-                            <div className="text-xs ">{option.description}</div>
-                          </div>
-                          {sortBy === option.value && (
-                            <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
-                          )}
+                {/* Sort Options Dropdown Portal */}
+                <DropdownPortal
+                  isOpen={showSortByModal}
+                  onClose={() => setShowSortByModal(false)}
+                  triggerRef={sortByRef}
+                                          className="w-[220px] max-h-[320px] overflow-y-auto p-2 custom-scrollbar"
+                >
+                  {SORT_OPTIONS.map(option => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSortBy(option.value);
+                        setShowSortByModal(false);
+                        setLoading(true);
+                      }}
+                      className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${sortBy === option.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
+                    >
+                      <div className="flex items-center gap-3 w-full">
+                        <span className="text-xl flex-shrink-0">{option.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium">{option.label}</div>
+                          <div className="text-xs">{option.description}</div>
                         </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                        {sortBy === option.value && (
+                          <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </DropdownPortal>
               </div>
 
               {/* View mode toggle */}
@@ -2343,7 +2459,7 @@ export default function ListingsPage() {
             />
           ) : (
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-2 sm:px-4 overflow-y-auto"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-2 sm:px-4 overflow-y-auto custom-scrollbar"
               aria-modal="true"
               role="dialog"
               tabIndex={-1}

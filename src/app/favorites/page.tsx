@@ -1,8 +1,9 @@
   "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Navbar from "@/components/ui/Navbar";
+import { createPortal } from "react-dom";
 
-// Define custom CSS for background pattern animations
+// Define custom CSS for background pattern animations and scrollbars
 const backgroundPatternStyles = `
   @keyframes float {
     0%, 100% {
@@ -31,9 +32,26 @@ const backgroundPatternStyles = `
   .pulsing-shape {
     animation: pulse 4s ease-in-out infinite;
   }
+  
+  /* Custom scrollbar styles */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.5);
+    border-radius: 3px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+  }
 `;
 import PropertyCard from "@/components/ui/PropertyCard";
-import CustomSelect from "@/components/ui/CustomSelect";
 import { useSession } from "next-auth/react";
 import {
   Heart,
@@ -64,6 +82,141 @@ interface FavoriteProperty {
   };
 }
 
+// Dropdown Portal Component
+interface DropdownPortalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const DropdownPortal = ({ isOpen, onClose, triggerRef, children, className = "", style }: DropdownPortalProps) => {
+  const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Calculate position when dropdown opens
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
+      
+      // Calculate available space
+      const spaceBelow = viewportHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Determine if dropdown should appear above or below
+      const shouldShowAbove = spaceBelow < 320 && spaceAbove > spaceBelow;
+      
+      // Calculate left position to prevent overflow
+      let left = rect.left;
+      const dropdownWidth = rect.width;
+      
+      // Adjust if dropdown would overflow right edge
+      if (left + dropdownWidth > viewportWidth) {
+        left = Math.max(0, viewportWidth - dropdownWidth - 10);
+      }
+      
+      setPosition({
+        top: shouldShowAbove 
+          ? rect.top + window.scrollY - 320
+          : rect.bottom + window.scrollY,
+        left: left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [isOpen, triggerRef]);
+
+  // Handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  // Handle scroll outside
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isOpen && triggerRef.current) {
+        const triggerRect = triggerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+
+        // Check if trigger is completely outside viewport or if it's moved significantly
+        if (
+          triggerRect.bottom < 0 ||
+          triggerRect.top > viewportHeight ||
+          triggerRect.right < 0 ||
+          triggerRect.left > viewportWidth ||
+          triggerRect.height === 0 || // Element is not visible
+          triggerRect.width === 0 // Element is not visible
+        ) {
+          onClose();
+        }
+      }
+    };
+
+    if (isOpen) {
+      // Use throttled scroll handler for better performance
+      let ticking = false;
+      const throttledScroll = () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            handleScroll();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+
+      window.addEventListener('scroll', throttledScroll, { passive: true });
+      window.addEventListener('resize', handleScroll, { passive: true });
+      
+      return () => {
+        window.removeEventListener('scroll', throttledScroll);
+        window.removeEventListener('resize', handleScroll);
+      };
+    }
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div
+      ref={dropdownRef}
+      className={`absolute z-[9999] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden ${className}`}
+      style={{
+        top: position.top,
+        left: position.left,
+        width: position.width,
+        maxHeight: '320px',
+        ...style
+      }}
+    >
+      {children}
+    </div>,
+    document.body
+  );
+};
+
 const propertyTypes = [
   "All",
   "APARTMENT",
@@ -72,6 +225,93 @@ const propertyTypes = [
   "LUXURY",
   "ROOM",
   "FAMILY_HOME",
+];
+
+// Property type options with icons and descriptions
+const PROPERTY_TYPE_OPTIONS = [
+  {
+    value: "All",
+    label: "All Types",
+    icon: "🏠",
+    description: "Show all property types",
+    color: "gray"
+  },
+  {
+    value: "APARTMENT",
+    label: "Apartment",
+    icon: "🏢",
+    description: "Modern apartments with amenities",
+    color: "blue"
+  },
+  {
+    value: "STUDIO",
+    label: "Studio",
+    icon: "🛋️",
+    description: "Compact single room units",
+    color: "purple"
+  },
+  {
+    value: "SHARED_HOUSE",
+    label: "Shared House",
+    icon: "🏘️",
+    description: "Shared accommodations with common areas",
+    color: "green"
+  },
+  {
+    value: "LUXURY",
+    label: "Luxury",
+    icon: "✨",
+    description: "Premium properties with high-end amenities",
+    color: "yellow"
+  },
+  {
+    value: "ROOM",
+    label: "Room",
+    icon: "🛏️",
+    description: "Single rooms in shared properties",
+    color: "pink"
+  },
+  {
+    value: "FAMILY_HOME",
+    label: "Family Home",
+    icon: "🏡",
+    description: "Full homes for families",
+    color: "orange"
+  }
+];
+
+// Sort options with icons and descriptions
+const SORT_OPTIONS = [
+  {
+    value: "date",
+    label: "Date Added",
+    icon: "📅",
+    description: "Most recently added first"
+  },
+  {
+    value: "price-low",
+    label: "Price: Low to High",
+    icon: "💰",
+    description: "Cheapest properties first"
+  },
+  {
+    value: "price-high",
+    label: "Price: High to Low",
+    icon: "💰",
+    description: "Luxury properties first"
+  },
+  {
+    value: "rating",
+    label: "Highest Rated",
+    icon: "⭐",
+    description: "Best-rated properties first"
+  },
+  {
+    value: "distance",
+    label: "Nearest First",
+    icon: "📍",
+    description: "Closest to your location"
+  }
 ];
 
 export default function FavoritesPage() {
@@ -83,6 +323,14 @@ export default function FavoritesPage() {
   const [sortBy, setSortBy] = useState("date");
   const [modalProperty, setModalProperty] = useState<FavoriteProperty | null>(null);
   const [showModal, setShowModal] = useState(false);
+  
+  // State for custom dropdowns
+  const [showPropertyTypeModal, setShowPropertyTypeModal] = useState(false);
+  const [showSortByModal, setShowSortByModal] = useState(false);
+  
+  // Refs for clicking outside detection
+  const propertyTypeRef = useRef<HTMLDivElement>(null);
+  const sortByRef = useRef<HTMLDivElement>(null);
 
   // Open modal with mapped property
   const openPropertyModal = (property: FavoriteProperty) => {
@@ -346,27 +594,127 @@ export default function FavoritesPage() {
 
                   {/* Property Type Filter */}
                   <div className="flex flex-col gap-4 md:gap-0 md:flex-row md:items-center md:justify-end md:col-span-2">
-                    <div className="md:w-48 w-full md:mr-4">
-                      <CustomSelect
-                        options={propertyTypes.map(type => ({ value: type, label: type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }))}
-                        value={selectedType}
-                        onChange={setSelectedType}
-                        placeholder="Property Type"
-                      />
+                    <div ref={propertyTypeRef} className="md:w-48 w-full md:mr-4 relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowPropertyTypeModal(!showPropertyTypeModal)}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900 bg-white flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const typeOption = PROPERTY_TYPE_OPTIONS.find(t => t.value === selectedType);
+                            return (
+                              <>
+                                <span className={`text-xl flex items-center justify-center w-7 h-7 rounded-md text-gray-700`}>
+                                  {typeOption?.icon}
+                                </span>
+                                <span>{typeOption?.label}</span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                        <span>{showPropertyTypeModal ? "▲" : "▼"}</span>
+                      </button>
+                      
+                      {/* Dropdown Portal */}
+                      <DropdownPortal
+                        isOpen={showPropertyTypeModal}
+                        onClose={() => setShowPropertyTypeModal(false)}
+                        triggerRef={propertyTypeRef}
+                        className="max-h-[320px] overflow-y-auto p-2 custom-scrollbar"
+                        style={{
+                          scrollbarWidth: 'thin',
+                          scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+                        }}
+                      >
+                        {PROPERTY_TYPE_OPTIONS.map(type => (
+                          <button
+                            key={type.value}
+                            onClick={() => {
+                              setSelectedType(type.value);
+                              setShowPropertyTypeModal(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${selectedType === type.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
+                                type.color === 'blue' ? 'bg-blue-200 text-blue-800' : 
+                                type.color === 'purple' ? 'bg-purple-200 text-purple-800' : 
+                                type.color === 'green' ? 'bg-green-200 text-green-800' :
+                                type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
+                                type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
+                                type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
+                                type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
+                                'bg-gray-200 text-black'
+                              }`}>{type.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{type.label}</div>
+                                <div className="text-xs truncate">{type.description}</div>
+                              </div>
+                              {selectedType === type.value && (
+                                <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </DropdownPortal>
                     </div>
-                    <div className="md:w-56 w-full">
-                      <CustomSelect
-                        options={[
-                          { value: "date", label: "Sort by Date Added" },
-                          { value: "price-low", label: "Price: Low to High" },
-                          { value: "price-high", label: "Price: High to Low" },
-                          { value: "rating", label: "Highest Rated" },
-                          { value: "distance", label: "Nearest First" },
-                        ]}
-                        value={sortBy}
-                        onChange={setSortBy}
-                        placeholder="Sort By"
-                      />
+                    
+                    <div ref={sortByRef} className="md:w-56 w-full relative">
+                      <button
+                        type="button"
+                        onClick={() => setShowSortByModal(!showSortByModal)}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900 bg-white flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const sortOption = SORT_OPTIONS.find(s => s.value === sortBy);
+                            return (
+                              <>
+                                <span className={`text-xl flex items-center justify-center w-7 h-7 rounded-md text-gray-700`}>
+                                  {sortOption?.icon}
+                                </span>
+                                <span>{sortOption?.label}</span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                        <span>{showSortByModal ? "▲" : "▼"}</span>
+                      </button>
+                      
+                      {/* Sort Options Dropdown Portal */}
+                      <DropdownPortal
+                        isOpen={showSortByModal}
+                        onClose={() => setShowSortByModal(false)}
+                        triggerRef={sortByRef}
+                        className="w-full max-h-[320px] overflow-y-auto p-2 custom-scrollbar"
+                        style={{
+                          scrollbarWidth: 'thin',
+                          scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+                        }}
+                      >
+                        {SORT_OPTIONS.map(option => (
+                          <button
+                            key={option.value}
+                            onClick={() => {
+                              setSortBy(option.value);
+                              setShowSortByModal(false);
+                            }}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${sortBy === option.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <span className="text-xl flex-shrink-0">{option.icon}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{option.label}</div>
+                                <div className="text-xs">{option.description}</div>
+                              </div>
+                              {sortBy === option.value && (
+                                <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </DropdownPortal>
                     </div>
                   </div>
                 </div>

@@ -322,6 +322,29 @@ function PropertyModal({
   };
   mode: "add" | "edit";
 }) {
+  // Ref for the modal content to handle click outside
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close modal
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    }
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      // Prevent background scrolling when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      // Restore scrolling when modal is closed
+      document.body.style.overflow = 'unset';
+    };
+  }, [open, onClose]);
   // Process amenities from initialValues if they are objects
   const processedAmenities = useMemo(() => {
     if (!initialValues?.amenities) return [];
@@ -786,8 +809,8 @@ function PropertyModal({
         }
       `}</style>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-2 sm:px-4">
-        <div className="relative w-full max-w-4xl mx-auto bg-white/95 rounded-3xl shadow-2xl border border-gray-100 animate-fade-in-up max-h-[90vh] overflow-y-auto flex flex-col">
-          <div className="p-8 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        <div ref={modalRef} className="relative w-full max-w-4xl mx-auto bg-white/95 rounded-3xl shadow-2xl border border-gray-100 animate-fade-in-up max-h-[90vh] overflow-y-auto flex flex-col">
+          <div className="p-8 max-h-[90vh] overflow-y-auto custom-scrollbar text-gray-700">
             <button
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 text-2xl font-bold z-10"
               onClick={onClose}
@@ -963,13 +986,13 @@ function PropertyModal({
                             className={`group w-full h-full p-6 rounded-2xl border-2 transition-all duration-300 shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer
           ${
             form.type === type.value
-              ? "border-[var(--color-primary-500)] bg-gradient-to-br from-[var(--color-primary-50)] to-white scale-105 shadow-2xl"
+              ? "border-[var(--color-primary-500)] bg-[var(--color-primary-600)] scale-105 shadow-2xl"
               : "border-gray-200 bg-white hover:border-[var(--color-primary-300)] hover:scale-105"
           }`}
                             aria-pressed={form.type === type.value}
                           >
                             <span className="text-5xl mb-2">{type.icon}</span>
-                            <span className="text-xl font-semibold text-gray-900 group-hover:text-[var(--color-primary-600)]">
+                            <span className="text-xl font-semibold text-gray-900 group-hover:text-[var(--color-primary-200)]">
                               {type.label}
                             </span>
                             <span className="text-gray-500 text-sm text-center">
@@ -1533,7 +1556,7 @@ function PropertyModal({
                               ? "border-red-300"
                               : "border-gray-200"
                           }`}
-                          placeholder="+91 98765 43210"
+                          placeholder="+91 xxxxxxxxxx"
                         />
                         <Smartphone className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                       </div>
@@ -1597,14 +1620,14 @@ function PropertyModal({
                             setTimeout(() => setShowSEOSuggestions(false), 200)
                           }
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
-                          placeholder="student accommodation, near campus, affordable rent"
+                          placeholder="student accommodation, near campus, affordable"
                         />
-                        <Target className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        
                       </div>
 
                       {/* SEO Suggestions */}
                       {showSEOSuggestions && (
-                        <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
+                        <div className="absolute z-20 w-[400px] mt-1 bg-white border border-gray-200 rounded-xl shadow-lg">
                           <div className="p-3 border-b border-gray-100">
                             <p className="text-sm font-medium text-gray-700">
                               Suggested keywords for {form.type}
@@ -2676,7 +2699,7 @@ export default function OwnerDashboard() {
                               setSelectedPropertyType(type.value);
                               setShowPropertyTypeModal(false);
                             }}
-                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${selectedPropertyType === type.value ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" : ""}`}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${selectedPropertyType === type.value ? "bg-[var(--color-primary-50)] text-[var(--color-primary-800)]" : ""}`}
                           >
                             <div className="flex items-center gap-3 w-full">
                               <span className="text-2xl flex-shrink-0">{type.icon}</span>
