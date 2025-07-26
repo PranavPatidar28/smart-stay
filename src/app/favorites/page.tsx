@@ -1,6 +1,37 @@
   "use client";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/ui/Navbar";
+
+// Define custom CSS for background pattern animations
+const backgroundPatternStyles = `
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(5deg);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.15;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.25;
+      transform: scale(1.05);
+    }
+  }
+  
+  .floating-shape {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .pulsing-shape {
+    animation: pulse 4s ease-in-out infinite;
+  }
+`;
 import PropertyCard from "@/components/ui/PropertyCard";
 import CustomSelect from "@/components/ui/CustomSelect";
 import { useSession } from "next-auth/react";
@@ -9,6 +40,8 @@ import {
 } from "lucide-react";
 import FavoritesListSkeleton from "@/components/ui/FavoritesListSkeleton";
 import ViewPropertyModal from '@/components/ui/ViewPropertyModal';
+import { trackAnalyticsEvent } from '@/lib/api-client';
+import { showSuccess } from '@/lib/toast';
 
 interface FavoriteProperty {
   id: string;
@@ -134,9 +167,28 @@ export default function FavoritesPage() {
       if (!response.ok) throw new Error('Failed to remove favorite');
       
       setFavorites(favorites.filter((fav) => fav.id !== id));
+      
+      // Track analytics
+      trackAnalyticsEvent('favorite_removed', id);
+      showSuccess('Removed from favorites');
     } catch (error) {
       console.error('Error removing favorite:', error);
+      showError('Failed to remove from favorites');
     }
+  };
+
+  // Handle contact from property card
+  const handlePropertyContact = (property: any) => {
+    // Track analytics
+    trackAnalyticsEvent('favorites_property_contact', property.id);
+    
+    // Open the property modal for contact options
+    const favoriteProperty = favorites.find(fav => fav.id === property.id);
+    if (favoriteProperty) {
+      openPropertyModal(favoriteProperty);
+    }
+    
+    showSuccess('Opening property details. You can contact the owner from there.');
   };
 
   // Helper to map FavoriteProperty to PropertyCard expected shape
@@ -230,14 +282,34 @@ export default function FavoritesPage() {
   const hasFavorites = favorites.length > 0;
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Apply background pattern styles */}
+      <style jsx global>{backgroundPatternStyles}</style>
+      
       {/* Fixed Header */}
       <Navbar />
 
       {/* Main Content */}
       <div className="pt-16">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-25">
+            {/* Grid Pattern */}
+            <div className="absolute inset-0" style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px'
+            }}></div>
+            
+            {/* Floating geometric shapes */}
+            <div className="absolute top-10 left-10 w-16 h-16 border border-white/15 rounded-full floating-shape"></div>
+            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{animationDelay: '1s'}}></div>
+            <div className="absolute bottom-20 left-1/4 w-8 h-8 border border-white/15 rounded-full pulsing-shape"></div>
+            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{animationDelay: '2s'}}></div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -341,6 +413,7 @@ export default function FavoritesPage() {
                   <PropertyCard 
                     property={mapFavoriteToPropertyCard(property)} 
                     onViewDetails={() => openPropertyModal(property)}
+                    onContact={handlePropertyContact}
                   />
                 </div>
               ))}

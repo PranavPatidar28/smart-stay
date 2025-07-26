@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { Menu, X, Search, Heart, Building2 } from "lucide-react";
+import { Menu, X, Search, Heart, Building2, Home, User, Settings } from "lucide-react";
 import { usePathname } from "next/navigation";
 import UserMenu from "./UserMenu";
 import { useSession } from "next-auth/react";
@@ -24,6 +24,18 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [setIsScrolled]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMenuOpen]);
 
   // Handle navigation with role check
   const handleNavigation = (href: string, requiresRole?: string | null) => {
@@ -53,21 +65,36 @@ export default function Navbar() {
 
   const navLinks = [
     { 
+      href: "/", 
+      label: "Home", 
+      icon: <Home className="w-5 h-5" />,
+      requiresRole: null
+    },
+    { 
       href: "/listings", 
       label: "Browse Listings", 
-      icon: <Search className="w-4 h-4" />,
+      icon: <Search className="w-5 h-5" />,
       requiresRole: null
     },
     { 
       href: "/owner-dashboard", 
       label: "List Property", 
-      icon: <Building2 className="w-4 h-4" />,
+      icon: <Building2 className="w-5 h-5" />,
       requiresRole: "LANDLORD"
     },
     { 
       href: "/favorites", 
       label: "Favorites", 
-      icon: <Heart className="w-4 h-4" />,
+      icon: <Heart className="w-5 h-5" />,
+      requiresRole: null
+    },
+  ];
+
+  const additionalLinks = [
+    { 
+      href: "/settings", 
+      label: "Settings", 
+      icon: <Settings className="w-5 h-5" />,
       requiresRole: null
     },
   ];
@@ -78,7 +105,7 @@ export default function Navbar() {
       // Home page: transparent with white text, solid background when scrolled
       return {
         nav: isScrolled 
-          ? 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg' 
+          ? 'bg-white/90 backdrop-blur-xl  shadow-lg' 
           : 'bg-transparent',
         logo: isScrolled 
           ? 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent' 
@@ -103,7 +130,7 @@ export default function Navbar() {
         nav: 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg',
         logo: 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent',
         logoHover: 'hover:opacity-80',
-        links: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50',
+        links: 'text-gray-700 hover:text-[var(--color-primary-400)] ',
         mobileMenu: 'bg-white/95 backdrop-blur-xl',
         mobileLinks: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50',
         menuButton: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
@@ -132,7 +159,7 @@ export default function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
-              {navLinks.map((link) => (
+              {navLinks.slice(1).map((link) => (
                 <Link
                   key={link.href}
                   href={handleNavigation(link.href, link.requiresRole)}
@@ -177,54 +204,122 @@ export default function Navbar() {
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
-          className="fixed inset-0 z-[60] flex flex-col bg-white/60 backdrop-blur-2xl border border-white/30 shadow-2xl transition-all duration-300 animate-fade-in glassmorphism"
+          className="fixed inset-0 z-[60] flex flex-col bg-gradient-to-b from-white/95 to-white/98 backdrop-blur-2xl border-b border-gray-200/50 shadow-2xl transition-all duration-500 ease-out animate-slide-down"
         >
-          {/* Logo and Close Button */}
-          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+          {/* Header with Logo and Close Button */}
+          <div className="flex items-center justify-between px-6 py-6 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-white/50">
             <Link
               href="/"
               onClick={() => setIsMenuOpen(false)}
+              className="group"
             >
-              <span className="text-2xl font-extrabold bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent">
+              <span className="text-2xl font-extrabold bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent transition-all duration-300 group-hover:scale-105">
                 Smart<span className="font-black">Stay</span>
               </span>
             </Link>
             <button
               aria-label="Close menu"
               onClick={() => setIsMenuOpen(false)}
-              className="p-2 rounded-xl text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-100"
+              className="p-3 rounded-2xl text-gray-600 hover:text-[var(--color-primary-600)] hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2"
             >
-              <X className="w-7 h-7" />
+              <X className="w-6 h-6" />
             </button>
           </div>
-          {/* User Menu */}
-          <div className="px-6 py-4 border-b border-gray-100">
-            <UserMenu />
+
+          {/* User Menu Section */}
+          <div className="px-6 py-6 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/30 to-white/30">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Account</h3>
+            </div>
+            <UserMenu isInMobileMenu={true} />
           </div>
-          {/* Nav Links */}
-          <nav className="flex-1 flex flex-col gap-2 px-6 py-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={handleNavigation(link.href, link.requiresRole)}
-                onClick={(e) => {
-                  handleLinkClick(e, link.requiresRole);
-                  setIsMenuOpen(false);
-                }}
-                className="flex items-center gap-4 px-5 py-4 rounded-2xl text-lg font-medium transition-all duration-200 text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)]"
-              >
-                {link.icon}
-                <span>{link.label}</span>
-              </Link>
-            ))}
-          </nav>
+
+          {/* Main Navigation Links */}
+          <div className="flex-1 px-6 py-6">
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Navigation</h3>
+              <nav className="space-y-2">
+                {navLinks.map((link, index) => (
+                  <Link
+                    key={link.href}
+                    href={handleNavigation(link.href, link.requiresRole)}
+                    onClick={(e) => {
+                      handleLinkClick(e, link.requiresRole);
+                      setIsMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
+                      pathname === link.href 
+                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]' 
+                        : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    <div className={`p-2 rounded-xl transition-all duration-200 ${
+                      pathname === link.href 
+                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]' 
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
+                    }`}>
+                      {link.icon}
+                    </div>
+                    <span className="flex-1">{link.label}</span>
+                    {link.requiresRole && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">
+                        {link.requiresRole}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            {/* Additional Links */}
+            <div className="border-t border-gray-200/50 pt-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">More</h3>
+              <nav className="space-y-2">
+                {additionalLinks.map((link, index) => (
+                  <Link
+                    key={link.href}
+                    href={handleNavigation(link.href, link.requiresRole)}
+                    onClick={(e) => {
+                      handleLinkClick(e, link.requiresRole);
+                      setIsMenuOpen(false);
+                    }}
+                    className={`flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
+                      pathname === link.href 
+                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]' 
+                        : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
+                    }`}
+                    style={{ animationDelay: `${(index + navLinks.length) * 100}ms` }}
+                  >
+                    <div className={`p-2 rounded-xl transition-all duration-200 ${
+                      pathname === link.href 
+                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]' 
+                        : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
+                    }`}>
+                      {link.icon}
+                    </div>
+                    <span className="flex-1">{link.label}</span>
+                  </Link>
+                ))}
+              </nav>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="px-6 py-6 border-t border-gray-200/50 bg-gradient-to-r from-gray-50/30 to-white/30">
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                © 2024 SmartStay. All rights reserved.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Overlay for mobile menu */}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-lg z-50 md:hidden animate-fade-in"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 md:hidden animate-fade-in"
           aria-hidden="true"
           onClick={() => setIsMenuOpen(false)}
         />
@@ -238,6 +333,36 @@ export default function Navbar() {
         currentRole={(session?.user as { role?: string | null })?.role || ""}
         actionType="list properties"
       />
+
+      <style jsx>{`
+        @keyframes slide-down {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-slide-down {
+          animation: slide-down 0.3s ease-out;
+        }
+        
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+      `}</style>
     </>
   );
 }

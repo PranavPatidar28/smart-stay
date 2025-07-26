@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         where: { id: propertyId },
         data: { views: { increment: 1 } },
       });
-    } else if (eventType === 'booking') {
+    } else if (eventType === 'booking' || eventType === 'booking_request') {
       await prisma.bookingEvent.create({
         data: { propertyId, userId, bookingId, metadata },
       });
@@ -31,8 +31,72 @@ export async function POST(request: NextRequest) {
       await prisma.inquiryEvent.create({
         data: { propertyId, userId, inquiryId, metadata },
       });
+    } else if (eventType === 'phone_contact' || eventType === 'email_contact' || 
+               eventType === 'property_card_contact' || eventType === 'favorites_property_contact') {
+      // Track contact events as inquiry events for now
+      await prisma.inquiryEvent.create({
+        data: { 
+          propertyId, 
+          userId, 
+          metadata: { 
+            ...metadata, 
+            contactType: eventType,
+            timestamp: new Date()
+          }
+        },
+      });
+    } else if (eventType === 'property_shared') {
+      // Track share events as view events with metadata
+      await prisma.propertyViewEvent.create({
+        data: { 
+          propertyId, 
+          userId, 
+          metadata: { 
+            ...metadata, 
+            action: 'shared',
+            timestamp: new Date()
+          }
+        },
+      });
+    } else if (eventType === 'favorite_added' || eventType === 'favorite_removed') {
+      // Track favorite events as view events with metadata
+      await prisma.propertyViewEvent.create({
+        data: { 
+          propertyId, 
+          userId, 
+          metadata: { 
+            ...metadata, 
+            action: eventType,
+            timestamp: new Date()
+          }
+        },
+      });
+    } else if (eventType === 'review_submitted') {
+      // Track review events as inquiry events with metadata
+      await prisma.inquiryEvent.create({
+        data: { 
+          propertyId, 
+          userId, 
+          metadata: { 
+            ...metadata, 
+            action: 'review_submitted',
+            timestamp: new Date()
+          }
+        },
+      });
     } else {
-      return NextResponse.json({ error: 'Invalid eventType' }, { status: 400 });
+      // For any other event type, track as a view event with metadata
+      await prisma.propertyViewEvent.create({
+        data: { 
+          propertyId, 
+          userId, 
+          metadata: { 
+            ...metadata, 
+            action: eventType,
+            timestamp: new Date()
+          }
+        },
+      });
     }
 
     return NextResponse.json({ success: true });

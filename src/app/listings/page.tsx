@@ -34,6 +34,9 @@ import {
   Clock,
   ArrowUp,
   ArrowDown,
+  Send,
+  MessageSquare,
+  Share2,
 } from "lucide-react";
 import { FaRupeeSign as Rupee } from "react-icons/fa";
 import { trackAnalyticsEvent } from '@/lib/api-client';
@@ -97,6 +100,35 @@ const customScrollbarStyles = `
     100% {
       left: 100%;
     }
+  }
+  
+  /* Background pattern animations */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(5deg);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.2;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.4;
+      transform: scale(1.05);
+    }
+  }
+  
+  .floating-shape {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .pulsing-shape {
+    animation: pulse 4s ease-in-out infinite;
   }
 `;
 
@@ -164,6 +196,7 @@ interface Property {
     reviews: number;
     inquiries: number;
   };
+  reviews?: Review[]; // Add this line
 }
 /* 
 interface SearchFilters {
@@ -348,18 +381,34 @@ interface MobilePropertyModalProps {
   property: Property;
   toggleFavorite: (id: string) => void;
   closePropertyModal: () => void;
+  onBookViewing: (propertyId: string) => void;
+  onPhoneContact: (propertyId: string) => void;
+  onEmailContact: (propertyId: string) => void;
+  onShare: (propertyId: string) => void;
 }
-const MobilePropertyModal = ({ property, toggleFavorite, closePropertyModal }: MobilePropertyModalProps) => {
+
+const MobilePropertyModal = ({ 
+  property, 
+  toggleFavorite, 
+  closePropertyModal,
+  onBookViewing,
+  onPhoneContact,
+  onEmailContact,
+  onShare
+}: MobilePropertyModalProps) => {
   const [mobileModalFavorite, setMobileModalFavorite] = useState(property.isFavorite);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
   useEffect(() => {
     setMobileModalFavorite(property.isFavorite);
   }, [property.isFavorite]);
+  
   const handleMobileFavoriteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     setMobileModalFavorite(!mobileModalFavorite);
     toggleFavorite(property.id);
   };
+  
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto"
@@ -394,6 +443,12 @@ const MobilePropertyModal = ({ property, toggleFavorite, closePropertyModal }: M
               <MapIcon className="w-5 h-5 text-gray-700" />
             </button>
           )}
+          <button 
+            onClick={() => onShare(property.id)}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <Share2 className="w-5 h-5 text-gray-700" />
+          </button>
         </div>
       </div>
       {/* Image Gallery */}
@@ -535,19 +590,28 @@ const MobilePropertyModal = ({ property, toggleFavorite, closePropertyModal }: M
             </div>
           </div>
         </div>
-        {/* Action Buttons */}
-        <div className="flex gap-3 mt-4 mb-2">
-          <button className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-            <Calendar className="w-5 h-5" />
-            Book Viewing
-          </button>
-          <button className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg">
-            <Phone className="w-5 h-5" />
-          </button>
-          <button className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg">
-            <Mail className="w-5 h-5" />
-          </button>
-        </div>
+                 {/* Action Buttons - Updated with functionality */}
+         <div className="flex gap-3 mt-4 mb-6 px-4">
+           <button 
+             onClick={() => onBookViewing(property.id)}
+             className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+           >
+              <Calendar className="w-5 h-5" />
+              Book Viewing
+            </button>
+           <button 
+             onClick={() => onPhoneContact(property.id)}
+             className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+           >
+              <Phone className="w-5 h-5" />
+            </button>
+           <button 
+             onClick={() => onEmailContact(property.id)}
+             className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+           >
+              <Mail className="w-5 h-5" />
+            </button>
+          </div>
       </div>
     </div>
   );
@@ -573,6 +637,19 @@ const getAmenityIcon = (amenity: string) => {
   }
 };
 
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+    image?: string;
+  };
+}
+
 export default function ListingsPage() {
   const { data: session } = useSession();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -594,6 +671,21 @@ export default function ListingsPage() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Reviews state
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewPagination, setReviewPagination] = useState({
+    page: 1,
+    totalPages: 1,
+    hasNext: false,
+    hasPrev: false
+  });
+  const [userReview, setUserReview] = useState({
+    rating: 5,
+    comment: ''
+  });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   
   // State for custom dropdowns
   const [showPropertyTypeModal, setShowPropertyTypeModal] = useState(false);
@@ -987,6 +1079,10 @@ export default function ListingsPage() {
     const action = wasAlreadyFavorite ? "Removed from" : "Added to";
     showSuccess(`${action} favorites`);
     
+    // Track analytics
+    const eventType = wasAlreadyFavorite ? 'favorite_removed' : 'favorite_added';
+    trackAnalyticsEvent(eventType, id);
+    
     // Perform API operation in background
     try {
       if (wasAlreadyFavorite) {
@@ -1028,15 +1124,15 @@ export default function ListingsPage() {
   };
 
   // Toggle quick filter function
- /*  const toggleQuickFilter = (filter: keyof typeof quickFilters) => {
+  const toggleQuickFilter = (filter: keyof typeof quickFilters) => {
     setQuickFilters(prev => ({
       ...prev,
       [filter]: !prev[filter]
     }));
-  }; */
+  };
 
   // Clear all filters function
-/*   const clearFilters = () => {
+  const clearFilters = () => {
     setSearchTerm("");
     setDebouncedSearchTerm("");
     setSelectedType("All");
@@ -1049,26 +1145,125 @@ export default function ListingsPage() {
       petFriendly: false,
       availableNow: false
     });
-  }; */
+  };
 
   const openPropertyModal = (property: Property) => {
     setSelectedProperty(property);
     setShowModal(true);
     setCurrentImageIndex(0);
+    
+    // Fetch reviews when opening the modal
+    if (property) {
+      fetchPropertyReviews(property.id);
+    }
   };
 
   const closePropertyModal = () => {
     setShowModal(false);
     setSelectedProperty(null);
     setCurrentImageIndex(0);
+    // Reset reviews state
+    setReviews([]);
+    setReviewPagination({
+      page: 1,
+      totalPages: 1,
+      hasNext: false,
+      hasPrev: false
+    });
+    setUserReview({
+      rating: 0,
+      comment: ''
+    });
+  };
+  
+  // Fetch property reviews
+  const fetchPropertyReviews = async (propertyId: string, page = 1) => {
+    setReviewsLoading(true);
+    try {
+      const response = await fetch(`/api/reviews?propertyId=${propertyId}&page=${page}&limit=5`);
+      if (!response.ok) throw new Error('Failed to fetch reviews');
+      
+      const data = await response.json();
+      setReviews(data.reviews);
+      setReviewPagination(data.pagination);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      showError('Could not load reviews');
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+  
+  // Handle pagination for reviews
+  const handleReviewPageChange = (newPage: number) => {
+    if (selectedProperty) {
+      setReviewPagination(prev => ({ ...prev, page: newPage }));
+      fetchPropertyReviews(selectedProperty.id, newPage);
+    }
+  };
+  
+  // Submit a new review
+  const submitReview = async () => {
+    if (!session?.user) {
+      showError('Please sign in to leave a review');
+      return;
+    }
+    
+    if (!selectedProperty) return;
+    
+    setIsSubmittingReview(true);
+    
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyId: selectedProperty.id,
+          rating: userReview.rating,
+          comment: userReview.comment || undefined
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit review');
+      }
+      
+      // Refresh reviews
+      fetchPropertyReviews(selectedProperty.id);
+      
+      // Track analytics
+      trackAnalyticsEvent('review_submitted', selectedProperty.id, {
+        rating: userReview.rating,
+        hasComment: !!userReview.comment
+      });
+      
+      // Reset review form
+      setUserReview({
+        rating: 0,
+        comment: ''
+      });
+      
+      // Show success message
+      showSuccess('Review submitted successfully');
+      
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      showError(error instanceof Error ? error.message : 'Failed to submit review');
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   const PropertyCard = ({
     property,
     isListView = false,
+    onContact,
   }: {
     property: Property;
     isListView?: boolean;
+    onContact?: (property: Property) => void;
   }) => {
     // Mini-gallery hover for desktop
     const [hovered, setHovered] = useState(false);
@@ -1156,7 +1351,7 @@ export default function ListingsPage() {
             {/* Title, Location, Rating */}
             <div className="flex items-start justify-between gap-2 min-w-0 mb-1">
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-gray-900 text-xl line-clamp-2 break-words group-hover:text-[var(--color-primary-600)] transition-colors" title={property.title}>{property.title}</h3>
+                <h3 className="font-bold text-gray-900 text-xl line-clamp-2 break-words group-hover:text-[var(--color-primary-200)] transition-colors" title={property.title}>{property.title}</h3>
                 <div className="flex items-center gap-2 text-gray-600 text-sm mt-1">
                   <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
                   <span className="truncate">{property.location}</span>
@@ -1221,11 +1416,17 @@ export default function ListingsPage() {
             >
               View Details
             </button>
-            <button className="px-4 py-3 border-2 border-[var(--color-primary-200)] text-[var(--color-primary-600)] rounded-xl hover:bg-[var(--color-primary-50)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium">
+            <button 
+              onClick={() => onContact ? onContact(property) : null}
+              className="px-4 py-3 border-2 border-[var(--color-primary-200)] text-[var(--color-primary-200)] rounded-xl hover:bg-[var(--color-primary-200)] hover:text-[var(--color-primary-800)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
+            >
               <Phone className="w-4 h-4" />Contact
             </button>
             {isListView && (
-              <button className="px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2">
+              <button 
+                onClick={() => onContact ? onContact(property) : null}
+                className="px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2"
+              >
                 <Mail className="w-4 h-4" />Message
               </button>
             )}
@@ -1267,6 +1468,13 @@ export default function ListingsPage() {
   // Track local favorite state for the modal
   const [modalFavorite, setModalFavorite] = useState(false);
   
+  // State for booking modal
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingDate, setBookingDate] = useState('');
+  const [bookingTime, setBookingTime] = useState('');
+  const [bookingNote, setBookingNote] = useState('');
+  const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+  
   // Update local state when selected property changes
   useEffect(() => {
     if (selectedProperty) {
@@ -1282,6 +1490,110 @@ export default function ListingsPage() {
     }
   };
 
+  // Handle booking a viewing
+  const handleBookViewing = () => {
+    if (!session?.user) {
+      showError('Please sign in to book a viewing');
+      return;
+    }
+    setShowBookingModal(true);
+  };
+
+  // Submit booking request
+  const submitBooking = async () => {
+    if (!selectedProperty || !session?.user) return;
+    
+    if (!bookingDate || !bookingTime) {
+      showError('Please select a date and time');
+      return;
+    }
+    
+    setIsSubmittingBooking(true);
+    
+    try {
+      // Track analytics event
+      trackAnalyticsEvent('booking_request', selectedProperty.id);
+      
+      // In a real app, this would send the booking to an API endpoint
+      // await fetch('/api/bookings', { 
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     propertyId: selectedProperty.id,
+      //     date: bookingDate,
+      //     time: bookingTime,
+      //     notes: bookingNote
+      //   })
+      // });
+      
+      // For now, simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      showSuccess('Booking request submitted successfully!');
+      setShowBookingModal(false);
+      
+      // Reset form
+      setBookingDate('');
+      setBookingTime('');
+      setBookingNote('');
+      
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+      showError('Failed to submit booking request');
+    } finally {
+      setIsSubmittingBooking(false);
+    }
+  };
+
+  // Handle phone contact
+  const handlePhoneContact = () => {
+    if (!selectedProperty) return;
+    
+    // In a real app, this might reveal the owner's phone number
+    // For now, track analytics and show a success message
+    trackAnalyticsEvent('phone_contact', selectedProperty.id);
+    showSuccess('Phone number requested. The owner will contact you shortly.');
+  };
+
+  // Handle email contact
+  const handleEmailContact = () => {
+    if (!selectedProperty) return;
+    
+    // In a real app, this might open an email compose window
+    // For now, track analytics and show a success message
+    trackAnalyticsEvent('email_contact', selectedProperty.id);
+    showSuccess('Email request sent. Check your inbox for follow-up information.');
+  };
+
+  // Handle share property
+  const handleShareProperty = () => {
+    if (!selectedProperty) return;
+    
+    // In a real app, this would open a share dialog
+    // For now, copy the URL to clipboard
+    const url = `${window.location.origin}/property/${selectedProperty.id}`;
+    navigator.clipboard.writeText(url);
+    
+    trackAnalyticsEvent('property_shared', selectedProperty.id);
+    showSuccess('Property link copied to clipboard!');
+  };
+
+  // Handle contact from property card
+  const handlePropertyContact = (property: Property) => {
+    // Track analytics
+    trackAnalyticsEvent('property_card_contact', property.id);
+    
+    // Show contact options modal or directly open the property modal
+    setSelectedProperty(property);
+    setShowModal(true);
+    setCurrentImageIndex(0);
+    
+    // Fetch reviews when opening the modal
+    fetchPropertyReviews(property.id);
+    
+    showSuccess('Opening property details. You can contact the owner from there.');
+  };
+
   // Add new handlers for all filters that set loading to true immediately
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLoading(true);
@@ -1295,6 +1607,14 @@ export default function ListingsPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
     setSearchTerm(e.target.value);
+    
+    // Track search analytics if search term is not empty
+    if (e.target.value.trim()) {
+      trackAnalyticsEvent('search_performed', 'search', {
+        searchTerm: e.target.value.trim(),
+        searchType: 'text'
+      });
+    }
   };
   const handleAmenityChange = (amenity: string, checked: boolean) => {
     setLoading(true);
@@ -1303,14 +1623,33 @@ export default function ListingsPage() {
     } else {
       setSelectedAmenities(prev => prev.filter(a => a !== amenity));
     }
+    
+    // Track filter analytics
+    trackAnalyticsEvent('filter_applied', 'filter', {
+      filterType: 'amenity',
+      filterValue: amenity,
+      action: checked ? 'added' : 'removed'
+    });
   };
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLoading(true);
     setSortBy(e.target.value);
+    
+    // Track sort analytics
+    trackAnalyticsEvent('sort_applied', 'sort', {
+      sortBy: e.target.value
+    });
   };
   const handleQuickFilterToggle = (filter: keyof typeof quickFilters) => {
     setLoading(true);
-    setQuickFilters(prev => ({ ...prev, [filter]: !prev[filter] }));
+    const newValue = !quickFilters[filter];
+    setQuickFilters(prev => ({ ...prev, [filter]: newValue }));
+    
+    // Track quick filter analytics
+    trackAnalyticsEvent('quick_filter_applied', 'filter', {
+      filterType: filter,
+      filterValue: newValue
+    });
   };
   const handleClearFilters = () => {
     setLoading(true);
@@ -1326,6 +1665,11 @@ export default function ListingsPage() {
       petFriendly: false,
       availableNow: false
     });
+    
+    // Track clear filters analytics
+    trackAnalyticsEvent('filters_cleared', 'filter', {
+      action: 'clear_all'
+    });
   };
 
   return (
@@ -1338,8 +1682,25 @@ export default function ListingsPage() {
       {/* Main Content */}
       <div className="pt-16">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-25">
+            {/* Grid Pattern */}
+            <div className="absolute inset-0" style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px'
+            }}></div>
+            
+            {/* Floating geometric shapes */}
+            <div className="absolute top-10 left-10 w-16 h-16 border border-white/15 rounded-full floating-shape"></div>
+            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{animationDelay: '1s'}}></div>
+            <div className="absolute bottom-20 left-1/4 w-8 h-8 border border-white/15 rounded-full pulsing-shape"></div>
+            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{animationDelay: '2s'}}></div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="text-center mb-8">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
                 Find Your Perfect Student Home
@@ -1826,7 +2187,12 @@ export default function ListingsPage() {
               {/* View mode toggle */}
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
                 <button
-                  onClick={() => setViewMode("grid")}
+                  onClick={() => {
+                  setViewMode("grid");
+                  trackAnalyticsEvent('view_mode_changed', 'view', {
+                    mode: 'grid'
+                  });
+                }}
                   className={`p-2 rounded-md ${
                     viewMode === "grid"
                       ? "bg-white text-[var(--color-primary-600)] shadow-sm"
@@ -1836,7 +2202,12 @@ export default function ListingsPage() {
                   <Grid className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => setViewMode("list")}
+                  onClick={() => {
+                  setViewMode("list");
+                  trackAnalyticsEvent('view_mode_changed', 'view', {
+                    mode: 'list'
+                  });
+                }}
                   className={`p-2 rounded-md ${
                     viewMode === "list"
                       ? "bg-white text-[var(--color-primary-600)] shadow-sm"
@@ -1863,6 +2234,7 @@ export default function ListingsPage() {
                   key={property.id}
                   property={property}
                   isListView={true}
+                  onContact={handlePropertyContact}
                 />
               ))}
             </div>
@@ -1871,7 +2243,7 @@ export default function ListingsPage() {
                       {filteredProperties.map((property) => (
                         <div key={property.id} className="flex justify-center h-full">
                           <div className="h-full flex">
-                  <PropertyCard property={property} />
+                  <PropertyCard property={property} onContact={handlePropertyContact} />
                           </div>
                 </div>
               ))}
@@ -1944,6 +2316,30 @@ export default function ListingsPage() {
               property={selectedProperty!} 
               toggleFavorite={toggleFavorite}
               closePropertyModal={closePropertyModal}
+              onBookViewing={(propertyId) => {
+                closePropertyModal();
+                setTimeout(() => {
+                  const foundProperty = properties.find(p => p.id === propertyId);
+                  if (foundProperty) {
+                    openPropertyModal(foundProperty);
+                    setTimeout(() => setShowBookingModal(true), 300);
+                  }
+                }, 300);
+              }}
+              onPhoneContact={(propertyId) => {
+                trackAnalyticsEvent('phone_contact', propertyId);
+                showSuccess('Phone number requested. The owner will contact you shortly.');
+              }}
+              onEmailContact={(propertyId) => {
+                trackAnalyticsEvent('email_contact', propertyId);
+                showSuccess('Email request sent. Check your inbox for follow-up information.');
+              }}
+              onShare={(propertyId) => {
+                const url = `${window.location.origin}/property/${propertyId}`;
+                navigator.clipboard.writeText(url);
+                trackAnalyticsEvent('property_shared', propertyId);
+                showSuccess('Property link copied to clipboard!');
+              }}
             />
           ) : (
             <div
@@ -2173,11 +2569,161 @@ export default function ListingsPage() {
                             <span className="text-gray-800">{amenity.amenity.name}</span>
                           </div>
                         ))}
+    50                </div>
+                    </div>
+                    
+                    {/* Reviews Section */}
+                    <div className="my-6 bg-gray-50 p-5 rounded-xl border border-gray-100">
+                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+                          <MessageSquare className="w-4 h-4 text-[var(--color-primary-600)]" />
+                        </div>
+                        Reviews ({selectedProperty!._count.reviews})
+                      </h4>
+                      
+                      {/* Review List */}
+                      <div className="space-y-4 mb-6">
+                        {reviewsLoading ? (
+                          <div className="flex justify-center items-center py-6">
+                            <Loader2 className="w-8 h-8 text-[var(--color-primary-500)] animate-spin" />
+                          </div>
+                        ) : reviews.length > 0 ? (
+                          <>
+                            {reviews.map(review => (
+                              <div key={review.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-10 h-10 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
+                                      {review.user.image ? (
+                                        <img 
+                                          src={review.user.image} 
+                                          alt={review.user.name} 
+                                          className="w-full h-full object-cover rounded-full"
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-bold text-white">{review.user.name.charAt(0)}</span>
+                                      )}
+                                    </div>
+                                    <div>
+                                      <div className="font-medium text-gray-900">{review.user.name}</div>
+                                      <div className="text-xs text-gray-500">
+                                        {new Date(review.createdAt).toLocaleDateString()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
+                                    <div className="flex">
+                                      {[1, 2, 3, 4, 5].map(star => (
+                                        <Star 
+                                          key={star} 
+                                          className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                                        />
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                                {review.comment && (
+                                  <p className="text-gray-700 text-sm mt-2">{review.comment}</p>
+                                )}
+                              </div>
+                            ))}
+                            
+                            {/* Pagination controls */}
+                            {reviewPagination.totalPages > 1 && (
+                              <div className="flex justify-center mt-4 gap-2">
+                                <button
+                                  onClick={() => handleReviewPageChange(reviewPagination.page - 1)}
+                                  disabled={!reviewPagination.hasPrev}
+                                  className={`p-2 rounded-lg ${
+                                    reviewPagination.hasPrev 
+                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' 
+                                      : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                  }`}
+                                >
+                                  Previous
+                                </button>
+                                <div className="flex items-center px-3 bg-[var(--color-primary-100)] text-[var(--color-primary-700)] rounded-lg">
+                                  {reviewPagination.page} / {reviewPagination.totalPages}
+                                </div>
+                                <button
+                                  onClick={() => handleReviewPageChange(reviewPagination.page + 1)}
+                                  disabled={!reviewPagination.hasNext}
+                                  className={`p-2 rounded-lg ${
+                                    reviewPagination.hasNext 
+                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' 
+                                      : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                  }`}
+                                >
+                                  Next
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-center py-6 bg-white rounded-lg border border-gray-200">
+                            <div className="text-gray-500 mb-2">No reviews yet</div>
+                            <div className="text-sm text-gray-400">Be the first to leave a review!</div>
+                          </div>
+                        )}
                       </div>
+                      
+                      {/* Leave a review form */}
+                      {session?.user ? (
+                        <div className="bg-white p-4 rounded-lg border border-gray-200">
+                          <h5 className="font-medium text-gray-900 mb-3">Leave a Review</h5>
+                          <div className="mb-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map(star => (
+                                <button
+                                  key={star}
+                                  type="button"
+                                  onClick={() => setUserReview(prev => ({ ...prev, rating: star }))}
+                                  className="focus:outline-none"
+                                >
+                                  <Star 
+                                    className={`w-6 h-6 ${
+                                      star <= userReview.rating 
+                                        ? 'text-yellow-400 fill-yellow-400' 
+                                        : 'text-gray-300 hover:text-yellow-200'
+                                    }`} 
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="mb-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Comment (optional)</label>
+                            <textarea
+                              value={userReview.comment}
+                              onChange={(e) => setUserReview(prev => ({ ...prev, comment: e.target.value }))}
+                              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+                              placeholder="Share your experience..."
+                              rows={3}
+                            />
+                          </div>
+                          <button
+                            onClick={submitReview}
+                            disabled={isSubmittingReview}
+                            className="w-full py-2 px-4 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 flex items-center justify-center gap-2"
+                          >
+                            {isSubmittingReview ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
+                            Submit Review
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4 bg-[var(--color-primary-50)] rounded-lg border border-[var(--color-primary-200)]">
+                          <p className="text-[var(--color-primary-700)]">Please sign in to leave a review</p>
+                        </div>
+                      )}
                     </div>
                     
                     {/* Landlord Info - Enhanced card */}
-                    <div className="my-6 bg-[var(--color-primary-50)] p-5 rounded-xl border border-[var(--color-primary-100)]">
+                    <div className="my-6 bg-[var(--color-primary-800)] p-5 rounded-xl border border-[var(--color-primary-500)]">
                       <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
                           <User className="w-4 h-4 text-[var(--color-primary-600)]" />
@@ -2213,19 +2759,28 @@ export default function ListingsPage() {
                   {/* Action Bar - Sticky at bottom with enhanced buttons */}
                   <div className="sticky bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 px-6 py-4 mt-auto">
                     <div className="flex gap-3 items-center">
-                      <button className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3.5 px-4 rounded-xl font-medium hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group">
+                      <button 
+                        onClick={handleBookViewing}
+                        className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3.5 px-4 rounded-xl font-medium hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+                      >
                         <Calendar className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         <span className="font-semibold">Book Viewing</span>
                       </button>
                       <div className="flex gap-3">
-                        <button className="p-3.5 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg">
+                        <button 
+                          onClick={handlePhoneContact}
+                          className="p-3.5 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+                        >
                           <Phone className="w-5 h-5" />
                         </button>
-                        <button className="p-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg">
+                        <button 
+                          onClick={handleEmailContact}
+                          className="p-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+                        >
                           <Mail className="w-5 h-5" />
                         </button>
                         <button 
-                          onClick={() => handleModalFavoriteToggle()} 
+                          onClick={handleModalFavoriteToggle} 
                           className="p-2.5 rounded-xl flex items-center justify-center"
                           aria-label={modalFavorite ? "Remove from favorites" : "Add to favorites"}
                         >
@@ -2245,6 +2800,79 @@ export default function ListingsPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Booking Modal */}
+      {showBookingModal && selectedProperty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-2 sm:px-4">
+          <div className="absolute inset-0 z-0 cursor-pointer" onClick={() => setShowBookingModal(false)}></div>
+          <div className="relative w-full max-w-md mx-auto bg-white rounded-xl shadow-2xl p-6 animate-fade-in-up">
+            <button
+              onClick={() => setShowBookingModal(false)}
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 text-gray-500"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Book a Viewing</h3>
+            <p className="text-gray-600 mb-6">Schedule a viewing for {selectedProperty.title}</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <input
+                  type="date"
+                  value={bookingDate}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-400 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+                <select
+                  value={bookingTime}
+                  onChange={(e) => setBookingTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-700 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+                >
+                  <option value="">Select a time</option>
+                  <option value="09:00">09:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                  <option value="13:00">01:00 PM</option>
+                  <option value="14:00">02:00 PM</option>
+                  <option value="15:00">03:00 PM</option>
+                  <option value="16:00">04:00 PM</option>
+                  <option value="17:00">05:00 PM</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+                <textarea
+                  value={bookingNote}
+                  onChange={(e) => setBookingNote(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 text-gray-500 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+                  placeholder="Any special requests or questions?"
+                  rows={3}
+                ></textarea>
+              </div>
+              
+              <button
+                onClick={submitBooking}
+                disabled={isSubmittingBooking}
+                className="w-full py-3 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg font-medium hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-colors flex items-center justify-center"
+              >
+                {isSubmittingBooking ? (
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                ) : null}
+                {isSubmittingBooking ? 'Booking...' : 'Book Viewing'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

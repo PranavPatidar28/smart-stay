@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       "lh3.googleusercontent.com",
       "localhost",
       "127.0.0.1",
+      "images.unsplash.com",
     ],
   },
   eslint: {

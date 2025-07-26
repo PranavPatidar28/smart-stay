@@ -7,7 +7,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from 'next/image';
 
-export default function UserMenu() {
+interface UserMenuProps {
+  isInMobileMenu?: boolean;
+}
+
+export default function UserMenu({ isInMobileMenu = false }: UserMenuProps) {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -40,8 +44,13 @@ export default function UserMenu() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Determine text color based on page and scroll position
+  // Determine text color based on page, scroll position, and mobile menu context
   const getUserMenuTextColor = () => {
+    // If in mobile menu, always use dark text
+    if (isInMobileMenu) {
+      return "text-gray-700";
+    }
+    
     if (isHomePage && !isScrolled) {
       return "text-white"; // White text on transparent home page navbar
     }
@@ -53,7 +62,13 @@ export default function UserMenu() {
       <div className="flex items-center gap-3">
         <Link
           href="/auth/signin"
-          className={`transition-colors font-medium ${isHomePage && !isScrolled ? "text-white hover:text-white/80" : "text-gray-600 hover:text-[var(--color-primary-600)]"}`}
+          className={`transition-colors font-medium ${
+            isInMobileMenu 
+              ? "text-[var(--color-primary-400)] hover:text-[var(--color-primary-600)]" 
+              : isHomePage && !isScrolled 
+                ? "text-white hover:text-white/80" 
+                : "text-gray-600 hover:text-[var(--color-primary-600)]"
+          }`}
         >
           Sign In
         </Link>
@@ -115,7 +130,7 @@ export default function UserMenu() {
           className="flex-shrink-0"
         >
           <span className="text-sm font-bold text-white">
-            {session.user.name?.charAt(0).toUpperCase() || "U"}
+            {session?.user?.name?.charAt(0).toUpperCase() || "U"}
           </span>
         </div>
       );
@@ -123,9 +138,11 @@ export default function UserMenu() {
   };
 
   const textColorClass = getUserMenuTextColor();
-  const hoverClass = isHomePage && !isScrolled 
-    ? "hover:bg-white/10" 
-    : "hover:bg-gray-100";
+  const hoverClass = isInMobileMenu 
+    ? "hover:bg-gray-100" 
+    : isHomePage && !isScrolled 
+      ? "hover:bg-white/10" 
+      : "hover:bg-gray-100";
 
   return (
     <div className="relative" ref={menuRef}>
@@ -134,10 +151,10 @@ export default function UserMenu() {
         className={`flex items-center gap-2 p-2 rounded-xl ${hoverClass} transition-colors`}
       >
         {renderUserAvatar(32)}
-        <span className={`text-sm font-medium ${textColorClass} username-gradient`}>
-          {session.user.name || "User"}
+        <span className={`text-sm font-medium ${textColorClass} ${isHomePage && !isScrolled && !isInMobileMenu ? "username-gradient-home" : "username-gradient"}`}>
+          {session?.user?.name || "User"}
         </span>
-        <ChevronDown className={`w-4 h-4 ${isHomePage && !isScrolled ? "text-white" : "text-gray-500"}`} />
+        <ChevronDown className={`w-4 h-4 ${isInMobileMenu ? "text-gray-500" : isHomePage && !isScrolled ? "text-white" : "text-gray-500"}`} />
       </button>
 
       {isOpen && (
@@ -147,10 +164,10 @@ export default function UserMenu() {
             <div className="flex items-center gap-3">
               {renderUserAvatar(40)}
               <div>
-                <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-secondary-600)] drop-shadow username-gradient">{session.user.name}</p>
-                <p className="text-sm text-gray-600">{session.user.email}</p>
+                <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-secondary-600)] drop-shadow username-gradient">{session?.user?.name}</p>
+                <p className="text-sm text-gray-600">{session?.user?.email}</p>
                 <span className="inline-block mt-1 px-2 py-1 bg-[var(--color-primary-100)] text-[var(--color-primary-700)] text-xs rounded-full font-medium">
-                  {session.user.role || "Student"}
+                  {(session?.user as { role?: string | null })?.role || "Student"}
                 </span>
               </div>
             </div>
@@ -158,7 +175,7 @@ export default function UserMenu() {
 
           {/* Menu Items */}
           <div className="py-2">
-            {session.user.role === "LANDLORD" && (
+            {(session?.user as { role?: string | null })?.role === "LANDLORD" && (
               <Link
                 href="/owner-dashboard"
                 className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"

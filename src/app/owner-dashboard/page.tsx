@@ -2,6 +2,37 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import Navbar from "@/components/ui/Navbar";
+
+// Define custom CSS for background pattern animations
+const backgroundPatternStyles = `
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(5deg);
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.15;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.25;
+      transform: scale(1.05);
+    }
+  }
+  
+  .floating-shape {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .pulsing-shape {
+    animation: pulse 4s ease-in-out infinite;
+  }
+`;
 import { useSession } from "next-auth/react";
 import {
   showSuccess,
@@ -2399,13 +2430,33 @@ export default function OwnerDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Apply background pattern styles */}
+      <style jsx global>{backgroundPatternStyles}</style>
+      
       <Navbar />
 
       {/* Main Content */}
       <div className="pt-16">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white relative overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-25">
+            {/* Grid Pattern */}
+            <div className="absolute inset-0" style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
+              `,
+              backgroundSize: '40px 40px'
+            }}></div>
+            
+            {/* Floating geometric shapes */}
+            <div className="absolute top-10 left-10 w-16 h-16 border border-white/15 rounded-full floating-shape"></div>
+            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{animationDelay: '1s'}}></div>
+            <div className="absolute bottom-20 left-1/4 w-8 h-8 border border-white/15 rounded-full pulsing-shape"></div>
+            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{animationDelay: '2s'}}></div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
