@@ -1,6 +1,6 @@
 import Navbar from "@/components/ui/Navbar";
 import HeroBackgroundArt from "@/components/ui/HeroBackgroundArt";
-import { Search, Shield, Star, MapPin, Users, Home as HomeIcon, CheckCircle, ArrowRight, Building2 } from "lucide-react";
+import { Search, Shield, Star, MapPin, Users, Home as HomeIcon, CheckCircle, ArrowRight, Building2, Heart } from "lucide-react";
 import Link from "next/link";
 
 const HeroSection = () => {
@@ -100,40 +100,122 @@ const HeroSection = () => {
               </div>
             </div>
             {/* Right Side: Image */}
-            <div className="flex items-center justify-center hero-content-item w-full max-w-xl mx-20" style={{animationDelay: '1.2s'}}>
+            <div className="flex items-center justify-center hero-content-item w-full max-w-xl m-auto" style={{animationDelay: '1.2s'}}>  
               <div className="relative group w-full flex justify-center">
-                {/* Main Image Container */}
-                <div className="relative overflow-hidden rounded-3xl shadow-2xl transform group-hover:scale-105 transition-all duration-700 image-hover-glow border-4 border-[#312E81]/30 w-full max-w-lg">
-                  {/* Glow Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-700"></div>
-                  {/* Image */}
-                  <div className="relative z-10">
+                {/* Staggered Image Layout */}
+                <div className="relative w-full max-w-xl h-[480px]">
+                  {/* Background Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 rounded-3xl blur-2xl opacity-60"></div>
+                  
+                  {/* Image 1 - Bottom Left */}
+                  <div className="absolute -bottom-4 left-6 w-60 h-80 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#312E81]/40 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-2xl"></div>
+
+                    <div className="absolute bottom-2 left-2 bg-gradient-to-r from-[#6366F1]/55 to-[#8B5CF6]/55 backdrop-blur-xl px-2 py-1 rounded-2xl border border-[#6366F1]/40 shadow-[0_0_25px_rgba(99,102,241,0.3)] hover:scale-105 transition-all duration-300 ease-out min-w-[90px] z-40 hover:shadow-[0_0_35px_rgba(99,102,241,0.7)] group">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white mb-1 group-hover:text-[#F3E8FF] transition-colors duration-300">50+</div>
+                    <div className="text-[#DDD6FE] text-xs font-semibold group-hover:text-white transition-colors duration-300">Cities</div>
+                  </div>
+                </div>
+
                     <img 
                       src="/images/Gemini_Generated_Image_LandingPage.png" 
-                      alt="Student Accommodation" 
-                      className="w-full h-auto max-h-[420px] rounded-3xl object-cover shadow-2xl"
+                      alt="Student Accommodation 1" 
+                      className="w-full h-full object-cover"
                     />
+                    {/* Floating Label */}
+                    {/* <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <span className="text-white text-xs font-medium">Premium Hostel</span>
+                    </div> */}
                   </div>
-                  {/* Overlay Gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/30 via-transparent to-transparent rounded-3xl"></div>
+
+                  {/* Image 2 - Top Right */}
+                  <div className="absolute top-0 right-0 w-60 h-80 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-2xl"></div>
+                    
+                    <div className="absolute top-2 right-2 bg-gradient-to-r from-[#6366F1]/55 to-[#8B5CF6]/55 backdrop-blur-xl px-2 py-1 rounded-2xl border border-[#6366F1]/40 shadow-[0_0_25px_rgba(99,102,241,0.3)] hover:scale-105 transition-all duration-300 ease-out min-w-[90px] z-40 hover:shadow-[0_0_35px_rgba(99,102,241,0.7)] group">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white mb-1 group-hover:text-[#F3E8FF] transition-colors duration-300">500+</div>
+                    <div className="text-[#DDD6FE] text-xs font-semibold group-hover:text-white transition-colors duration-300">Properties</div>
+                  </div>
                 </div>
+
+                    <img 
+                      src="/images/Gemini_Generated_Image_p5v7j7p5v7j7p5v7.png" 
+                      alt="Student Accommodation 2" 
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Floating Label */}
+                    {/* <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <span className="text-white text-xs font-medium">Student PG</span>
+                    </div> */}
+                  </div>
+                  
+                  {/* Image 3 - Center (Main) */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-65 h-90 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-15 hover:z-25">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-2xl"></div>
+                    <img 
+                      src="/images/Gemini_Generated_Image_plv6quplv6quplv6.png" 
+                      alt="Student Accommodation 3" 
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Featured Badge */}
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-[#8B5CF6]/90 to-[#6366F1]/90 px-3 py-1.5 flex items-center justify-center rounded-full shadow-lg">
+                      <span className="text-white text-xs font-bold text-center">FEATURED</span>
+                    </div>
+                    {/* Floating Label */}
+                    {/* <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <span className="text-white text-xs font-medium">Luxury Apartment</span>
+                    </div> */}
+                  </div>
+
+                  {/* Image 4 - Bottom Right */}
+                  {/* <div className="absolute bottom-8 right-16 w-55 h-64 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-2xl"></div>
+                    <img 
+                      src="/images/Gemini_Generated_Image_rhc46nrhc46nrhc4.png" 
+                      alt="Student Accommodation 4" 
+                      className="w-full h-full object-cover"
+                    /> */}
+                    {/* Floating Label */}
+                    {/* <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <span className="text-white text-xs font-medium">Shared Room</span>
+                    </div>
+                  </div> */}
+
+                  {/* Subtle Connection Lines */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10">
+                    <defs>
+                      <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8"/>
+                        <stop offset="100%" stopColor="#6366F1" stopOpacity="0.8"/>
+                      </linearGradient>
+                    </defs>
+                    <path d="M 100 300 Q 200 200 300 100" stroke="url(#connectionGradient)" strokeWidth="1" fill="none"/>
+                    <path d="M 300 100 Q 400 200 500 300" stroke="url(#connectionGradient)" strokeWidth="1" fill="none"/>
+                  </svg>
+
+                  {/* Subtle Floating Particles */}
+                  {/* <div className="absolute top-10 left-10 w-1.5 h-1.5 bg-[#8B5CF6] rounded-full opacity-40"></div>
+                  <div className="absolute top-20 right-20 w-1 h-1 bg-[#6366F1] rounded-full opacity-40"></div>
+                  <div className="absolute bottom-20 left-20 w-0.5 h-0.5 bg-[#A78BFA] rounded-full opacity-40"></div> */}
+                </div>
+
                 {/* Floating Stats Cards */}
-                <div className="absolute -top-6 -left-6 bg-gradient-to-r from-[#8B5CF6]/90 to-[#6366F1]/90 backdrop-blur-md p-4 rounded-2xl border border-[#8B5CF6]/30 shadow-[0_0_20px_rgba(139,92,246,0.3)] transform group-hover:scale-110 transition-all duration-500 floating-card min-w-[110px] z-20">
+                {/* <div className="absolute top-0 left-10 bg-gradient-to-r from-[#8B5CF6]/35 to-[#6366F1]/35 backdrop-blur-xl p-4 rounded-2xl border border-[#8B5CF6]/40 shadow-[0_0_25px_rgba(139,92,246,0.2)] hover:scale-105 transition-all duration-300 ease-out min-w-[110px] -z-40 hover:shadow-[0_0_35px_rgba(139,92,246,0.7)] group">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-white">500+</div>
-                    <div className="text-[#DDD6FE] text-sm">Properties</div>
-                  </div>
-                </div>
-                <div className="absolute -bottom-6 -right-6 bg-gradient-to-r from-[#6366F1]/90 to-[#8B5CF6]/90 backdrop-blur-md p-4 rounded-2xl border border-[#6366F1]/30 shadow-[0_0_20px_rgba(99,102,241,0.3)] transform group-hover:scale-110 transition-all duration-500 floating-card min-w-[110px] z-20">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white">50+</div>
-                    <div className="text-[#DDD6FE] text-sm">Cities</div>
-                  </div>
-                </div>
+                    <div className="text-2xl font-bold text-white mb-1 group-hover:text-[#F3E8FF] transition-colors duration-300">500+</div>
+                    <div className="text-[#DDD6FE] text-xs font-semibold group-hover:text-white transition-colors duration-300">Properties</div>
+                  </div> */}
+                  {/* Decorative Corner */}
+                  {/* <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-gradient-to-br from-[#A78BFA] to-[#818CF8] rounded-full opacity-60"></div>
+                </div> */}
+                
                 {/* Verification Badge */}
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-[#10B981]/90 to-[#059669]/90 backdrop-blur-md p-3 rounded-full border border-[#10B981]/30 shadow-lg badge-pulse z-20">
-                  <Shield className="w-5 h-5 text-white" />
-                </div>
+                {/* <div className="absolute top-6 right-6 bg-gradient-to-r from-[#10B981]/95 to-[#059669]/95 backdrop-blur-xl p-4 rounded-full border border-[#10B981]/40 shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:scale-110 transition-transform duration-300 ease-out z-40 hover:shadow-[0_0_30px_rgba(16,185,129,0.6)]">
+                  <Shield className="w-6 h-6 text-white" />
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-[#4ADE80] rounded-full border-2 border-white shadow-sm"></div>
+                </div> */}
               </div>
             </div>
           </div>
@@ -184,40 +266,112 @@ const HeroSection = () => {
           </form>
 
          
-          {/* Mobile Image */}
-          <div className="relative mb-8 w-full max-w-md">
-            <div className="relative overflow-hidden rounded-2xl shadow-xl border-2 border-[#312E81]/30">
-              {/* Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 rounded-2xl blur-lg"></div>
-              {/* Image */}
-              <div className="relative z-10">
-                <img 
-                  src="/images/Gemini_Generated_Image_LandingPage.png" 
-                  alt="Student Accommodation" 
-                  className="w-full h-auto max-h-[280px] rounded-2xl object-cover shadow-xl"
-                />
+          {/* Mobile Staggered Images */}
+          <div className="relative mb-8 w-full max-w-md h-[360px]">
+            {/* Background Glow Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 rounded-2xl blur-xl opacity-60"></div>
+            
+            {/* Mobile Image 1 - Bottom Left */}
+            <div className="absolute bottom-2 left-1 w-36 h-44 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
+              <img 
+                src="/images/Gemini_Generated_Image_LandingPage.png" 
+                alt="Student Accommodation 1" 
+                className="w-full h-full object-cover"
+              />
+              {/* Floating Label */}
+              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="text-white text-xs font-medium">Premium</span>
               </div>
-              {/* Overlay Gradient */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/30 via-transparent to-transparent rounded-2xl"></div>
             </div>
+
+            {/* Mobile Image 2 - Top Right */}
+            <div className="absolute top-1 right-1 w-40 h-52 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
+              <img 
+                src="/images/Gemini_Generated_Image_p5v7j7p5v7j7p5v7.png" 
+                alt="Student Accommodation 2" 
+                className="w-full h-full object-cover"
+              />
+              {/* Floating Label */}
+              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="text-white text-xs font-medium">Student PG</span>
+              </div>
+            </div>
+
+            {/* Mobile Image 3 - Center (Main) */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-44 h-56 rounded-xl overflow-hidden shadow-xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-15 hover:z-25">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
+              <img 
+                src="/images/Gemini_Generated_Image_plv6quplv6quplv6.png" 
+                alt="Student Accommodation 3" 
+                className="w-full h-full object-cover"
+              />
+              {/* Featured Badge */}
+              <div className="absolute top-2 right-2 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] px-2 py-1 rounded-full shadow-lg">
+                <span className="text-white text-xs font-bold">FEATURED</span>
+              </div>
+              {/* Floating Label */}
+              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="text-white text-xs font-medium">Luxury</span>
+              </div>
+            </div>
+
+            {/* Mobile Image 4 - Bottom Right */}
+            <div className="absolute bottom-4 right-4 w-32 h-40 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
+              <img 
+                src="/images/Gemini_Generated_Image_rhc46nrhc46nrhc4.png" 
+                alt="Student Accommodation 4" 
+                className="w-full h-full object-cover"
+              />
+              {/* Floating Label */}
+              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <span className="text-white text-xs font-medium">Shared</span>
+              </div>
+            </div>
+
+            {/* Subtle Connection Lines */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10">
+              <defs>
+                <linearGradient id="mobileConnectionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.8"/>
+                  <stop offset="100%" stopColor="#6366F1" stopOpacity="0.8"/>
+                </linearGradient>
+              </defs>
+              <path d="M 50 150 Q 100 100 150 50" stroke="url(#mobileConnectionGradient)" strokeWidth="1" fill="none"/>
+              <path d="M 150 50 Q 200 100 250 150" stroke="url(#mobileConnectionGradient)" strokeWidth="1" fill="none"/>
+            </svg>
+
+            {/* Subtle Floating Particles */}
+            <div className="absolute top-8 left-8 w-1.5 h-1.5 bg-[#8B5CF6] rounded-full opacity-40"></div>
+            <div className="absolute top-16 right-16 w-1 h-1 bg-[#6366F1] rounded-full opacity-40"></div>
+            <div className="absolute bottom-16 left-16 w-0.5 h-0.5 bg-[#A78BFA] rounded-full opacity-40"></div>
             
             {/* Mobile Stats Cards */}
-            <div className="absolute -top-3 -left-3 bg-gradient-to-r from-[#8B5CF6]/90 to-[#6366F1]/90 backdrop-blur-md p-2 rounded-xl border border-[#8B5CF6]/30 shadow-lg z-20">
+            <div className="absolute -top-2 -left-2 bg-gradient-to-r from-[#8B5CF6]/95 to-[#6366F1]/95 backdrop-blur-xl p-3 rounded-xl border border-[#8B5CF6]/40 shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:scale-105 transition-all duration-300 ease-out z-40 hover:shadow-[0_0_25px_rgba(139,92,246,0.6)] group min-w-[80px]">
               <div className="text-center">
-                <div className="text-lg font-bold text-white">500+</div>
-                <div className="text-[#DDD6FE] text-xs">Properties</div>
+                <div className="text-lg font-bold text-white mb-1 group-hover:text-[#F3E8FF] transition-colors duration-300">500+</div>
+                <div className="text-[#DDD6FE] text-xs font-semibold group-hover:text-white transition-colors duration-300">Properties</div>
+                <div className="w-5 h-0.5 bg-gradient-to-r from-[#A78BFA] to-[#818CF8] mx-auto mt-1 rounded-full group-hover:w-6 transition-all duration-300"></div>
               </div>
+              {/* Decorative Corner */}
+              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-gradient-to-br from-[#A78BFA] to-[#818CF8] rounded-full opacity-60"></div>
             </div>
-            <div className="absolute -bottom-3 -right-3 bg-gradient-to-r from-[#6366F1]/90 to-[#8B5CF6]/90 backdrop-blur-md p-2 rounded-xl border border-[#6366F1]/30 shadow-lg z-20">
+            <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-[#6366F1]/95 to-[#8B5CF6]/95 backdrop-blur-xl p-3 rounded-xl border border-[#6366F1]/40 shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:scale-105 transition-all duration-300 ease-out z-40 hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] group min-w-[80px]">
               <div className="text-center">
-                <div className="text-lg font-bold text-white">50+</div>
-                <div className="text-[#DDD6FE] text-xs">Cities</div>
+                <div className="text-lg font-bold text-white mb-1 group-hover:text-[#F3E8FF] transition-colors duration-300">50+</div>
+                <div className="text-[#DDD6FE] text-xs font-semibold group-hover:text-white transition-colors duration-300">Cities</div>
+                <div className="w-5 h-0.5 bg-gradient-to-r from-[#818CF8] to-[#A78BFA] mx-auto mt-1 rounded-full group-hover:w-6 transition-all duration-300"></div>
               </div>
+              {/* Decorative Corner */}
+              <div className="absolute -bottom-0.5 -left-0.5 w-1.5 h-1.5 bg-gradient-to-br from-[#818CF8] to-[#A78BFA] rounded-full opacity-60"></div>
             </div>
             
             {/* Verification Badge */}
-            <div className="absolute top-3 right-3 bg-gradient-to-r from-[#10B981]/90 to-[#059669]/90 backdrop-blur-md p-2 rounded-full border border-[#10B981]/30 shadow-lg z-20">
-              <Shield className="w-4 h-4 text-white" />
+            <div className="absolute top-3 right-3 bg-gradient-to-r from-[#10B981]/95 to-[#059669]/95 backdrop-blur-xl p-3 rounded-full border border-[#10B981]/40 shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:scale-110 transition-transform duration-300 ease-out z-40 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)]">
+              <Shield className="w-5 h-5 text-white" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-[#4ADE80] rounded-full border border-white shadow-sm"></div>
             </div>
           </div>
 

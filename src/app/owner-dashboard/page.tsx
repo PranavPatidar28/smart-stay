@@ -2483,7 +2483,7 @@ export default function OwnerDashboard() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                  Property Dashboard
+                  Owner Dashboard
                 </h1>
                 <p className="text-xl text-white/90">
                   Manage your student accommodation listings and track
