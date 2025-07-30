@@ -108,7 +108,7 @@ const HeroSection = () => {
                   <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 rounded-3xl blur-2xl opacity-60"></div>
                   
                   {/* Image 1 - Bottom Left */}
-                  <div className="absolute -bottom-4 left-6 w-60 h-80 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#312E81]/40 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+                  <div className="absolute -bottom-6 left-4 w-60 h-80 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-2xl"></div>
 
                     <div className="absolute bottom-2 left-2 bg-gradient-to-r from-[#6366F1]/55 to-[#8B5CF6]/55 backdrop-blur-xl px-2 py-1 rounded-2xl border border-[#6366F1]/40 shadow-[0_0_25px_rgba(99,102,241,0.3)] hover:scale-105 transition-all duration-300 ease-out min-w-[90px] z-40 hover:shadow-[0_0_35px_rgba(99,102,241,0.7)] group">
@@ -130,7 +130,7 @@ const HeroSection = () => {
                   </div>
 
                   {/* Image 2 - Top Right */}
-                  <div className="absolute top-0 right-0 w-60 h-80 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+                  <div className="absolute -top-6 right-2 w-60 h-80 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-2xl"></div>
                     
                     <div className="absolute top-2 right-2 bg-gradient-to-r from-[#6366F1]/55 to-[#8B5CF6]/55 backdrop-blur-xl px-2 py-1 rounded-2xl border border-[#6366F1]/40 shadow-[0_0_25px_rgba(99,102,241,0.3)] hover:scale-105 transition-all duration-300 ease-out min-w-[90px] z-40 hover:shadow-[0_0_35px_rgba(99,102,241,0.7)] group">
@@ -141,7 +141,7 @@ const HeroSection = () => {
                 </div>
 
                     <img 
-                      src="/images/Gemini_Generated_Image_p5v7j7p5v7j7p5v7.png" 
+                      src="/images/Gemini_Generated_Image_plv6quplv6quplv6.png" 
                       alt="Student Accommodation 2" 
                       className="w-full h-full object-cover"
                     />
@@ -152,10 +152,10 @@ const HeroSection = () => {
                   </div>
                   
                   {/* Image 3 - Center (Main) */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-65 h-90 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-15 hover:z-25">
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-110 rounded-2xl overflow-hidden shadow-2xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-15 hover:z-25">
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-2xl"></div>
                     <img 
-                      src="/images/Gemini_Generated_Image_plv6quplv6quplv6.png" 
+                      src="/images/Gemini_Generated_Image_4chicb4chicb4chi.png" 
                       alt="Student Accommodation 3" 
                       className="w-full h-full object-cover"
                     />
@@ -578,7 +578,7 @@ const CTASection = () => {
             
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <Link href="/listings" className="bg-white text-[#5B21B6] px-8 py-4 rounded-2xl font-bold hover:bg-[#F5F3FF] hover:shadow-[0_0_20px_rgba(167,139,250,0.5)] transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105 flex items-center justify-center gap-2">
+              <Link href="/listings" className="bg-white text-[#5B21B6] px-8 py-4 rounded-2xl font-bold hover:bg-[#F5F3FF] hover:shadow-[0_0_20px_rgba(167,139,250,0.5)] transition-all duration-300 shadow-xl  hover:scale-105 flex items-center justify-center gap-2">
                 <Search className="w-5 h-5" />
                 Browse Properties
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -624,7 +624,7 @@ const CTASection = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[#A78BFA] text-sm">Available From</span>
-                    <span className="text-white text-xl font-bold">June 2024</span>
+                    <span className="text-white text-xl font-bold">June 2025</span>
                   </div>
                 </div>
               </div>

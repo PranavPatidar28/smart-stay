@@ -11,11 +11,12 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState("landing");
   const pathname = usePathname();
   const { data: session } = useSession();
   
   // Check if we're on the home page
-  const isHomePage = pathname === "/";
+  // const isHomePage = pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +25,10 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [setIsScrolled]);
+
+  useEffect(() => {
+    setCurrentPage(pathname);
+  }, [pathname]);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -101,7 +106,7 @@ export default function Navbar() {
 
   // Determine navbar styling based on page and scroll state
   const getNavbarStyles = () => {
-    if (isHomePage) {
+    if (currentPage === "/") {
       // Home page: transparent with white text, solid background when scrolled
       return {
         nav: isScrolled 
@@ -130,7 +135,8 @@ export default function Navbar() {
         nav: 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg',
         logo: 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent',
         logoHover: 'hover:opacity-80',
-        links: 'text-gray-700 hover:text-[var(--color-primary-400)] ',
+        links: 'text-gray-700 hover:text-[var(--color-primary-400)]',
+        linksActive: 'text-[var(--color-primary-400)]',
         mobileMenu: 'bg-white/95 backdrop-blur-xl',
         mobileLinks: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50',
         menuButton: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
@@ -164,7 +170,8 @@ export default function Navbar() {
                   key={link.href}
                   href={handleNavigation(link.href, link.requiresRole)}
                   onClick={(e) => handleLinkClick(e, link.requiresRole)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105 ${styles.links}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105
+                      ${currentPage === link.href ? `${styles.linksActive}` : `${styles.links}`}`}
                 >
                   {link.icon}
                   <span className="font-medium">{link.label}</span>

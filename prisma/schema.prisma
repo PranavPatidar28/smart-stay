@@ -30,12 +30,12 @@ model User {
   sessions Session[]
 
   // App relations
-  properties    Property[]
-  favorites     Favorite[]
-  bookings      Booking[]
-  reviews       Review[]
-  inquiries     Inquiry[]
-  notifications Notification[]
+  properties         Property[]
+  favorites          Favorite[]
+  bookings           Booking[]
+  reviews            Review[]
+  inquiries          Inquiry[]
+  notifications      Notification[]
   propertyViewEvents PropertyViewEvent[]
   bookingEvents      BookingEvent[]
   inquiryEvents      InquiryEvent[]
@@ -83,38 +83,38 @@ model VerificationToken {
 }
 
 model Property {
-  id            String        @id @default(cuid())
-  title         String
-  description   String?
-  location      String
-  latitude      Float?        // Adding latitude field
-  longitude     Float?        // Adding longitude field
-  price         Float
-  deposit       Float?
-  type          PropertyType
-  status        PropertyStatus @default(ACTIVE)
-  bedrooms      Int           @default(1)
-  bathrooms     Float         @default(1)
-  availableFrom DateTime?
+  id             String         @id @default(cuid())
+  title          String
+  description    String?
+  location       String
+  latitude       Float? // Adding latitude field
+  longitude      Float? // Adding longitude field
+  price          Float
+  deposit        Float?
+  type           PropertyType
+  status         PropertyStatus @default(ACTIVE)
+  bedrooms       Int            @default(1)
+  bathrooms      Float          @default(1)
+  availableFrom  DateTime?
   virtualTourUrl String?
-  seoKeywords   String?
-  contactPhone  String?
-  contactEmail  String?
-  utilities     Boolean       @default(false)
-  petFriendly   Boolean       @default(false)
-  furnished     Boolean       @default(false)
-  parking       Boolean       @default(false)
-  views         Int           @default(0)
-  rating        Float         @default(0)
-  earnings      Float         @default(0)
-  occupancy     Int           @default(0)
-  lastUpdated   DateTime      @default(now())
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  seoKeywords    String?
+  contactPhone   String?
+  contactEmail   String?
+  utilities      Boolean        @default(false)
+  petFriendly    Boolean        @default(false)
+  furnished      Boolean        @default(false)
+  parking        Boolean        @default(false)
+  views          Int            @default(0)
+  rating         Float          @default(0)
+  earnings       Float          @default(0)
+  occupancy      Int            @default(0)
+  lastUpdated    DateTime       @default(now())
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
   // Relations
   ownerId       String
-  owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner         User                @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   images        PropertyImage[]
   amenities     PropertyAmenity[]
   favorites     Favorite[]
@@ -125,30 +125,39 @@ model Property {
   bookingEvents BookingEvent[]
   inquiryEvents InquiryEvent[]
 
+  @@index([status])
+  @@index([type])
+  @@index([price])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([ownerId])
+  @@index([location])
   @@map("properties")
 }
 
 model PropertyImage {
-  id         String   @id @default(cuid())
-  url        String
-  order      Int      @default(0)
-  isCover    Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  url       String
+  order     Int      @default(0)
+  isCover   Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   // Relations
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
+  @@index([propertyId])
+  @@index([order])
   @@map("property_images")
 }
 
 model Amenity {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  category    String
-  icon        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String
+  icon      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   properties PropertyAmenity[]
@@ -157,21 +166,23 @@ model Amenity {
 }
 
 model PropertyAmenity {
-  id         String @id @default(cuid())
+  id String @id @default(cuid())
 
   // Relations
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   amenityId  String
-  amenity    Amenity @relation(fields: [amenityId], references: [id], onDelete: Cascade)
+  amenity    Amenity  @relation(fields: [amenityId], references: [id], onDelete: Cascade)
 
   @@unique([propertyId, amenityId])
+  @@index([propertyId])
+  @@index([amenityId])
   @@map("property_amenities")
 }
 
 model Favorite {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
 
   // Relations
   userId     String
@@ -180,59 +191,69 @@ model Favorite {
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, propertyId])
+  @@index([userId])
+  @@index([propertyId])
   @@map("favorites")
 }
 
 model Booking {
-  id          String        @id @default(cuid())
-  startDate   DateTime
-  endDate     DateTime?
-  status      BookingStatus @default(PENDING)
-  amount      Float
-  deposit     Float?
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        String        @id @default(cuid())
+  startDate DateTime
+  endDate   DateTime?
+  status    BookingStatus @default(PENDING)
+  amount    Float
+  deposit   Float?
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([propertyId])
+  @@index([status])
   @@map("bookings")
 }
 
 model Review {
-  id          String   @id @default(cuid())
-  rating      Int
-  comment     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, propertyId])
+  @@index([propertyId])
+  @@index([rating])
   @@map("reviews")
 }
 
 model Inquiry {
-  id          String        @id @default(cuid())
-  message     String
-  status      InquiryStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        String        @id @default(cuid())
+  message   String
+  status    InquiryStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   // Relations
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([propertyId])
+  @@index([status])
   @@map("inquiries")
 }
 
@@ -245,9 +266,11 @@ model Notification {
   createdAt DateTime         @default(now())
 
   // Relations
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([read])
   @@map("notifications")
 }
 
@@ -255,10 +278,14 @@ model PropertyViewEvent {
   id         String   @id @default(cuid())
   propertyId String
   property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  userId     String?  // Nullable: allows anonymous property views. Migration forced.
+  userId     String? // Nullable: allows anonymous property views. Migration forced.
   user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   timestamp  DateTime @default(now())
   metadata   Json?
+
+  @@index([propertyId])
+  @@index([timestamp])
+  @@map("property_view_events")
 }
 
 model BookingEvent {
@@ -270,6 +297,10 @@ model BookingEvent {
   bookingId  String?
   timestamp  DateTime @default(now())
   metadata   Json?
+
+  @@index([propertyId])
+  @@index([timestamp])
+  @@map("booking_events")
 }
 
 model InquiryEvent {
@@ -281,6 +312,10 @@ model InquiryEvent {
   inquiryId  String?
   timestamp  DateTime @default(now())
   metadata   Json?
+
+  @@index([propertyId])
+  @@index([timestamp])
+  @@map("inquiry_events")
 }
 
 // Enums
@@ -327,4 +362,4 @@ enum NotificationType {
   REVIEW
   PAYMENT
   SYSTEM
-} 
+}

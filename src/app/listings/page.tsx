@@ -1088,7 +1088,10 @@ export default function ListingsPage() {
   // Fetch properties from API
   useEffect(() => {
     setLoading(true); // Start loading as soon as any filter changes
+    setError(null); // Clear any previous errors
+    
     const fetchProperties = async () => {
+      const startTime = performance.now();
       try {
         setSearchLoading(true);
         const params = new URLSearchParams();
@@ -1107,9 +1110,18 @@ export default function ListingsPage() {
         }
         // Add sort
         if (sortBy) params.append('sortBy', sortBy);
-        const response = await fetch(`/api/properties?${params.toString()}`);
-        if (!response.ok) throw new Error('Failed to fetch properties');
-        const data = await response.json();
+        
+        // Make API calls in parallel for better performance
+        const [propertiesResponse, favoritesResponse] = await Promise.allSettled([
+          fetch(`/api/properties?${params.toString()}`),
+          session?.user ? fetch('/api/favorites') : Promise.resolve(null)
+        ]);
+
+        if (propertiesResponse.status === 'rejected') {
+          throw new Error('Failed to fetch properties');
+        }
+
+        const data = await propertiesResponse.value.json();
         let properties = data.properties.map((property: Property) => ({
           ...property,
           image: property.images[0]?.url || '',
@@ -1117,28 +1129,35 @@ export default function ListingsPage() {
           isAvailable: property.status === 'ACTIVE',
           type: property.type // Keep the original enum value for display
         }));
-        // If user is logged in, fetch their favorites and mark favorited properties
-        if (session?.user) {
+
+        // If user is logged in and favorites fetch was successful, mark favorited properties
+        if (session?.user && favoritesResponse.status === 'fulfilled' && favoritesResponse.value) {
           try {
-            const favoritesResponse = await fetch('/api/favorites');
-            if (favoritesResponse.ok) {
-              const favoritesData = await favoritesResponse.json();
-              const favoritePropertyIds = favoritesData.favorites.map(
-                (favorite: any) => favorite.property.id
-              );
-              // Mark properties that are in user's favorites
-              properties = properties.map((property: Property) => ({
-                ...property,
-                isFavorite: favoritePropertyIds.includes(property.id)
-              }));
-            }
+            const favoritesData = await favoritesResponse.value.json();
+            const favoritePropertyIds = favoritesData.favorites.map(
+              (favorite: any) => favorite.property.id
+            );
+            // Mark properties that are in user's favorites
+            properties = properties.map((property: Property) => ({
+              ...property,
+              isFavorite: favoritePropertyIds.includes(property.id)
+            }));
           } catch (favError) {
-            console.error('Error fetching user favorites:', favError);
-            // Continue with properties even if favorites fetch fails
+            console.error('Error processing user favorites:', favError);
+            // Continue with properties even if favorites processing fails
           }
         }
+
         setProperties(properties);
+        
+        // Log performance metrics
+        const endTime = performance.now();
+        const loadTime = endTime - startTime;
+        console.log(`Properties loaded in ${loadTime.toFixed(2)}ms`);
+        
+        
       } catch (err) {
+        console.error('Error fetching properties:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch properties');
       } finally {
         setLoading(false);
@@ -1146,7 +1165,10 @@ export default function ListingsPage() {
         setIsSearching(false);
       }
     };
-    fetchProperties();
+    
+    // Add a small delay to prevent excessive API calls during rapid filter changes
+    const timeoutId = setTimeout(fetchProperties, 100);
+    return () => clearTimeout(timeoutId);
   }, [debouncedSearchTerm, selectedType, priceRange, quickFilters, selectedAmenities, sortBy, session?.user]);
 
   const toggleFavorite = async (id: string) => {
@@ -1189,9 +1211,11 @@ export default function ListingsPage() {
     const action = wasAlreadyFavorite ? "Removed from" : "Added to";
     showSuccess(`${action} favorites`);
     
-    // Track analytics
+    // Track analytics (non-blocking)
     const eventType = wasAlreadyFavorite ? 'favorite_removed' : 'favorite_added';
-    trackAnalyticsEvent(eventType, id);
+    trackAnalyticsEvent(eventType, id).catch(() => {
+      // Silently ignore analytics errors
+    });
     
     // Perform API operation in background
     try {
@@ -1343,10 +1367,12 @@ export default function ListingsPage() {
       // Refresh reviews
       fetchPropertyReviews(selectedProperty.id);
       
-      // Track analytics
+      // Track analytics (non-blocking)
       trackAnalyticsEvent('review_submitted', selectedProperty.id, {
         rating: userReview.rating,
         hasComment: !!userReview.comment
+      }).catch(() => {
+        // Silently ignore analytics errors
       });
       
       // Reset review form
@@ -1569,7 +1595,11 @@ export default function ListingsPage() {
 
   useEffect(() => {
     if (showModal && selectedProperty) {
-      trackAnalyticsEvent('property_view', selectedProperty.id);
+      // Track analytics asynchronously without blocking the UI
+      trackAnalyticsEvent('property_view', selectedProperty.id).catch((error) => {
+        console.error('Analytics tracking error (non-blocking):', error);
+        // Silently ignore analytics errors - they should never break the main app
+      });
     }
     // Only fire when modal opens for a new property
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1794,7 +1824,7 @@ export default function ListingsPage() {
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white relative overflow-hidden">
           {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-25">
+          <div className="absolute inset-0 opacity-50">
             {/* Grid Pattern */}
             <div className="absolute inset-0" style={{
               backgroundImage: `
@@ -2618,7 +2648,7 @@ export default function ListingsPage() {
                   {/* Header: Title, Location, Rating */}
                   <div className="sticky top-0 px-6 pt-6 pb-4 bg-white z-20 border-b border-gray-100 shadow-sm">
                     {/* Title with enhanced typography */}
-                    <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-[var(--color-primary-900)] bg-clip-text text-transparent leading-tight" title={selectedProperty!.title}>
+                    <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-[var(--color-primary-100)] bg-clip-text text-transparent leading-tight" title={selectedProperty!.title}>
                       {selectedProperty!.title}
                     </h2>
                     

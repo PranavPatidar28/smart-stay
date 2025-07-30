@@ -92,7 +92,7 @@ import {
   StarIcon,
 } from "lucide-react";
 import { Fragment } from "react";
-import { trackAnalyticsEvent } from '@/lib/api-client';
+import { trackAnalyticsEvent } from "@/lib/api-client";
 
 // Extend the Property interface to include coordinates
 interface Property {
@@ -147,51 +147,52 @@ const STATUS_OPTIONS = [
     label: "All Statuses",
     icon: "🔍",
     description: "Show all properties",
-    color: "gray"
+    color: "gray",
   },
   {
     value: "ACTIVE",
     label: "Active",
     icon: "✅",
     description: "Available for rent",
-    color: "green"
+    color: "green",
   },
   {
     value: "INACTIVE",
     label: "Inactive",
     icon: "⏸️",
     description: "Temporarily unavailable",
-    color: "gray"
+    color: "gray",
   },
   {
     value: "PENDING",
     label: "Pending",
     icon: "⏳",
     description: "Waiting for approval",
-    color: "yellow"
+    color: "yellow",
   },
   {
     value: "RENTED",
     label: "Rented",
     icon: "🔑",
     description: "Currently occupied",
-    color: "blue"
-  }
+    color: "blue",
+  },
 ];
 const generatePlaceholderActivities = (properties: Property[]): Activity[] => {
   if (!properties.length) return [];
-  
+
   return properties.slice(0, 3).map((property, idx) => ({
     id: idx + 1,
     type: idx === 0 ? "view" : idx === 1 ? "inquiry" : "payment",
-    message: idx === 0 
-      ? `Property "${property.title}" has been viewed recently`
-      : idx === 1 
-      ? `New inquiry received for "${property.title}"`
-      : `Recent payment activity for "${property.title}"`,
+    message:
+      idx === 0
+        ? `Property "${property.title}" has been viewed recently`
+        : idx === 1
+        ? `New inquiry received for "${property.title}"`
+        : `Recent payment activity for "${property.title}"`,
     time: idx === 0 ? "Today" : idx === 1 ? "Yesterday" : "Last week",
     propertyId: parseInt(property.id),
-    propertyTitle: property.title
+    propertyTitle: property.title,
   }));
 };
 
@@ -328,21 +329,24 @@ function PropertyModal({
   // Handle click outside to close modal
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     }
 
     if (open) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
       // Prevent background scrolling when modal is open
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
       // Restore scrolling when modal is closed
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [open, onClose]);
   // Process amenities from initialValues if they are objects
@@ -484,21 +488,26 @@ function PropertyModal({
   }, [form]);
 
   // Update validateField to trim and collapse spaces for string length validation:
-  const collapseSpaces = (str: string) => str.replace(/\s+/g, ' ').trim();
+  const collapseSpaces = (str: string) => str.replace(/\s+/g, " ").trim();
   const validateField = useCallback((field: keyof FormProperty, value: any) => {
     setValidationErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors[field];
       switch (field) {
         case "title": {
-          const val = typeof value === 'string' ? collapseSpaces(value) : '';
-          if (!val || val.length < 10) newErrors.title = "Title should be at least 10 non-space characters";
-          else if (val.length > 100) newErrors.title = "Title should be less than 100 characters";
+          const val = typeof value === "string" ? collapseSpaces(value) : "";
+          if (!val || val.length < 10)
+            newErrors.title =
+              "Title should be at least 10 non-space characters";
+          else if (val.length > 100)
+            newErrors.title = "Title should be less than 100 characters";
           break;
         }
         case "location": {
-          const val = typeof value === 'string' ? collapseSpaces(value) : '';
-          if (!val || val.length < 5) newErrors.location = "Location should be at least 5 non-space characters";
+          const val = typeof value === "string" ? collapseSpaces(value) : "";
+          if (!val || val.length < 5)
+            newErrors.location =
+              "Location should be at least 5 non-space characters";
           break;
         }
         case "price":
@@ -506,10 +515,12 @@ function PropertyModal({
           else if (value > 100000) newErrors.price = "Price seems too high";
           break;
         case "bedrooms":
-          if (value < 0 || value > 10) newErrors.bedrooms = "Bedrooms must be between 0 and 10";
+          if (value < 0 || value > 10)
+            newErrors.bedrooms = "Bedrooms must be between 0 and 10";
           break;
         case "bathrooms":
-          if (value < 0 || value > 10) newErrors.bathrooms = "Bathrooms must be between 0 and 10";
+          if (value < 0 || value > 10)
+            newErrors.bathrooms = "Bathrooms must be between 0 and 10";
           break;
         case "contactPhone": {
           if (value) {
@@ -517,8 +528,13 @@ function PropertyModal({
             if (phone.startsWith("+")) {
               // Remove '+' and check digits
               const digits = phone.slice(1);
-              if (!/^\d+$/.test(digits) || digits.length < 10 || digits.length > 15) {
-                newErrors.contactPhone = "Enter a valid international phone number (country code + number)";
+              if (
+                !/^\d+$/.test(digits) ||
+                digits.length < 10 ||
+                digits.length > 15
+              ) {
+                newErrors.contactPhone =
+                  "Enter a valid international phone number (country code + number)";
               }
             } else {
               if (!/^\d{10}$/.test(phone)) {
@@ -529,14 +545,19 @@ function PropertyModal({
           break;
         }
         case "contactEmail": {
-          if (value && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)) {
+          if (
+            value &&
+            !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(value)
+          ) {
             newErrors.contactEmail = "Please enter a valid email address";
           }
           break;
         }
         case "images":
-          if (!Array.isArray(value) || value.length === 0) newErrors.images = "At least one image is required";
-          else if (value.some((url: string) => !/^https?:\/\/.+\..+/.test(url))) newErrors.images = "All images must be valid URLs";
+          if (!Array.isArray(value) || value.length === 0)
+            newErrors.images = "At least one image is required";
+          else if (value.some((url: string) => !/^https?:\/\/.+\..+/.test(url)))
+            newErrors.images = "All images must be valid URLs";
           break;
         default:
           break;
@@ -762,12 +783,12 @@ function PropertyModal({
 
   useEffect(() => {
     if (open) {
-      document.body.classList.add('overflow-hidden');
+      document.body.classList.add("overflow-hidden");
     } else {
-      document.body.classList.remove('overflow-hidden');
+      document.body.classList.remove("overflow-hidden");
     }
     return () => {
-      document.body.classList.remove('overflow-hidden');
+      document.body.classList.remove("overflow-hidden");
     };
   }, [open]);
 
@@ -809,7 +830,10 @@ function PropertyModal({
         }
       `}</style>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-2 sm:px-4">
-        <div ref={modalRef} className="relative w-full max-w-4xl mx-auto bg-white/95 rounded-3xl shadow-2xl border border-gray-100 animate-fade-in-up max-h-[90vh] overflow-y-auto flex flex-col">
+        <div
+          ref={modalRef}
+          className="relative w-full max-w-4xl mx-auto bg-white/95 rounded-3xl shadow-2xl border border-gray-100 animate-fade-in-up max-h-[90vh] overflow-y-auto flex flex-col"
+        >
           <div className="p-8 max-h-[90vh] overflow-y-auto custom-scrollbar text-gray-700">
             <button
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-900 text-2xl font-bold z-10"
@@ -827,7 +851,6 @@ function PropertyModal({
               <p className="text-gray-600 mb-4">
                 Create an attractive listing for students
               </p>
-
             </div>
 
             {/* Enhanced Stepper */}
@@ -835,8 +858,12 @@ function PropertyModal({
               {/* Modern Progress Bar */}
               <div className="w-full max-w-lg mx-auto mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Progress</span>
-                  <span className="text-sm font-bold text-[var(--color-primary-600)]">{completionScore}%</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Progress
+                  </span>
+                  <span className="text-sm font-bold text-[var(--color-primary-600)]">
+                    {completionScore}%
+                  </span>
                 </div>
                 <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                   <div
@@ -848,26 +875,51 @@ function PropertyModal({
 
               {/* Modern Horizontal Stepper */}
               <div className="flex items-start justify-center gap-1 sm:gap-4 w-full max-w-2xl mx-auto overflow-x-auto scrollbar-hide flex-nowrap">
-                {["Basic Info", "Images", "Details", "Contact & SEO", "Review"].map((label, idx) => (
-                  <div key={label} className="flex flex-col items-center justify-start w-full min-w-0 flex-grow">
+                {[
+                  "Basic Info",
+                  "Images",
+                  "Details",
+                  "Contact & SEO",
+                  "Review",
+                ].map((label, idx) => (
+                  <div
+                    key={label}
+                    className="flex flex-col items-center justify-start w-full min-w-0 flex-grow"
+                  >
                     <button
                       type="button"
                       onClick={() => setStep(idx)}
                       className={`flex flex-col items-center group focus:outline-none w-full`}
                       aria-current={step === idx ? "step" : undefined}
                     >
-                      <div className={`flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all duration-300
-                        ${step > idx ? 'bg-[var(--color-primary-500)] border-[var(--color-primary-500)] text-white' :
-                          step === idx ? 'bg-white border-[var(--color-primary-500)] text-[var(--color-primary-600)] shadow-lg' :
-                          'bg-gray-100 border-gray-300 text-gray-400'}
-                      `}>
+                      <div
+                        className={`flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all duration-300
+                        ${
+                          step > idx
+                            ? "bg-[var(--color-primary-500)] border-[var(--color-primary-500)] text-white"
+                            : step === idx
+                            ? "bg-white border-[var(--color-primary-500)] text-[var(--color-primary-600)] shadow-lg"
+                            : "bg-gray-100 border-gray-300 text-gray-400"
+                        }
+                      `}
+                      >
                         <span className="font-bold text-base">{idx + 1}</span>
                       </div>
-                      <span className={`mt-2 text-xs sm:text-sm font-medium text-center whitespace-normal break-words transition-colors duration-300 min-h-[32px] sm:min-h-[24px] flex items-center justify-center w-full ...`}>{label}</span>
+                      <span
+                        className={`mt-2 text-xs sm:text-sm font-medium text-center whitespace-normal break-words transition-colors duration-300 min-h-[32px] sm:min-h-[24px] flex items-center justify-center w-full ...`}
+                      >
+                        {label}
+                      </span>
                     </button>
                     {idx < 4 && (
-                      <div className={`flex-1 h-1 mx-1 sm:mx-2 rounded-full transition-all duration-300
-                        ${step > idx ? 'bg-[var(--color-primary-500)]' : 'bg-gray-200'}`}></div>
+                      <div
+                        className={`flex-1 h-1 mx-1 sm:mx-2 rounded-full transition-all duration-300
+                        ${
+                          step > idx
+                            ? "bg-[var(--color-primary-500)]"
+                            : "bg-gray-200"
+                        }`}
+                      ></div>
                     )}
                   </div>
                 ))}
@@ -1158,9 +1210,31 @@ function PropertyModal({
                     image will be the cover photo.
                   </p>
 
+                  {/* URL Input */}
+                  {form.images.length < 8 && (
+                    <div className="mt-4">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newImage}
+                          onChange={(e) => setNewImage(e.target.value)}
+                          placeholder="Or paste image URL here"
+                          className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+                        />
+                        <button
+                          onClick={handleAddImage}
+                          className="px-6 py-3 bg-[var(--color-primary-500)] text-white rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors disabled:opacity-50"
+                          disabled={!newImage}
+                        >
+                          Add URL
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Drag & Drop Area */}
                   <div
-                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
+                    className={`border-2 border-dashed rounded-xl p-8 mt-4 text-center transition-all duration-200 ${
                       isDragging
                         ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
                         : "border-gray-300 hover:border-gray-400"
@@ -1176,7 +1250,8 @@ function PropertyModal({
                           Drop images here or click to upload
                         </p>
                         <p className="text-sm text-gray-600">
-                          Supports JPG, PNG, GIF up to 10MB each
+                          <span className="block">Supports JPG, PNG, GIF up to 10MB each</span>
+                          <span className="text-lg text-red-500 block">Currently Image upload is not supported. But you can add image URL.</span>
                         </p>
                       </div>
                       <button
@@ -1255,26 +1330,7 @@ function PropertyModal({
                   )}
 
                   {/* URL Input */}
-                  {form.images.length < 8 && (
-                    <div className="mt-4">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newImage}
-                          onChange={(e) => setNewImage(e.target.value)}
-                          placeholder="Or paste image URL here"
-                          className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
-                        />
-                        <button
-                          onClick={handleAddImage}
-                          className="px-6 py-3 bg-[var(--color-primary-500)] text-white rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors disabled:opacity-50"
-                          disabled={!newImage}
-                        >
-                          Add URL
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  {/* Position change */}
 
                   {touched.images && form.images.length === 0 && (
                     <span className="text-xs text-red-500 mt-2">
@@ -1284,7 +1340,7 @@ function PropertyModal({
                 </div>
 
                 {/* Virtual Tour */}
-                <div>
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Virtual Tour URL
                   </label>
@@ -1303,7 +1359,7 @@ function PropertyModal({
                   <p className="text-xs text-gray-500 mt-1">
                     Add a 360° virtual tour or video walkthrough link
                   </p>
-                </div>
+                </div> */}
               </div>
             )}
 
@@ -1622,7 +1678,6 @@ function PropertyModal({
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
                           placeholder="student accommodation, near campus, affordable"
                         />
-                        
                       </div>
 
                       {/* SEO Suggestions */}
@@ -1893,8 +1948,6 @@ function PropertyModal({
   );
 }
 
-
-
 export default function OwnerDashboard() {
   const { data: session } = useSession();
   const [properties, setProperties] = useState<Property[]>([]);
@@ -1910,11 +1963,13 @@ export default function OwnerDashboard() {
   const [selectedPropertyToEdit, setSelectedPropertyToEdit] =
     useState<Property | null>(null);
   // Add state for delete confirmation
-  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
+    null
+  );
   const [analyticsData, setAnalyticsData] = useState<unknown>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
-  
+
   // Extract user ID safely with type assertion
   const userId = session?.user ? (session.user as any).id : undefined;
 
@@ -1927,31 +1982,35 @@ export default function OwnerDashboard() {
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       // Close property type modal when clicking outside
-      if (showPropertyTypeModal && 
-          propertyTypeRef.current && 
-          !propertyTypeRef.current.contains(event.target as Node)) {
+      if (
+        showPropertyTypeModal &&
+        propertyTypeRef.current &&
+        !propertyTypeRef.current.contains(event.target as Node)
+      ) {
         setShowPropertyTypeModal(false);
       }
-      
+
       // Close status modal when clicking outside
-      if (showStatusModal && 
-          statusRef.current && 
-          !statusRef.current.contains(event.target as Node)) {
+      if (
+        showStatusModal &&
+        statusRef.current &&
+        !statusRef.current.contains(event.target as Node)
+      ) {
         setShowStatusModal(false);
       }
     }
 
     // Add event listener when either modal is shown
     if (showPropertyTypeModal || showStatusModal) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
-    
+
     // Clean up
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [showPropertyTypeModal, showStatusModal]);
-  
+
   // Fetch user's properties from API
   useEffect(() => {
     const fetchProperties = async () => {
@@ -1964,17 +2023,18 @@ export default function OwnerDashboard() {
 
       try {
         setLoading(true);
-        const response = await fetch(
-          `/api/properties?ownerId=${userId}`
-        );
-        
+        const response = await fetch(`/api/properties?ownerId=${userId}`);
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Failed to fetch properties: ${response.status}`);
+          throw new Error(
+            errorData.message ||
+              `Failed to fetch properties: ${response.status}`
+          );
         }
 
         const data = await response.json();
-        
+
         if (Array.isArray(data.properties)) {
           // Map API response to Property type
           const mappedProperties = data.properties.map((property: any) => {
@@ -1988,11 +2048,12 @@ export default function OwnerDashboard() {
               : [];
 
             // Get first image URL if available
-            const imageUrl = property.images && property.images.length > 0 
-              ? (typeof property.images[0] === 'string' 
-                ? property.images[0] 
-                : property.images[0]?.url || "") 
-              : "";
+            const imageUrl =
+              property.images && property.images.length > 0
+                ? typeof property.images[0] === "string"
+                  ? property.images[0]
+                  : property.images[0]?.url || ""
+                : "";
 
             return {
               ...property,
@@ -2006,10 +2067,10 @@ export default function OwnerDashboard() {
               amenities: amenityNames,
             };
           });
-          
+
           // Update properties state
           setProperties(mappedProperties);
-          
+
           // Generate activity data based on user properties
           setActivities(generatePlaceholderActivities(mappedProperties));
         } else {
@@ -2040,7 +2101,10 @@ export default function OwnerDashboard() {
     (p) => p.status === "RENTED"
   ).length;
   const totalViews = properties.reduce((sum, p) => sum + (p.views || 0), 0);
-  const totalInquiries = properties.reduce((sum, p) => sum + (p.inquiries || 0), 0);
+  const totalInquiries = properties.reduce(
+    (sum, p) => sum + (p.inquiries || 0),
+    0
+  );
   const totalEarnings = properties.reduce(
     (sum, p) => sum + (p.earnings || 0),
     0
@@ -2052,7 +2116,13 @@ export default function OwnerDashboard() {
             properties.length
         )
       : 0;
-  const averageRating = properties.length > 0 ? (properties.reduce((sum, p) => sum + (p.rating || 0), 0) / properties.length).toFixed(2) : '0';
+  const averageRating =
+    properties.length > 0
+      ? (
+          properties.reduce((sum, p) => sum + (p.rating || 0), 0) /
+          properties.length
+        ).toFixed(2)
+      : "0";
 
   const filteredProperties = properties.filter((property) => {
     const matchesStatus =
@@ -2318,7 +2388,7 @@ export default function OwnerDashboard() {
   useEffect(() => {
     if (selectedPropertyToEdit && userId) {
       // Only track events if we have both a property and user ID
-      trackAnalyticsEvent('property_view', selectedPropertyToEdit.id);
+      trackAnalyticsEvent("property_view", selectedPropertyToEdit.id);
     }
     // Only fire when modal opens for a new property
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2333,14 +2403,14 @@ export default function OwnerDashboard() {
 
     setAnalyticsLoading(true);
     fetch(`/api/dashboard/analytics?ownerId=${userId}`)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         setAnalyticsData(data);
         setAnalyticsLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Analytics error:", err);
-        setAnalyticsError('Failed to load analytics');
+        setAnalyticsError("Failed to load analytics");
         setAnalyticsLoading(false);
       });
   }, [userId, properties.length]);
@@ -2350,7 +2420,10 @@ export default function OwnerDashboard() {
     return (
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-pulse">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 flex flex-col gap-4">
+          <div
+            key={i}
+            className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 flex flex-col gap-4"
+          >
             <div className="h-5 w-1/3 bg-white/30 rounded" />
             <div className="h-10 w-2/3 bg-white/30 rounded" />
             <div className="h-4 w-1/4 bg-white/30 rounded mt-2" />
@@ -2364,7 +2437,10 @@ export default function OwnerDashboard() {
     return (
       <div className="grid grid-cols-1 gap-6 py-6 mx-4 animate-pulse">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col md:flex-row overflow-hidden">
+          <div
+            key={i}
+            className="bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col md:flex-row overflow-hidden"
+          >
             <div className="w-full md:w-56 h-48 md:h-auto bg-gray-200" />
             <div className="flex-1 px-5 py-4 flex flex-col gap-2 justify-between">
               <div className="h-6 w-1/2 bg-gray-200 rounded mb-2" />
@@ -2420,7 +2496,9 @@ export default function OwnerDashboard() {
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center border border-red-200">
             <div className="text-3xl text-red-500 mb-4">&#9888;</div>
-            <div className="text-red-600 text-lg font-semibold mb-2">Something went wrong</div>
+            <div className="text-red-600 text-lg font-semibold mb-2">
+              Something went wrong
+            </div>
             <div className="text-gray-700 mb-6">{error}</div>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
@@ -2454,8 +2532,10 @@ export default function OwnerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Apply background pattern styles */}
-      <style jsx global>{backgroundPatternStyles}</style>
-      
+      <style jsx global>
+        {backgroundPatternStyles}
+      </style>
+
       <Navbar />
 
       {/* Main Content */}
@@ -2463,21 +2543,30 @@ export default function OwnerDashboard() {
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white relative overflow-hidden">
           {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-25">
+          <div className="absolute inset-0 opacity-50">
             {/* Grid Pattern */}
-            <div className="absolute inset-0" style={{
-              backgroundImage: `
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `
                 linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)
               `,
-              backgroundSize: '40px 40px'
-            }}></div>
-            
+                backgroundSize: "40px 40px",
+              }}
+            ></div>
+
             {/* Floating geometric shapes */}
             <div className="absolute top-10 left-10 w-16 h-16 border border-white/15 rounded-full floating-shape"></div>
-            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{animationDelay: '1s'}}></div>
+            <div
+              className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape"
+              style={{ animationDelay: "1s" }}
+            ></div>
             <div className="absolute bottom-20 left-1/4 w-8 h-8 border border-white/15 rounded-full pulsing-shape"></div>
-            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{animationDelay: '2s'}}></div>
+            <div
+              className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape"
+              style={{ animationDelay: "2s" }}
+            ></div>
           </div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
@@ -2509,8 +2598,7 @@ export default function OwnerDashboard() {
                 <p className="text-3xl font-bold text-white">
                   {totalProperties}
                 </p>
-                <div className="flex items-center gap-1 mt-2">
-                </div>
+                <div className="flex items-center gap-1 mt-2"></div>
               </div>
 
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -2521,8 +2609,7 @@ export default function OwnerDashboard() {
                 <p className="text-3xl font-bold text-white">
                   {activeProperties}
                 </p>
-                <div className="flex items-center gap-1 mt-2">
-                </div>
+                <div className="flex items-center gap-1 mt-2"></div>
               </div>
 
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -2531,10 +2618,9 @@ export default function OwnerDashboard() {
                   <EyeIcon className="w-5 h-5 text-white/80" />
                 </div>
                 <p className="text-3xl font-bold text-white">
-                {totalViews.toLocaleString()}
+                  {totalViews.toLocaleString()}
                 </p>
-                <div className="flex items-center gap-1 mt-2">
-                </div>
+                <div className="flex items-center gap-1 mt-2"></div>
               </div>
 
               <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
@@ -2542,11 +2628,8 @@ export default function OwnerDashboard() {
                   <p className="text-white/80 text-sm">Avg. Rating</p>
                   <StarIcon className="w-5 h-5 text-white/80" />
                 </div>
-                <p className="text-3xl font-bold text-white">
-                  {averageRating}
-                </p>
-                <div className="flex items-center gap-1 mt-2">
-                </div>
+                <p className="text-3xl font-bold text-white">{averageRating}</p>
+                <div className="flex items-center gap-1 mt-2"></div>
               </div>
             </div>
           </div>
@@ -2566,7 +2649,7 @@ export default function OwnerDashboard() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         e.preventDefault();
                         // Focus will trigger any needed UI updates
                       }
@@ -2574,12 +2657,14 @@ export default function OwnerDashboard() {
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
                   />
                 </div>
-                <button 
+                <button
                   className="px-6 py-3 bg-[var(--color-primary-500)] text-white rounded-xl hover:bg-[var(--color-primary-600)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium min-w-[100px]"
                   onClick={() => {
                     // This will force a re-render with current filters
                     // We're already using state for filters so this is enough
-                    const searchInput = document.querySelector('input[placeholder="Search properties..."]');
+                    const searchInput = document.querySelector(
+                      'input[placeholder="Search properties..."]'
+                    );
                     if (searchInput instanceof HTMLInputElement) {
                       searchInput.focus();
                     }
@@ -2589,7 +2674,7 @@ export default function OwnerDashboard() {
                   Search
                 </button>
               </div>
-              
+
               <div className="flex flex-wrap gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500">Status:</span>
@@ -2600,49 +2685,81 @@ export default function OwnerDashboard() {
                       className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent bg-white hover:bg-gray-50 flex items-center gap-2 min-w-[150px]"
                     >
                       {(() => {
-                        const statusOption = STATUS_OPTIONS.find(s => s.value === selectedStatus);
-                        const colorClass = 
-                          statusOption?.color === 'green' ? 'bg-green-100 text-green-700' : 
-                          statusOption?.color === 'blue' ? 'bg-blue-100 text-blue-700' : 
-                          statusOption?.color === 'yellow' ? 'bg-amber-100 text-amber-700' : 
-                          'bg-gray-100 text-gray-700';
-                        
+                        const statusOption = STATUS_OPTIONS.find(
+                          (s) => s.value === selectedStatus
+                        );
+                        const colorClass =
+                          statusOption?.color === "green"
+                            ? "bg-green-100 text-green-700"
+                            : statusOption?.color === "blue"
+                            ? "bg-blue-100 text-blue-700"
+                            : statusOption?.color === "yellow"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-gray-100 text-gray-700";
+
                         return (
                           <>
-                            <span className={`text-lg flex items-center justify-center w-6 h-6 rounded-md mr-2 ${colorClass}`}>
+                            <span
+                              className={`text-lg flex items-center justify-center w-6 h-6 rounded-md mr-2 ${colorClass}`}
+                            >
                               {statusOption?.icon}
                             </span>
                             <span>{statusOption?.label}</span>
                           </>
                         );
                       })()}
-                      <span className="ml-auto">{showStatusModal ? "▲" : "▼"}</span>
+                      <span className="ml-auto">
+                        {showStatusModal ? "▲" : "▼"}
+                      </span>
                     </button>
-                    
-                    <div className={`absolute z-40 mt-2 w-[260px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden left-0 transition-all duration-200 origin-top ${showStatusModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+
+                    <div
+                      className={`absolute z-40 mt-2 w-[260px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden left-0 transition-all duration-200 origin-top ${
+                        showStatusModal
+                          ? "opacity-100 scale-100"
+                          : "opacity-0 scale-95 pointer-events-none"
+                      }`}
+                    >
                       <div className="max-h-[280px] overflow-y-auto p-2">
-                        {STATUS_OPTIONS.map(status => (
+                        {STATUS_OPTIONS.map((status) => (
                           <button
                             key={status.value}
                             onClick={() => {
                               setSelectedStatus(status.value);
                               setShowStatusModal(false);
                             }}
-                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center gap-3 ${selectedStatus === status.value ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" : ""}`}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center gap-3 ${
+                              selectedStatus === status.value
+                                ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                                : ""
+                            }`}
                           >
                             <div className="flex items-center gap-3 w-full">
-                              <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
-                                status.color === 'green' ? 'bg-green-100 text-green-700' : 
-                                status.color === 'blue' ? 'bg-blue-100 text-blue-700' : 
-                                status.color === 'yellow' ? 'bg-amber-100 text-amber-700' : 
-                                'bg-gray-100 text-gray-700'
-                              }`}>{status.icon}</span>
+                              <span
+                                className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
+                                  status.color === "green"
+                                    ? "bg-green-100 text-green-700"
+                                    : status.color === "blue"
+                                    ? "bg-blue-100 text-blue-700"
+                                    : status.color === "yellow"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {status.icon}
+                              </span>
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium">{status.label}</div>
-                                <div className="text-xs text-gray-500">{status.description}</div>
+                                <div className="font-medium">
+                                  {status.label}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {status.description}
+                                </div>
                               </div>
                               {selectedStatus === status.value && (
-                                <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                                <span className="ml-auto text-[var(--color-primary-600)]">
+                                  ✓
+                                </span>
                               )}
                             </div>
                           </button>
@@ -2651,13 +2768,15 @@ export default function OwnerDashboard() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500">Type:</span>
                   <div className="relative" ref={propertyTypeRef}>
                     <button
                       type="button"
-                      onClick={() => setShowPropertyTypeModal(!showPropertyTypeModal)}
+                      onClick={() =>
+                        setShowPropertyTypeModal(!showPropertyTypeModal)
+                      }
                       className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent bg-white hover:bg-gray-50 flex items-center gap-2 min-w-[150px]"
                     >
                       {selectedPropertyType === "all" ? (
@@ -2665,50 +2784,78 @@ export default function OwnerDashboard() {
                       ) : (
                         <>
                           <span className="text-lg mr-1">
-                            {PROPERTY_TYPES.find(t => t.value === selectedPropertyType)?.icon || "🏠"}
+                            {PROPERTY_TYPES.find(
+                              (t) => t.value === selectedPropertyType
+                            )?.icon || "🏠"}
                           </span>
                           <span>
-                            {PROPERTY_TYPES.find(t => t.value === selectedPropertyType)?.label || selectedPropertyType}
+                            {PROPERTY_TYPES.find(
+                              (t) => t.value === selectedPropertyType
+                            )?.label || selectedPropertyType}
                           </span>
                         </>
                       )}
-                      <span className="ml-auto">{showPropertyTypeModal ? "▲" : "▼"}</span>
+                      <span className="ml-auto">
+                        {showPropertyTypeModal ? "▲" : "▼"}
+                      </span>
                     </button>
-                    
-                    <div className={`absolute z-40 mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden right-0 transition-all duration-200 origin-top ${showPropertyTypeModal ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}>
+
+                    <div
+                      className={`absolute z-40 mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden right-0 transition-all duration-200 origin-top ${
+                        showPropertyTypeModal
+                          ? "opacity-100 scale-100"
+                          : "opacity-0 scale-95 pointer-events-none"
+                      }`}
+                    >
                       <div className="p-2 border-b border-gray-100">
                         <button
                           onClick={() => {
                             setSelectedPropertyType("all");
                             setShowPropertyTypeModal(false);
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${selectedPropertyType === "all" ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" : ""}`}
+                          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${
+                            selectedPropertyType === "all"
+                              ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                              : ""
+                          }`}
                         >
                           <span className="text-lg">🏠</span>
                           <span className="font-medium">All Types</span>
                           {selectedPropertyType === "all" && (
-                            <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                            <span className="ml-auto text-[var(--color-primary-600)]">
+                              ✓
+                            </span>
                           )}
                         </button>
                       </div>
                       <div className="max-h-[320px] overflow-y-auto p-2">
-                        {PROPERTY_TYPES.map(type => (
+                        {PROPERTY_TYPES.map((type) => (
                           <button
                             key={type.value}
                             onClick={() => {
                               setSelectedPropertyType(type.value);
                               setShowPropertyTypeModal(false);
                             }}
-                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${selectedPropertyType === type.value ? "bg-[var(--color-primary-50)] text-[var(--color-primary-800)]" : ""}`}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${
+                              selectedPropertyType === type.value
+                                ? "bg-[var(--color-primary-50)] text-[var(--color-primary-800)]"
+                                : ""
+                            }`}
                           >
                             <div className="flex items-center gap-3 w-full">
-                              <span className="text-2xl flex-shrink-0">{type.icon}</span>
+                              <span className="text-2xl flex-shrink-0">
+                                {type.icon}
+                              </span>
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium">{type.label}</div>
-                                <div className="text-xs text-gray-500 truncate">{type.description}</div>
+                                <div className="text-xs text-gray-500 truncate">
+                                  {type.description}
+                                </div>
                               </div>
                               {selectedPropertyType === type.value && (
-                                <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                                <span className="ml-auto text-[var(--color-primary-600)]">
+                                  ✓
+                                </span>
                               )}
                             </div>
                           </button>
@@ -2717,7 +2864,7 @@ export default function OwnerDashboard() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="ml-auto flex items-center">
                   <span className="text-sm bg-[var(--color-primary-50)] text-[var(--color-primary-700)] px-3 py-1.5 rounded-lg">
                     {filteredProperties.length} properties found
@@ -2726,7 +2873,7 @@ export default function OwnerDashboard() {
               </div>
             </div>
           </div>
-        
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -2771,39 +2918,110 @@ export default function OwnerDashboard() {
                             alt={property.title}
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                           />
-                          <span className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold shadow-md z-10 ${property.status === 'ACTIVE' ? 'bg-green-500 text-white' : property.status === 'RENTED' ? 'bg-yellow-500 text-white' : 'bg-gray-400 text-white'}`}>{property.status}</span>
+                          <span
+                            className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold shadow-md z-10 ${
+                              property.status === "ACTIVE"
+                                ? "bg-green-500 text-white"
+                                : property.status === "RENTED"
+                                ? "bg-yellow-500 text-white"
+                                : "bg-gray-400 text-white"
+                            }`}
+                          >
+                            {property.status}
+                          </span>
                         </div>
                         {/* Card Content */}
                         <div className="flex-1 px-5 py-4 flex flex-col gap-2 justify-between">
                           {/* Title & Price */}
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-bold text-lg truncate flex-1" title={property.title}>{property.title}</h3>
-                            <span className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg px-3 py-1 text-sm font-semibold shadow">₹{property.price.toLocaleString()}</span>
+                            <h3
+                              className="font-bold text-lg truncate flex-1"
+                              title={property.title}
+                            >
+                              {property.title}
+                            </h3>
+                            <span className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg px-3 py-1 text-sm font-semibold shadow">
+                              ₹{property.price.toLocaleString()}
+                            </span>
                           </div>
                           {/* Location, Type, Occupancy */}
                           <div className="flex flex-wrap gap-2 mb-1">
-                            <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"><MapPin className="w-3 h-3" />{property.location}</span>
-                            <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"><Building2 className="w-3 h-3" />{property.type}</span>
-                            <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"><Users className="w-3 h-3" />{property.occupancy}% occupied</span>
+                            <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                              <MapPin className="w-3 h-3" />
+                              {property.location}
+                            </span>
+                            <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                              <Building2 className="w-3 h-3" />
+                              {property.type}
+                            </span>
+                            <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                              <Users className="w-3 h-3" />
+                              {property.occupancy}% occupied
+                            </span>
                           </div>
                           {/* Features Row */}
                           <div className="flex flex-wrap gap-2 mb-1">
-                            {property.furnished && <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full"><Home className="w-3 h-3" />Furnished</span>}
-                            {property.petFriendly && <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">🐾 Pet Friendly</span>}
-                            {property.parking && <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"><Car className="w-3 h-3" />Parking</span>}
-                            {property.utilities && <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full"><Wifi className="w-3 h-3" />Utilities</span>}
+                            {property.furnished && (
+                              <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                                <Home className="w-3 h-3" />
+                                Furnished
+                              </span>
+                            )}
+                            {property.petFriendly && (
+                              <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                🐾 Pet Friendly
+                              </span>
+                            )}
+                            {property.parking && (
+                              <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">
+                                <Car className="w-3 h-3" />
+                                Parking
+                              </span>
+                            )}
+                            {property.utilities && (
+                              <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
+                                <Wifi className="w-3 h-3" />
+                                Utilities
+                              </span>
+                            )}
                           </div>
                           {/* Stats Row */}
                           <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-2">
-                            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{property.views} views</span>
-                            <span className="flex items-center gap-1"><MessageSquare className="w-3 h-3" />{property.inquiries} inquiries</span>
-                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />Updated {new Date(property.lastUpdated).toLocaleDateString()}</span>
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-3 h-3" />
+                              {property.views} views
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <MessageSquare className="w-3 h-3" />
+                              {property.inquiries} inquiries
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              Updated{" "}
+                              {new Date(
+                                property.lastUpdated
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
                           {/* Floating Action Buttons */}
                           <div className="flex items-center gap-2 mt-2 md:absolute md:bottom-4 md:right-4 md:flex-col md:gap-2 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity">
-                            <button className="p-2 bg-white rounded-full shadow hover:text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)] transition-colors duration-200"><Eye className="w-5 h-5" /></button>
-                            <button onClick={() => setSelectedPropertyToEdit(property)} className="p-2 bg-white rounded-full shadow hover:text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)] transition-colors duration-200"><Edit className="w-5 h-5" /></button>
-                            <button onClick={() => setPropertyToDelete(property)} className="p-2 bg-white rounded-full shadow hover:text-red-600 hover:bg-red-50 transition-colors duration-200"><Trash2 className="w-5 h-5" /></button>
+                            <button className="p-2 bg-white rounded-full shadow hover:text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)] transition-colors duration-200">
+                              <Eye className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setSelectedPropertyToEdit(property)
+                              }
+                              className="p-2 bg-white rounded-full shadow hover:text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)] transition-colors duration-200"
+                            >
+                              <Edit className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => setPropertyToDelete(property)}
+                              className="p-2 bg-white rounded-full shadow hover:text-red-600 hover:bg-red-50 transition-colors duration-200"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -2817,37 +3035,46 @@ export default function OwnerDashboard() {
             <div className="space-y-6">
               {/* Recent Activity */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Recent Activity
-              </h3>
-              {properties.length === 0 ? (
-                <div className="text-center py-6">
-                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Bell className="w-6 h-6 text-gray-400" />
-                  </div>
-                  <p className="text-sm text-gray-600">No recent activity yet</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Generate placeholder activities from actual user properties */}
-                  {generatePlaceholderActivities(properties).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {activity.message}
-                        </p>
-                        <p className="text-xs text-gray-600">{activity.time}</p>
-                      </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  Recent Activity
+                </h3>
+                {properties.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Bell className="w-6 h-6 text-gray-400" />
                     </div>
-                  ))}
-                </div>
-              )}
-              <button className="w-full mt-4 text-center p-2 text-sm text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium">
-                View All Activity →
-              </button>
+                    <p className="text-sm text-gray-600">
+                      No recent activity yet
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Generate placeholder activities from actual user properties */}
+                    {generatePlaceholderActivities(properties).map(
+                      (activity) => (
+                        <div
+                          key={activity.id}
+                          className="flex items-start gap-3"
+                        >
+                          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            {getActivityIcon(activity.type)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {activity.message}
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {activity.time}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+                <button className="w-full mt-4 text-center p-2 text-sm text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium">
+                  View All Activity →
+                </button>
               </div>
 
               {/* Quick Actions */}
@@ -2985,8 +3212,14 @@ export default function OwnerDashboard() {
             >
               ×
             </button>
-            <h2 className="text-2xl font-bold mb-4 text-gray-900">Delete Property</h2>
-            <p className="text-gray-700 mb-6">Are you sure you want to delete <span className="font-semibold">{propertyToDelete.title}</span>? This action cannot be undone.</p>
+            <h2 className="text-2xl font-bold mb-4 text-gray-900">
+              Delete Property
+            </h2>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{propertyToDelete.title}</span>?
+              This action cannot be undone.
+            </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setPropertyToDelete(null)}

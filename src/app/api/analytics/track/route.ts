@@ -1,43 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
     const body = await request.json();
-    const { eventType, propertyId, metadata, bookingId, inquiryId } = body;
-    const userId = session?.user?.id || body.userId || null;
+    const { eventType, propertyId, metadata, bookingId, inquiryId, userId } = body;
+    const sessionUserId = body.userId || null;
 
-    if (!eventType || !propertyId) {
-      return NextResponse.json({ error: 'Missing eventType or propertyId' }, { status: 400 });
+    // Validate required fields
+    if (!eventType || typeof eventType !== 'string') {
+      return NextResponse.json({ error: 'Missing or invalid eventType' }, { status: 400 });
+    }
+
+    // For events that don't require a propertyId (like performance metrics), skip property-specific tracking
+    if (!propertyId) {
+      return NextResponse.json({ success: true });
+    }
+
+    // Validate propertyId format
+    if (typeof propertyId !== 'string' || propertyId.trim().length === 0) {
+      return NextResponse.json({ error: 'Invalid propertyId format' }, { status: 400 });
+    }
+
+    const sanitizedPropertyId = propertyId.trim();
+
+    // Verify the property exists before tracking events
+    const property = await prisma.property.findUnique({
+      where: { id: sanitizedPropertyId },
+      select: { id: true }
+    });
+
+    if (!property) {
+      return NextResponse.json({ error: 'Property not found' }, { status: 404 });
     }
 
     // Handle different event types
     if (eventType === 'property_view') {
       await prisma.propertyViewEvent.create({
-        data: { propertyId, userId, metadata },
+        data: { propertyId: sanitizedPropertyId, userId: sessionUserId, metadata },
       });
       await prisma.property.update({
-        where: { id: propertyId },
+        where: { id: sanitizedPropertyId },
         data: { views: { increment: 1 } },
       });
     } else if (eventType === 'booking' || eventType === 'booking_request') {
       await prisma.bookingEvent.create({
-        data: { propertyId, userId, bookingId, metadata },
+        data: { propertyId: sanitizedPropertyId, userId: sessionUserId, bookingId, metadata },
       });
     } else if (eventType === 'inquiry') {
       await prisma.inquiryEvent.create({
-        data: { propertyId, userId, inquiryId, metadata },
+        data: { propertyId: sanitizedPropertyId, userId: sessionUserId, inquiryId, metadata },
       });
     } else if (eventType === 'phone_contact' || eventType === 'email_contact' || 
                eventType === 'property_card_contact' || eventType === 'favorites_property_contact') {
       // Track contact events as inquiry events for now
       await prisma.inquiryEvent.create({
         data: { 
-          propertyId, 
-          userId, 
+          propertyId: sanitizedPropertyId, 
+          userId: sessionUserId, 
           metadata: { 
             ...metadata, 
             contactType: eventType,
@@ -49,8 +69,8 @@ export async function POST(request: NextRequest) {
       // Track share events as view events with metadata
       await prisma.propertyViewEvent.create({
         data: { 
-          propertyId, 
-          userId, 
+          propertyId: sanitizedPropertyId, 
+          userId: sessionUserId, 
           metadata: { 
             ...metadata, 
             action: 'shared',
@@ -62,8 +82,8 @@ export async function POST(request: NextRequest) {
       // Track favorite events as view events with metadata
       await prisma.propertyViewEvent.create({
         data: { 
-          propertyId, 
-          userId, 
+          propertyId: sanitizedPropertyId, 
+          userId: sessionUserId, 
           metadata: { 
             ...metadata, 
             action: eventType,
@@ -75,8 +95,8 @@ export async function POST(request: NextRequest) {
       // Track review events as inquiry events with metadata
       await prisma.inquiryEvent.create({
         data: { 
-          propertyId, 
-          userId, 
+          propertyId: sanitizedPropertyId, 
+          userId: sessionUserId, 
           metadata: { 
             ...metadata, 
             action: 'review_submitted',
@@ -88,8 +108,8 @@ export async function POST(request: NextRequest) {
       // For any other event type, track as a view event with metadata
       await prisma.propertyViewEvent.create({
         data: { 
-          propertyId, 
-          userId, 
+          propertyId: sanitizedPropertyId, 
+          userId: sessionUserId, 
           metadata: { 
             ...metadata, 
             action: eventType,

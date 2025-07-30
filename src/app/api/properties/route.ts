@@ -41,6 +41,11 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search')
     const sortBy = searchParams.get('sortBy')
     const ownerId = searchParams.get('ownerId')
+    const nearCampus = searchParams.get('nearCampus') === 'true'
+    const furnished = searchParams.get('furnished') === 'true'
+    const petFriendly = searchParams.get('petFriendly') === 'true'
+    const availableNow = searchParams.get('availableNow') === 'true'
+    const amenities = searchParams.getAll('amenities')
 
     const skip = (page - 1) * limit
 
@@ -74,6 +79,16 @@ export async function GET(request: NextRequest) {
       ]
     }
 
+    // Add quick filters
+    if (furnished) where.furnished = true
+    if (petFriendly) where.petFriendly = true
+    if (availableNow) {
+      where.OR = [
+        { availableFrom: null },
+        { availableFrom: { lte: new Date() } }
+      ]
+    }
+
     // Determine orderBy based on sortBy
     let orderBy: Record<string, unknown> = { createdAt: 'desc' };
     if (sortBy === 'price-low') orderBy = { price: 'asc' };
@@ -81,6 +96,7 @@ export async function GET(request: NextRequest) {
     else if (sortBy === 'rating') orderBy = { rating: 'desc' };
     else if (sortBy === 'newest') orderBy = { createdAt: 'desc' };
 
+    // Optimize the query by limiting the data fetched
     const [properties, total] = await Promise.all([
       prisma.property.findMany({
         where,
@@ -94,11 +110,19 @@ export async function GET(request: NextRequest) {
           },
           images: {
             orderBy: { order: 'asc' },
+            take: 4, // Limit to 4 images for performance
           },
           amenities: {
             include: {
-              amenity: true,
+              amenity: {
+                select: {
+                  id: true,
+                  name: true,
+                  category: true,
+                }
+              },
             },
+            take: 8, // Limit to 8 amenities for performance
           },
           _count: {
             select: {
@@ -115,10 +139,20 @@ export async function GET(request: NextRequest) {
       prisma.property.count({ where }),
     ])
 
+    // Filter by amenities if specified
+    let filteredProperties = properties
+    if (amenities.length > 0) {
+      filteredProperties = properties.filter(property => 
+        amenities.every(amenity => 
+          property.amenities.some(pa => pa.amenity.name === amenity)
+        )
+      )
+    }
+
     const totalPages = Math.ceil(total / limit)
 
-    return NextResponse.json({
-      properties,
+    const response = NextResponse.json({
+      properties: filteredProperties,
       pagination: {
         page,
         limit,
@@ -128,6 +162,12 @@ export async function GET(request: NextRequest) {
         hasPrev: page > 1,
       },
     })
+
+    // Add caching headers for better performance
+    response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60')
+    response.headers.set('Content-Type', 'application/json')
+
+    return response
   } catch (error) {
     console.error('Error fetching properties:', error)
     return NextResponse.json(

@@ -1,22 +1,30 @@
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
 
 export async function GET() {
   try {
     // Test database connection
-    const propertyCount = await prisma.property.count()
-    
+    const propertyCount = await prisma.property.count();
+    const properties = await prisma.property.findMany({
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        location: true
+      }
+    });
+
     return NextResponse.json({
-      message: 'Backend is working!',
-      timestamp: new Date().toISOString(),
-      database: 'Connected',
-      propertyCount
-    })
+      success: true,
+      propertyCount,
+      sampleProperties: properties,
+      message: 'Database connection successful'
+    });
   } catch (error) {
-    console.error('Test API error:', error)
-    return NextResponse.json(
-      { error: 'Backend connection failed' },
-      { status: 500 }
-    )
+    console.error('Database test error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 } 

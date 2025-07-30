@@ -433,17 +433,65 @@ class ApiClient {
   }
 }
 
-export async function trackAnalyticsEvent(eventType: string, propertyId: string, options: Record<string, unknown> = {}) {
+export async function trackAnalyticsEvent(eventType: string, propertyId?: string, options: Record<string, unknown> = {}) {
   try {
-    const res = await fetch('/api/analytics/track', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventType, propertyId, ...options }),
-    });
-    if (!res.ok) throw new Error('Failed to track analytics event');
-    return await res.json();
+    // Validate inputs
+    if (!eventType || typeof eventType !== 'string') {
+      console.warn('Invalid eventType for analytics tracking:', eventType);
+      return { error: true };
+    }
+
+    // Sanitize propertyId if provided
+    const sanitizedPropertyId = propertyId && typeof propertyId === 'string' ? propertyId.trim() : undefined;
+    
+    const payload = { 
+      eventType, 
+      propertyId: sanitizedPropertyId, 
+      ...options 
+    };
+    
+    // Safely stringify the payload
+    let jsonBody;
+    try {
+      jsonBody = JSON.stringify(payload);
+    } catch (stringifyError) {
+      console.error('JSON stringify error:', stringifyError);
+      return { error: true };
+    }
+    
+    // Don't block the main functionality if analytics fails
+    // Add a timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    try {
+      const res = await fetch('/api/analytics/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: jsonBody,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!res.ok) {
+        console.warn(`Analytics tracking failed for ${eventType}: ${res.status}`);
+        return { error: true };
+      }
+      
+      return await res.json();
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      if (fetchError.name === 'AbortError') {
+        console.warn('Analytics tracking timed out');
+      } else {
+        console.warn('Analytics tracking fetch error:', fetchError);
+      }
+      return { error: true };
+    }
   } catch (error) {
-    console.error('Analytics event error:', error);
+    // Log but don't throw - analytics should never break the main app
+    console.warn('Analytics event error (non-blocking):', error);
     return { error: true };
   }
 }
