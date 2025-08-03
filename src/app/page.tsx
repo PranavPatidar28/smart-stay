@@ -1,47 +1,97 @@
 import Navbar from "@/components/ui/Navbar";
-import HeroBackgroundArt from "@/components/ui/HeroBackgroundArt";
 import { Search, Shield, Star, MapPin, Users, Home as HomeIcon, CheckCircle, ArrowRight, Building2, Heart } from "lucide-react";
 import Link from "next/link";
 
 const HeroSection = () => {
   return (
-    <div className="min-h-screen w-full bg-[#030712] relative overflow-hidden">
-      {/* Dark Mesh Gradient Background */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#4C1D95] opacity-60"
-        style={{ mixBlendMode: 'hard-light' }}
-      ></div>
+    <div className="h-screen max-h-[1000px] w-full bg-[#030712] relative overflow-hidden">
+      {/* Subtle Base Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0A0A1A] via-[#1A1A2E] to-[#16213E] opacity-5"></div>
       
-      {/* Animated Gradient Overlay */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-tr from-[#4C1D95] via-transparent to-[#312E81] opacity-40 animate-pulse"
-        style={{ animationDuration: '8s' }}
-      ></div>
-
-      {/* 3D Perspective Grid */}
-      <div className="absolute inset-0 perspective-grid">
-        <div className="grid-overlay"></div>
-        <div className="horizontal-lines"></div>
-        <div className="vertical-lines"></div>
+      {/* Radial Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-radial from-[#8B5CF6]/8 via-transparent to-transparent"></div>
+      
+      {/* Animated Gradient Mesh */}
+      <div className="absolute inset-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#8B5CF6]/12 via-[#6366F1]/8 to-[#A78BFA]/6 opacity-60"></div>
+        <div className="absolute bottom-0 right-0 w-full h-1/3 bg-gradient-to-t from-[#6366F1]/10 via-[#8B5CF6]/6 to-[#A78BFA]/0 opacity-80" ></div>
       </div>
       
-      {/* Static Grid for Mobile */}
-      <div className="mobile-static-grid"></div>
+      {/* Grid Background Pattern */}
+      <div 
+        className="absolute inset-0 opacity-45"
+        style={{
+          backgroundImage: `
+            linear-gradient(rgba(139, 92, 246, 0.15) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(139, 92, 246, 0.15) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px',
+          backgroundPosition: '0 0, 0 0'
+        }}
+      ></div>
       
-      {/* Particle Effects/Floating Elements */}
-      <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full bg-[#4C1D95] filter blur-[80px] opacity-20 animate-blob"></div>
-      <div className="absolute top-2/3 right-1/4 w-80 h-80 rounded-full bg-[#312E81] filter blur-[100px] opacity-20 animate-blob animation-delay-2000"></div>
-      <div className="absolute bottom-1/4 left-1/2 w-72 h-72 rounded-full bg-[#6D28D9] filter blur-[90px] opacity-20 animate-blob animation-delay-4000"></div>
+      {/* Animated Grid Overlay */}
+      <div 
+        className="absolute inset-0 opacity-15"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.4) 1px, transparent 1px),
+            radial-gradient(circle at 75% 75%, rgba(99, 102, 241, 0.4) 1px, transparent 1px)
+          `,
+          backgroundSize: '100px 100px, 150px 150px',
+          backgroundPosition: '0 0, 50px 50px',
+          animation: 'gridMove 20s linear infinite'
+        }}
+      ></div>
       
-      {/* Small Floating Orbs */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] rounded-full opacity-30 animate-float"></div>
-      <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] rounded-full opacity-40 animate-pulse animation-delay-2000"></div>
-      <div className="absolute bottom-40 left-20 w-12 h-12 bg-gradient-to-br from-[#A78BFA] to-[#818CF8] rounded-full opacity-35 animate-float animation-delay-4000"></div>
+      {/* Enhanced Gradient Overlay */}
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-[#1E1B4B]/40 via-[#312E81]/30 to-[#4C1D95]/50"
+        style={{ mixBlendMode: 'soft-light' }}
+      ></div>
+      
+      {/* Subtle Floating Gradient Orbs */}
+      <div className="absolute top-32 left-32 w-64 h-64 bg-gradient-to-br from-[#8B5CF6]/6 to-[#6366F1]/8 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-32 right-32 w-80 h-80 bg-gradient-to-br from-[#6366F1]/5 to-[#A78BFA]/7 rounded-full blur-3xl animate-pulse" style={{animationDelay: '3s'}}></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-br from-[#A78BFA]/4 to-[#8B5CF6]/6 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
       
       {/* Desktop Hero Section (lg and above) */}
-      <div className="hidden lg:flex relative z-10 items-center justify-center w-full min-h-screen py-12">
+      <div className="hidden lg:flex relative z-10 items-center justify-center w-full h-full py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 gap-y-16 gap-x-30 items-center justify-center min-h-[60vh] max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 gap-y-16 gap-x-30 items-center justify-center min-h-[60vh] max-w-7xl mx-auto relative">
+            {/* Floating Grid Elements - Relative to hero section */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Top Left Grid Cluster */}
+              <div className="absolute -top-20 -left-30 z-20 w-32 h-32 opacity-40 max-w-[200px] max-h-[200px] grid-float">
+                <div className="absolute top-0 left-0 w-8 h-8 border border-[#8B5CF6] opacity-70 grid-pulse"></div>
+                <div className="absolute top-8 left-8 w-8 h-8 border border-[#6366F1] opacity-70 grid-pulse-delay-1"></div>
+                <div className="absolute top-16 left-16 w-8 h-8 border border-[#A78BFA] opacity-70 grid-pulse-delay-2"></div>
+              </div>
+              
+              {/* Top Right Grid Cluster */}
+              <div className="absolute -top-20 -right-20 w-24 h-24 opacity-35 max-w-[150px] max-h-[150px] ">
+                <div className="absolute top-0 left-0 w-6 h-6 border border-[#6366F1] opacity-70 grid-glow"></div>
+                <div className="absolute top-6 left-6 w-6 h-6 border border-[#8B5CF6] opacity-70 grid-glow-delay-1"></div>
+                <div className="absolute top-12 left-12 w-6 h-6 border border-[#A78BFA] opacity-70 grid-glow"></div>
+              </div>
+              
+              {/* Bottom Left Grid Cluster */}
+              <div className="absolute -bottom-20 -left-20 w-28 h-28 opacity-30 max-w-[180px] max-h-[180px] grid-float-delay-2">
+                <div className="absolute top-0 left-0 w-7 h-7 border border-[#A78BFA] opacity-70 grid-rotate"></div>
+                <div className="absolute top-7 left-7 w-7 h-7 border border-[#6366F1] opacity-70 grid-rotate-reverse"></div>
+                <div className="absolute top-14 left-14 w-7 h-7 border border-[#8B5CF6] opacity-70 grid-rotate"></div>
+              </div>
+              
+              {/* Bottom Right Grid Cluster */}
+              <div className="absolute -bottom-20 -right-20 z-20 w-36 h-36 opacity-40 max-w-[220px] max-h-[220px] ">
+                <div className="absolute top-0 left-0 w-9 h-9 border border-[#8B5CF6] opacity-70 grid-pulse"></div>
+                <div className="absolute top-9 left-9 w-9 h-9 border border-[#6366F1] opacity-70 grid-pulse-delay-1"></div>
+                <div className="absolute top-18 left-18 w-9 h-9 border border-[#A78BFA] opacity-70 grid-pulse-delay-2"></div>
+              </div>
+            </div>
+            
+            
+            
             {/* Left Side: Content */}
             <div className="flex flex-col justify-center items-start hero-content-fade-in max-w-2xl mx-auto">
               <div className="mb-8 hero-content-item text-center lg:text-left" style={{animationDelay: '0.5s'}}>
@@ -54,7 +104,7 @@ const HeroSection = () => {
                     Student Home
                   </span>
                 </h1>
-                                 <p className="text-xl text-gray-100 mb-8 max-w-2xl leading-relaxed font-medium">
+                                 <p className="text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed font-medium">
                 Discover verified Hostels, PGs, and Flats near your campus.
                 Because finding a room shouldn't feel like an exam.
                 </p>
@@ -223,8 +273,47 @@ const HeroSection = () => {
       </div>
 
       {/* Mobile Hero Section (below lg) */}
-      <div className="lg:hidden relative z-10 flex flex-col items-center justify-center w-full min-h-screen px-4 py-8">
-        <div className="w-full max-w-md mx-auto text-center flex flex-col items-center justify-center min-h-[80vh]">
+      <div className="lg:hidden relative z-10 flex flex-col items-center justify-center w-full h-screen max-h-[700px] px-4 py-8">
+        {/* Mobile Subtle Gradient Orbs */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-[#8B5CF6]/8 to-[#6366F1]/6 rounded-full blur-2xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-gradient-to-br from-[#6366F1]/6 to-[#A78BFA]/8 rounded-full blur-2xl animate-pulse" style={{animationDelay: '2s'}}></div>
+        
+        <div className="w-full max-w-md mx-auto text-center flex flex-col items-center justify-center h-full relative">
+          {/* Mobile Floating Grid Elements - Relative to mobile hero section */}
+          <div className="absolute inset-0 pointer-events-none">
+            {/* Mobile Top Left Grid Cluster */}
+            <div className="absolute top-16 left-8 w-16 h-16 opacity-30 max-w-[80px] max-h-[80px] grid-float">
+              <div className="absolute top-0 left-0 w-4 h-4 border border-[#8B5CF6] opacity-70 grid-pulse"></div>
+              <div className="absolute top-4 left-4 w-4 h-4 border border-[#6366F1] opacity-70 grid-pulse-delay-1"></div>
+              <div className="absolute top-8 left-8 w-4 h-4 border border-[#A78BFA] opacity-70 grid-pulse-delay-2"></div>
+            </div>
+            
+            {/* Mobile Top Right Grid Cluster */}
+            <div className="absolute top-24 right-8 w-12 h-12 opacity-25 max-w-[60px] max-h-[60px] grid-float-delay-1">
+              <div className="absolute top-0 left-0 w-3 h-3 border border-[#6366F1] opacity-70 grid-glow"></div>
+              <div className="absolute top-3 left-3 w-3 h-3 border border-[#8B5CF6] opacity-70 grid-glow-delay-1"></div>
+              <div className="absolute top-6 left-6 w-3 h-3 border border-[#A78BFA] opacity-70 grid-glow"></div>
+            </div>
+            
+            {/* Mobile Bottom Left Grid Cluster */}
+            <div className="absolute bottom-32 left-12 w-14 h-14 opacity-20 max-w-[70px] max-h-[70px] grid-float-delay-2">
+              <div className="absolute top-0 left-0 w-3.5 h-3.5 border border-[#A78BFA] opacity-70 grid-rotate"></div>
+              <div className="absolute top-3.5 left-3.5 w-3.5 h-3.5 border border-[#6366F1] opacity-70 grid-rotate-reverse"></div>
+              <div className="absolute top-7 left-7 w-3.5 h-3.5 border border-[#8B5CF6] opacity-70 grid-rotate"></div>
+            </div>
+            
+            {/* Mobile Bottom Right Grid Cluster */}
+            <div className="absolute bottom-24 right-12 w-18 h-18 opacity-30 max-w-[90px] max-h-[90px] grid-float">
+              <div className="absolute top-0 left-0 w-4.5 h-4.5 border border-[#8B5CF6] opacity-70 grid-pulse"></div>
+              <div className="absolute top-4.5 left-4.5 w-4.5 h-4.5 border border-[#6366F1] opacity-70 grid-pulse-delay-1"></div>
+              <div className="absolute top-9 left-9 w-4.5 h-4.5 border border-[#A78BFA] opacity-70 grid-pulse-delay-2"></div>
+            </div>
+          </div>
+          
+          {/* Mobile Subtle Glow Effects */}
+          <div className="absolute top-40 left-24 w-32 h-32 bg-[#8B5CF6] opacity-8 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute bottom-40 right-24 w-40 h-40 bg-[#6366F1] opacity-6 rounded-full blur-2xl pointer-events-none"></div>
+          
           {/* Trust Badge */}
           <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-md rounded-full border border-[#8B5CF6]/30 text-[#A78BFA] font-medium text-sm mb-6 mt-6">
           Smart, safe, and Secured
@@ -239,7 +328,7 @@ const HeroSection = () => {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-gray-100 mb-8 leading-relaxed font-medium">
+          <p className="text-lg sm:text-xl text-gray-300 mb-8 leading-relaxed font-medium">
             Discover verified Hostels, PGs, and Flats near your campus.
             Because finding a room shouldn't feel like an exam.
           </p>
@@ -272,64 +361,52 @@ const HeroSection = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 rounded-2xl blur-xl opacity-60"></div>
             
             {/* Mobile Image 1 - Bottom Left */}
-            <div className="absolute bottom-2 left-1 w-36 h-44 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+            <div className="absolute bottom-2 left-1 w-40 h-48 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
               <img 
                 src="/images/Gemini_Generated_Image_LandingPage.png" 
                 alt="Student Accommodation 1" 
                 className="w-full h-full object-cover"
               />
-              {/* Floating Label */}
-              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <span className="text-white text-xs font-medium">Premium</span>
-              </div>
             </div>
 
             {/* Mobile Image 2 - Top Right */}
-            <div className="absolute top-1 right-1 w-40 h-52 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
-              <img 
-                src="/images/Gemini_Generated_Image_p5v7j7p5v7j7p5v7.png" 
-                alt="Student Accommodation 2" 
-                className="w-full h-full object-cover"
-              />
-              {/* Floating Label */}
-              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <span className="text-white text-xs font-medium">Student PG</span>
-              </div>
-            </div>
-
-            {/* Mobile Image 3 - Center (Main) */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-44 h-56 rounded-xl overflow-hidden shadow-xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-15 hover:z-25">
+            <div className="absolute top-1 right-1 w-40 h-56 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
               <img 
                 src="/images/Gemini_Generated_Image_plv6quplv6quplv6.png" 
+                alt="Student Accommodation 2" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            {/* Mobile Image 3 - Center (Main) */}
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-55 h-65 rounded-xl overflow-hidden shadow-xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-15 hover:z-25">
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
+              <img 
+                src="/images/Gemini_Generated_Image_4chicb4chicb4chi.png" 
                 alt="Student Accommodation 3" 
                 className="w-full h-full object-cover"
               />
               {/* Featured Badge */}
-              <div className="absolute top-2 right-2 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] px-2 py-1 rounded-full shadow-lg">
-                <span className="text-white text-xs font-bold">FEATURED</span>
-              </div>
-              {/* Floating Label */}
-              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <span className="text-white text-xs font-medium">Luxury</span>
-              </div>
+              <div className="absolute top-3 right-3 bg-gradient-to-r from-[#8B5CF6]/90 to-[#6366F1]/90 px-3 py-0.5 rounded-full shadow-lg">
+                      <span className="text-white text-xs font-bold text-center">FEATURED</span>
+                    </div>
             </div>
 
             {/* Mobile Image 4 - Bottom Right */}
-            <div className="absolute bottom-4 right-4 w-32 h-40 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+            {/* <div className="absolute bottom-4 right-4 w-32 h-40 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
               <img 
                 src="/images/Gemini_Generated_Image_rhc46nrhc46nrhc4.png" 
                 alt="Student Accommodation 4" 
                 className="w-full h-full object-cover"
-              />
+              /> */}
               {/* Floating Label */}
-              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              {/* <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                 <span className="text-white text-xs font-medium">Shared</span>
               </div>
-            </div>
+            </div> */}
 
             {/* Subtle Connection Lines */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-10">
@@ -344,35 +421,33 @@ const HeroSection = () => {
             </svg>
 
             {/* Subtle Floating Particles */}
-            <div className="absolute top-8 left-8 w-1.5 h-1.5 bg-[#8B5CF6] rounded-full opacity-40"></div>
+            {/* <div className="absolute top-8 left-8 w-1.5 h-1.5 bg-[#8B5CF6] rounded-full opacity-40"></div>
             <div className="absolute top-16 right-16 w-1 h-1 bg-[#6366F1] rounded-full opacity-40"></div>
-            <div className="absolute bottom-16 left-16 w-0.5 h-0.5 bg-[#A78BFA] rounded-full opacity-40"></div>
+            <div className="absolute bottom-16 left-16 w-0.5 h-0.5 bg-[#A78BFA] rounded-full opacity-40"></div> */}
             
             {/* Mobile Stats Cards */}
-            <div className="absolute -top-2 -left-2 bg-gradient-to-r from-[#8B5CF6]/95 to-[#6366F1]/95 backdrop-blur-xl p-3 rounded-xl border border-[#8B5CF6]/40 shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:scale-105 transition-all duration-300 ease-out z-40 hover:shadow-[0_0_25px_rgba(139,92,246,0.6)] group min-w-[80px]">
+            <div className="absolute -top-0 -left-2 bg-gradient-to-r from-[#8B5CF6]/90 to-[#6366F1]/90 backdrop-blur-xl p-3 rounded-xl border border-[#8B5CF6]/40 shadow-[0_0_15px_rgba(139,92,246,0.4)] hover:scale-105 transition-all duration-300 ease-out -z-40 hover:shadow-[0_0_25px_rgba(139,92,246,0.6)] group min-w-[80px]">
               <div className="text-center">
                 <div className="text-lg font-bold text-white mb-1 group-hover:text-[#F3E8FF] transition-colors duration-300">500+</div>
                 <div className="text-[#DDD6FE] text-xs font-semibold group-hover:text-white transition-colors duration-300">Properties</div>
-                <div className="w-5 h-0.5 bg-gradient-to-r from-[#A78BFA] to-[#818CF8] mx-auto mt-1 rounded-full group-hover:w-6 transition-all duration-300"></div>
               </div>
               {/* Decorative Corner */}
-              <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-gradient-to-br from-[#A78BFA] to-[#818CF8] rounded-full opacity-60"></div>
+              {/* <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-gradient-to-br from-[#A78BFA] to-[#818CF8] rounded-full opacity-60"></div> */}
             </div>
-            <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-[#6366F1]/95 to-[#8B5CF6]/95 backdrop-blur-xl p-3 rounded-xl border border-[#6366F1]/40 shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:scale-105 transition-all duration-300 ease-out z-40 hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] group min-w-[80px]">
+            <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-[#6366F1]/90 to-[#8B5CF6]/90 backdrop-blur-xl p-3 rounded-xl border border-[#6366F1]/40 shadow-[0_0_15px_rgba(99,102,241,0.4)] hover:scale-105 transition-all duration-300 ease-out -z-40 hover:shadow-[0_0_25px_rgba(99,102,241,0.6)] group min-w-[80px]">
               <div className="text-center">
                 <div className="text-lg font-bold text-white mb-1 group-hover:text-[#F3E8FF] transition-colors duration-300">50+</div>
                 <div className="text-[#DDD6FE] text-xs font-semibold group-hover:text-white transition-colors duration-300">Cities</div>
-                <div className="w-5 h-0.5 bg-gradient-to-r from-[#818CF8] to-[#A78BFA] mx-auto mt-1 rounded-full group-hover:w-6 transition-all duration-300"></div>
               </div>
               {/* Decorative Corner */}
-              <div className="absolute -bottom-0.5 -left-0.5 w-1.5 h-1.5 bg-gradient-to-br from-[#818CF8] to-[#A78BFA] rounded-full opacity-60"></div>
+              {/* <div className="absolute -bottom-0.5 -left-0.5 w-1.5 h-1.5 bg-gradient-to-br from-[#818CF8] to-[#A78BFA] rounded-full opacity-60"></div> */}
             </div>
             
             {/* Verification Badge */}
-            <div className="absolute top-3 right-3 bg-gradient-to-r from-[#10B981]/95 to-[#059669]/95 backdrop-blur-xl p-3 rounded-full border border-[#10B981]/40 shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:scale-110 transition-transform duration-300 ease-out z-40 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)]">
+            {/* <div className="absolute top-3 right-3 bg-gradient-to-r from-[#10B981]/95 to-[#059669]/95 backdrop-blur-xl p-3 rounded-full border border-[#10B981]/40 shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:scale-110 transition-transform duration-300 ease-out z-40 hover:shadow-[0_0_25px_rgba(16,185,129,0.6)]">
               <Shield className="w-5 h-5 text-white" />
               <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-[#4ADE80] rounded-full border border-white shadow-sm"></div>
-            </div>
+            </div> */}
           </div>
 
           {/* Mobile Trust Indicators */}
