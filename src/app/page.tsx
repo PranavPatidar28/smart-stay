@@ -4,7 +4,20 @@ import Link from "next/link";
 
 const HeroSection = () => {
   return (
-    <div className="h-screen max-h-[1000px] w-full bg-[#030712] relative overflow-hidden">
+    <div className="w-full bg-[#030712] relative overflow-hidden lg:h-screen lg:max-h-[1000px] " style={{
+      '--text-xs': 'clamp(0.625rem, 1.5vw, 0.75rem)',
+      '--text-sm': 'clamp(0.75rem, 2vw, 0.875rem)',
+      '--text-base': 'clamp(0.875rem, 2.5vw, 1rem)',
+      '--text-lg': 'clamp(1rem, 3vw, 1.125rem)',
+      '--text-xl': 'clamp(1.125rem, 3.5vw, 1.25rem)',
+      '--text-2xl': 'clamp(1.25rem, 4vw, 1.5rem)',
+      '--text-3xl': 'clamp(1.5rem, 5vw, 2rem)',
+      '--text-4xl': 'clamp(1.875rem, 6vw, 2.5rem)',
+      '--text-5xl': 'clamp(2.25rem, 7vw, 3rem)',
+      '--text-6xl': 'clamp(3rem, 8vw, 4rem)',
+      '--text-7xl': 'clamp(3.75rem, 9vw, 5rem)',
+      '--text-8xl': 'clamp(5rem, 10vw, 6rem)',
+    } as React.CSSProperties}>
       {/* Subtle Base Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0A0A1A] via-[#1A1A2E] to-[#16213E] opacity-5"></div>
       
@@ -56,7 +69,7 @@ const HeroSection = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gradient-to-br from-[#A78BFA]/4 to-[#8B5CF6]/6 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
       
       {/* Desktop Hero Section (lg and above) */}
-      <div className="hidden lg:flex relative z-10 items-center justify-center w-full h-full py-12">
+      <div className="hidden lg:flex relative  z-10 items-center justify-center w-full h-full py-12">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 gap-y-16 gap-x-30 items-center justify-center min-h-[60vh] max-w-7xl mx-auto relative">
             {/* Floating Grid Elements - Relative to hero section */}
@@ -95,16 +108,16 @@ const HeroSection = () => {
             {/* Left Side: Content */}
             <div className="flex flex-col justify-center items-start hero-content-fade-in max-w-2xl mx-auto">
               <div className="mb-8 hero-content-item text-center lg:text-left" style={{animationDelay: '0.5s'}}>
-                <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-md rounded-full border border-[#8B5CF6]/30 text-[#A78BFA] font-medium text-sm mb-6">
+                <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-md rounded-full border border-[#8B5CF6]/30 text-[#A78BFA] font-medium mb-6" style={{ fontSize: 'var(--text-sm)' }}>
                   Smart, safe, and Secured
                 </div>
-                <h1 className="text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight max-w-3xl">
+                <h1 className="font-bold text-white mb-6 leading-tight max-w-3xl" style={{ fontSize: 'var(--text-6xl)' }}>
                   Find Your Perfect
                   <span className="shining-text block">
                     Student Home
                   </span>
                 </h1>
-                                 <p className="text-xl text-gray-300 mb-8 max-w-2xl leading-relaxed font-medium">
+                                 <p className="text-gray-300 mb-8 max-w-2xl leading-relaxed font-medium" style={{ fontSize: 'var(--text-xl)' }}>
                 Discover verified Hostels, PGs, and Flats near your campus.
                 Because finding a room shouldn't feel like an exam.
                 </p>
@@ -134,7 +147,7 @@ const HeroSection = () => {
           
 
               {/* Trust Indicators */}
-              <div className="flex items-center gap-8 text-gray-200 text-sm font-medium hero-content-item" style={{animationDelay: '1.1s'}}>
+              <div className="flex items-center gap-8 text-gray-200 font-medium hero-content-item" style={{animationDelay: '1.1s', fontSize: 'var(--text-sm)' }}>
                 <div className="flex items-center gap-2">
                   <Star className="w-5 h-5 text-yellow-400 fill-current" />
                   <span>Trusted by 10,000+ students</span>
@@ -273,7 +286,7 @@ const HeroSection = () => {
       </div>
 
       {/* Mobile Hero Section (below lg) */}
-      <div className="lg:hidden relative z-10 flex flex-col items-center justify-center w-full h-screen max-h-[700px] px-4 py-8">
+      <div className="lg:hidden relative z-10 flex flex-col items-center justify-center w-full min-h-screen px-4 py-8">
         {/* Mobile Subtle Gradient Orbs */}
         <div className="absolute top-20 left-20 w-32 h-32 bg-gradient-to-br from-[#8B5CF6]/8 to-[#6366F1]/6 rounded-full blur-2xl animate-pulse"></div>
         <div className="absolute bottom-20 right-20 w-40 h-40 bg-gradient-to-br from-[#6366F1]/6 to-[#A78BFA]/8 rounded-full blur-2xl animate-pulse" style={{animationDelay: '2s'}}></div>
@@ -282,31 +295,31 @@ const HeroSection = () => {
           {/* Mobile Floating Grid Elements - Relative to mobile hero section */}
           <div className="absolute inset-0 pointer-events-none">
             {/* Mobile Top Left Grid Cluster */}
-            <div className="absolute top-16 left-8 w-16 h-16 opacity-30 max-w-[80px] max-h-[80px] grid-float">
+            <div className="absolute top-16 left-8 w-16 h-16 opacity-30 max-w-[80px] max-h-[80px] ">
               <div className="absolute top-0 left-0 w-4 h-4 border border-[#8B5CF6] opacity-70 grid-pulse"></div>
               <div className="absolute top-4 left-4 w-4 h-4 border border-[#6366F1] opacity-70 grid-pulse-delay-1"></div>
               <div className="absolute top-8 left-8 w-4 h-4 border border-[#A78BFA] opacity-70 grid-pulse-delay-2"></div>
             </div>
             
             {/* Mobile Top Right Grid Cluster */}
-            <div className="absolute top-24 right-8 w-12 h-12 opacity-25 max-w-[60px] max-h-[60px] grid-float-delay-1">
+            <div className="absolute top-18 right-0 w-12 h-12 opacity-25 max-w-[60px] max-h-[60px]">
               <div className="absolute top-0 left-0 w-3 h-3 border border-[#6366F1] opacity-70 grid-glow"></div>
               <div className="absolute top-3 left-3 w-3 h-3 border border-[#8B5CF6] opacity-70 grid-glow-delay-1"></div>
               <div className="absolute top-6 left-6 w-3 h-3 border border-[#A78BFA] opacity-70 grid-glow"></div>
             </div>
             
             {/* Mobile Bottom Left Grid Cluster */}
-            <div className="absolute bottom-32 left-12 w-14 h-14 opacity-20 max-w-[70px] max-h-[70px] grid-float-delay-2">
+            <div className="absolute top-65 left-8 w-14 h-14 opacity-20 max-w-[70px] max-h-[70px]">
               <div className="absolute top-0 left-0 w-3.5 h-3.5 border border-[#A78BFA] opacity-70 grid-rotate"></div>
               <div className="absolute top-3.5 left-3.5 w-3.5 h-3.5 border border-[#6366F1] opacity-70 grid-rotate-reverse"></div>
               <div className="absolute top-7 left-7 w-3.5 h-3.5 border border-[#8B5CF6] opacity-70 grid-rotate"></div>
             </div>
             
             {/* Mobile Bottom Right Grid Cluster */}
-            <div className="absolute bottom-24 right-12 w-18 h-18 opacity-30 max-w-[90px] max-h-[90px] grid-float">
-              <div className="absolute top-0 left-0 w-4.5 h-4.5 border border-[#8B5CF6] opacity-70 grid-pulse"></div>
-              <div className="absolute top-4.5 left-4.5 w-4.5 h-4.5 border border-[#6366F1] opacity-70 grid-pulse-delay-1"></div>
-              <div className="absolute top-9 left-9 w-4.5 h-4.5 border border-[#A78BFA] opacity-70 grid-pulse-delay-2"></div>
+            <div className="absolute bottom-24 right-12 w-18 h-18 opacity-30 max-w-[90px] max-h-[90px]">
+              <div className="absolute top-0 left-0 w-4.5 h-4.5 border border-[#8B5CF6] opacity-70"></div>
+              <div className="absolute top-4.5 left-4.5 w-4.5 h-4.5 border border-[#6366F1] opacity-70 "></div>
+              <div className="absolute top-9 left-9 w-4.5 h-4.5 border border-[#A78BFA] opacity-70 "></div>
             </div>
           </div>
           
@@ -315,12 +328,12 @@ const HeroSection = () => {
           <div className="absolute bottom-40 right-24 w-40 h-40 bg-[#6366F1] opacity-6 rounded-full blur-2xl pointer-events-none"></div>
           
           {/* Trust Badge */}
-          <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-md rounded-full border border-[#8B5CF6]/30 text-[#A78BFA] font-medium text-sm mb-6 mt-6">
+          <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-md rounded-full border border-[#8B5CF6]/30 text-[#A78BFA] font-medium mb-6 mt-6" style={{ fontSize: 'var(--text-sm)' }}>
           Smart, safe, and Secured
           </div>
           
           {/* Main Heading */}
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 leading-tight">
+          <h1 className="font-bold text-white mb-4 leading-tight" style={{ fontSize: 'var(--text-5xl)' }}>
             Find Your Perfect
             <span className="shining-text block mt-2">
               Student Home
@@ -328,7 +341,7 @@ const HeroSection = () => {
           </h1>
           
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-gray-300 mb-8 leading-relaxed font-medium">
+          <p className="text-gray-200 mb-8 leading-relaxed font-medium" style={{ fontSize: 'var(--text-lg)' }}>
             Discover verified Hostels, PGs, and Flats near your campus.
             Because finding a room shouldn't feel like an exam.
           </p>
@@ -451,7 +464,7 @@ const HeroSection = () => {
           </div>
 
           {/* Mobile Trust Indicators */}
-          <div className="flex flex-col gap-4 text-gray-200 text-sm font-medium">
+          <div className="flex flex-col gap-4 text-gray-200 font-medium" style={{ fontSize: 'var(--text-sm)' }}>
             <div className="flex items-center justify-center gap-2">
               <Star className="w-5 h-5 text-yellow-400 fill-current" />
               <span>Trusted by 10,000+ students</span>
@@ -499,10 +512,10 @@ const FeaturesSection = () => {
     <section className="py-20 bg-gray-950">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h2 className="font-bold text-white mb-4" style={{ fontSize: 'var(--text-5xl)' }}>
             Why Choose <span className="text-[#8B5CF6]">SmartStay</span>?
           </h2>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-gray-300 max-w-2xl mx-auto" style={{ fontSize: 'var(--text-xl)' }}>
             We make finding student accommodation simple, safe, and stress-free.
           </p>
         </div>
@@ -513,8 +526,8 @@ const FeaturesSection = () => {
               <div className="w-20 h-20 bg-gradient-to-br from-[#8B5CF6] to-[#6366F1] rounded-3xl flex items-center justify-center text-white mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg">
                 {feature.icon}
               </div>
-              <h3 className="text-xl font-bold text-white mb-4 group-hover:text-[#8B5CF6] transition-colors duration-300">{feature.title}</h3>
-              <p className="text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300">{feature.description}</p>
+              <h3 className="font-bold text-white mb-4 group-hover:text-[#8B5CF6] transition-colors duration-300" style={{ fontSize: 'var(--text-xl)' }}>{feature.title}</h3>
+              <p className="text-gray-300 leading-relaxed group-hover:text-gray-200 transition-colors duration-300" style={{ fontSize: 'var(--text-base)' }}>{feature.description}</p>
             </div>
           ))}
         </div>
@@ -552,10 +565,10 @@ const TestimonialsSection = () => {
     <section className="py-20 bg-gradient-to-br from-gray-950 to-gray-900">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          <h2 className="font-bold text-white mb-4" style={{ fontSize: 'var(--text-5xl)' }}>
             What Students Say
           </h2>
-          <p className="text-xl text-gray-300">
+          <p className="text-gray-300" style={{ fontSize: 'var(--text-xl)' }}>
             Join thousands of satisfied students who found their perfect accommodation across India
           </p>
         </div>
@@ -573,7 +586,7 @@ const TestimonialsSection = () => {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-white text-lg">{testimonial.name}</h4>
+                    <h4 className="font-bold text-white" style={{ fontSize: 'var(--text-lg)' }}>{testimonial.name}</h4>
                     <div className="bg-gradient-to-r from-[#6D28D9] to-[#4338CA] rounded-full p-0.5 shadow-md">
                       <div className="bg-[#4C1D95] rounded-full w-4 h-4 flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-white">
@@ -582,7 +595,7 @@ const TestimonialsSection = () => {
                       </div>
                     </div>
                   </div>
-                  <p className="text-sm text-gray-300">{testimonial.university}</p>
+                  <p className="text-gray-300" style={{ fontSize: 'var(--text-sm)' }}>{testimonial.university}</p>
                   <div className="flex mt-2">
                     {[...Array(testimonial.rating)].map((_, i) => (
                       <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
@@ -590,7 +603,7 @@ const TestimonialsSection = () => {
                   </div>
                 </div>
               </div>
-              <p className="text-gray-200 leading-relaxed italic text-lg">"{testimonial.text}"</p>
+              <p className="text-gray-200 leading-relaxed italic" style={{ fontSize: 'var(--text-lg)' }}>"{testimonial.text}"</p>
             </div>
           ))}
         </div>
@@ -625,29 +638,29 @@ const CTASection = () => {
           
           {/* Left Side: Text Content */}
           <div className="w-full lg:w-1/2 text-left">
-            <div className="inline-block px-4 py-1 bg-gradient-to-r from-[#5B21B6]/30 to-[#7E22CE]/30 backdrop-blur-md rounded-full border border-white/20 text-white font-medium text-sm mb-6 animate-bounce-slow">
+            <div className="inline-block px-4 py-1 bg-gradient-to-r from-[#5B21B6]/30 to-[#7E22CE]/30 backdrop-blur-md rounded-full border border-white/20 text-white font-medium mb-6 animate-bounce-slow" style={{ fontSize: 'var(--text-sm)' }}>
               Ready to get started?
             </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+            <h2 className="font-bold text-white mb-6 leading-tight" style={{ fontSize: 'var(--text-6xl)' }}>
               Find Your <span className="shining-text">Dream</span> Student Accommodation
             </h2>
-            <p className="text-xl text-white/90 mb-8 max-w-2xl">
+            <p className="text-white/90 mb-8 max-w-2xl" style={{ fontSize: 'var(--text-xl)' }}>
               Join thousands of students who have already found their ideal accommodation through SmartStay. Our platform connects you with verified properties near your campus.
             </p>
             
             {/* Stats Row */}
             <div className="flex flex-wrap gap-8 mb-8">
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white">10,000+</span>
-                <span className="text-[#A78BFA]">Happy Students</span>
+                <span className="font-bold text-white" style={{ fontSize: 'var(--text-3xl)' }}>10,000+</span>
+                <span className="text-[#A78BFA]" style={{ fontSize: 'var(--text-base)' }}>Happy Students</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white">500+</span>
-                <span className="text-[#A78BFA]">Properties</span>
+                <span className="font-bold text-white" style={{ fontSize: 'var(--text-3xl)' }}>500+</span>
+                <span className="text-[#A78BFA]" style={{ fontSize: 'var(--text-base)' }}>Properties</span>
               </div>
               <div className="flex flex-col">
-                <span className="text-3xl font-bold text-white">50+</span>
-                <span className="text-[#A78BFA]">Cities</span>
+                <span className="font-bold text-white" style={{ fontSize: 'var(--text-3xl)' }}>50+</span>
+                <span className="text-[#A78BFA]" style={{ fontSize: 'var(--text-base)' }}>Cities</span>
               </div>
             </div>
             
@@ -679,27 +692,27 @@ const CTASection = () => {
                     />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-white mb-2">University Towers</h3>
+                    <h3 className="font-bold text-white mb-2" style={{ fontSize: 'var(--text-2xl)' }}>University Towers</h3>
                     <div className="flex items-center gap-2 mb-1">
                       <MapPin className="w-4 h-4 text-[#A78BFA]" />
-                      <span className="text-[#DDD6FE]">Near Delhi University</span>
+                      <span className="text-[#DDD6FE]" style={{ fontSize: 'var(--text-sm)' }}>Near Delhi University</span>
                     </div>
                     <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} className="w-4 h-4 text-[#FBBF24] fill-current" />
                       ))}
-                      <span className="text-[#DDD6FE] ml-2">4.9 (120 reviews)</span>
+                      <span className="text-[#DDD6FE] ml-2" style={{ fontSize: 'var(--text-sm)' }}>4.9 (120 reviews)</span>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col">
-                    <span className="text-[#A78BFA] text-sm">Starting at</span>
-                    <span className="text-white text-xl font-bold">₹15,000/mo</span>
+                    <span className="text-[#A78BFA]" style={{ fontSize: 'var(--text-sm)' }}>Starting at</span>
+                    <span className="text-white font-bold" style={{ fontSize: 'var(--text-xl)' }}>₹15,000/mo</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[#A78BFA] text-sm">Available From</span>
-                    <span className="text-white text-xl font-bold">June 2025</span>
+                    <span className="text-[#A78BFA]" style={{ fontSize: 'var(--text-sm)' }}>Available From</span>
+                    <span className="text-white font-bold" style={{ fontSize: 'var(--text-xl)' }}>June 2025</span>
                   </div>
                 </div>
               </div>
@@ -708,13 +721,13 @@ const CTASection = () => {
               <div className="absolute -top-12 -right-8 bg-gradient-to-r from-[#5B21B6]/40 to-[#7E22CE]/40 backdrop-blur-md p-4 rounded-2xl border border-[#8B5CF6]/30 shadow-[0_0_15px_rgba(139,92,246,0.2)] transform rotate-6 hover:rotate-0 transition-all duration-500">
                 <div className="flex items-center gap-3">
                   <Shield className="w-5 h-5 text-[#4ADE80]" />
-                  <span className="text-white font-medium">Verified Property</span>
+                  <span className="text-white font-medium" style={{ fontSize: 'var(--text-sm)' }}>Verified Property</span>
                 </div>
               </div>
               <div className="absolute -bottom-8 -left-6 bg-gradient-to-r from-[#7E22CE]/40 to-[#5B21B6]/40 backdrop-blur-md p-4 rounded-2xl border border-[#8B5CF6]/30 shadow-[0_0_15px_rgba(139,92,246,0.2)] transform -rotate-3 hover:rotate-0 transition-all duration-500">
                 <div className="flex items-center gap-3">
                   <Users className="w-5 h-5 text-[#A78BFA]" />
-                  <span className="text-white font-medium">Highly Rated by Students</span>
+                  <span className="text-white font-medium" style={{ fontSize: 'var(--text-sm)' }}>Highly Rated by Students</span>
                 </div>
               </div>
             </div>
@@ -731,37 +744,37 @@ const Footer = () => {
       <div className="max-w-6xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-2xl font-bold text-[#8B5CF6] mb-4">SmartStay</h3>
-            <p className="text-gray-300">
+            <h3 className="font-bold text-[#8B5CF6] mb-4" style={{ fontSize: 'var(--text-2xl)' }}>SmartStay</h3>
+            <p className="text-gray-300" style={{ fontSize: 'var(--text-base)' }}>
               Helping students find trusted accommodation near their campuses.
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-white">For Students</h4>
-            <ul className="space-y-2 text-gray-300">
+            <h4 className="font-semibold mb-4 text-white" style={{ fontSize: 'var(--text-lg)' }}>For Students</h4>
+            <ul className="space-y-2 text-gray-300" style={{ fontSize: 'var(--text-base)' }}>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Browse Properties</a></li>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Find Roommates</a></li>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Student Guide</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-white">For Landlords</h4>
-            <ul className="space-y-2 text-gray-300">
+            <h4 className="font-semibold mb-4 text-white" style={{ fontSize: 'var(--text-lg)' }}>For Landlords</h4>
+            <ul className="space-y-2 text-gray-300" style={{ fontSize: 'var(--text-base)' }}>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">List Property</a></li>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Property Management</a></li>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Landlord Guide</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4 text-white">Support</h4>
-            <ul className="space-y-2 text-gray-300">
+            <h4 className="font-semibold mb-4 text-white" style={{ fontSize: 'var(--text-lg)' }}>Support</h4>
+            <ul className="space-y-2 text-gray-300" style={{ fontSize: 'var(--text-base)' }}>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Help Center</a></li>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Contact Us</a></li>
               <li><a href="#" className="hover:text-[#8B5CF6] transition-colors">Safety Tips</a></li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400" style={{ fontSize: 'var(--text-sm)' }}>
           <p>&copy; 2025 SmartStay. All rights reserved.</p>
         </div>
       </div>
