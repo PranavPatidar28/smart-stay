@@ -2838,7 +2838,7 @@ export default function OwnerDashboard() {
                             }}
                             className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${
                               selectedPropertyType === type.value
-                                ? "bg-[var(--color-primary-50)] text-[var(--color-primary-800)]"
+                                ? "bg-[var(--color-primary-600)] text-[var(--color-primary-800)]"
                                 : ""
                             }`}
                           >
@@ -2866,7 +2866,7 @@ export default function OwnerDashboard() {
                 </div>
 
                 <div className="ml-auto flex items-center">
-                  <span className="text-sm bg-[var(--color-primary-50)] text-[var(--color-primary-700)] px-3 py-1.5 rounded-lg">
+                  <span className="text-sm bg-[var(--color-primary-400)] text-white px-3 py-1.5 rounded-lg">
                     {filteredProperties.length} properties found
                   </span>
                 </div>

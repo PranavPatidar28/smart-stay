@@ -38,13 +38,19 @@ import {
   MessageSquare,
   Share2,
   PawPrint,
-  Grid3X3
+  Grid3X3,
+  Sofa,
+  Zap,
+  PawPrint as PawPrintIcon,
+  Waves,
+  WashingMachine
 } from "lucide-react";
 import { FaRupeeSign as Rupee } from "react-icons/fa";
 import { trackAnalyticsEvent } from '@/lib/api-client';
 import { showSuccess, showError } from '@/lib/toast';
 import Image from 'next/image';
 import { createPortal } from "react-dom";
+import MaterialPriceRangeSlider from "@/components/ui/MaterialPriceRangeSlider";
 
 // Define custom CSS for scrollbars
 const customScrollbarStyles = `
@@ -134,6 +140,8 @@ const customScrollbarStyles = `
   .pulsing-shape {
     animation: pulse 4s ease-in-out infinite;
   }
+  
+
 `;
 
 // Define the coordinates type
@@ -537,10 +545,10 @@ const MobilePropertyModal = ({
         </div>
         {/* Features */}
         <div className="flex flex-wrap gap-2 mt-2">
-          {property.furnished && <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium"><Home className="w-3 h-3" />Furnished</span>}
-          {property.petFriendly && <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"><Shield className="w-3 h-3" />Pet Friendly</span>}
+          {property.furnished && <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium"><Sofa className="w-3 h-3" />Furnished</span>}
+          {property.petFriendly && <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"><PawPrintIcon className="w-3 h-3" />Pet Friendly</span>}
           {property.parking && <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium"><Car className="w-3 h-3" />Parking</span>}
-          {property.utilities && <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium"><Wifi className="w-3 h-3" />Utilities</span>}
+          {property.utilities && <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium"><Zap className="w-3 h-3" />Utilities</span>}
         </div>
         {/* Amenities */}
         <div className="mt-3">
@@ -636,6 +644,10 @@ const getAmenityIcon = (amenity: string) => {
       return <Shield className="w-4 h-4" />;
     case "Study Room":
       return <BookOpen className="w-4 h-4" />;
+    case "Pool":
+      return <Waves className="w-4 h-4" />;
+    case "Laundry":
+      return <WashingMachine className="w-4 h-4" />;
     default:
       return <Home className="w-4 h-4" />;
   }
@@ -799,8 +811,7 @@ export default function ListingsPage() {
   const [displayCount, setDisplayCount] = useState(0);
   const prevCountRef = useRef(0);
   const [selectedType, setSelectedType] = useState("All");
-  const [priceRange, setPriceRange] = useState([0, 75000]);
-  const [priceRangeText, setPriceRangeText] = useState(['₹0', '₹75,000+']);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 75000]);
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
@@ -842,7 +853,6 @@ export default function ListingsPage() {
   // Refs for clicking outside detection
   const propertyTypeRef = useRef<HTMLDivElement>(null);
   const sortByRef = useRef<HTMLDivElement>(null);
-  const priceRangeRef = useRef<HTMLDivElement>(null);
   
   // Define property types with icons and descriptions
   const PROPERTY_TYPE_OPTIONS = [
@@ -946,16 +956,7 @@ export default function ListingsPage() {
 
 
 
-  // Update price range text when price range changes
-  useEffect(() => {
-    const formatPrice = (price: number) => {
-      if (price === 0) return '₹0';
-      if (price >= 75000) return '₹75,000+';
-      return `₹${price.toLocaleString()}`;
-    };
-    
-    setPriceRangeText([formatPrice(priceRange[0]), formatPrice(priceRange[1])]);
-  }, [priceRange]);
+
 
   // Read search parameter from URL on component mount
   useEffect(() => {
@@ -1520,10 +1521,10 @@ export default function ListingsPage() {
             </div>
             {/* Features */}
             <div className="flex flex-wrap gap-2 mb-2">
-              {property.furnished && <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium"><Home className="w-3 h-3" />Furnished</span>}
-              {property.petFriendly && <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"><Shield className="w-3 h-3" />Pet Friendly</span>}
+              {property.furnished && <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium"><Sofa className="w-3 h-3" />Furnished</span>}
+              {property.petFriendly && <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"><PawPrintIcon className="w-3 h-3" />Pet Friendly</span>}
               {property.parking && <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium"><Car className="w-3 h-3" />Parking</span>}
-              {property.utilities && <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium"><Wifi className="w-3 h-3" />Utilities</span>}
+              {property.utilities && <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium"><Zap className="w-3 h-3" />Utilities</span>}
             </div>
             {/* Amenities */}
             <div className="flex flex-wrap gap-2 mb-2">
@@ -1858,16 +1859,16 @@ export default function ListingsPage() {
                   {/* Search Input */}
                   <div className="relative col-span-2">
                     {isSearching ? (
-                      <Loader2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-primary-500)] w-5 h-5 animate-spin" />
+                      <Loader2 className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[var(--color-primary-500)] w-5 h-5 animate-spin" />
                     ) : (
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                     )}
                     <input
                       type="text"
                       placeholder="Search properties..."
                       value={searchTerm}
                       onChange={handleSearchChange}
-                      className={`w-full pl-10 ${searchTerm ? 'pr-10' : 'pr-4'} py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900 transition-all duration-200 ${isSearching ? 'bg-[var(--color-primary-50)]' : 'bg-white'}`}
+                      className={`w-full pl-12 ${searchTerm ? 'pr-10' : 'pr-4'} py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900 transition-all duration-200 ${isSearching ? 'bg-gray-50' : 'bg-white'}`}
                     />
                     {searchTerm && (
                       <button
@@ -1884,7 +1885,7 @@ export default function ListingsPage() {
                     <button
                       type="button"
                       onClick={() => setShowPropertyTypeModal(!showPropertyTypeModal)}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900 bg-white flex items-center justify-between"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-gray-900 bg-white flex items-center justify-between hover:border-gray-300 hover:shadow-sm transition-all duration-200"
                     >
                       <div className="flex items-center gap-2">
                         {(() => {
@@ -1917,7 +1918,11 @@ export default function ListingsPage() {
                             setShowPropertyTypeModal(false);
                             setLoading(true);
                           }}
-                          className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${selectedType === type.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
+                          className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center transition-colors duration-200 ${
+                            selectedType === type.value 
+                              ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]" 
+                              : "text-gray-700 hover:bg-gray-50 border border-transparent"
+                          }`}
                         >
                           <div className="flex items-center gap-3 w-full">
                             <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
@@ -1935,7 +1940,7 @@ export default function ListingsPage() {
                               <div className="text-xs truncate">{type.description}</div>
                             </div>
                             {selectedType === type.value && (
-                              <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                              <span className="ml-auto text-white font-bold">✓</span>
                             )}
                           </div>
                         </button>
@@ -1948,8 +1953,8 @@ export default function ListingsPage() {
                     onClick={() => setShowFilters(!showFilters)}
                     className={`flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${
                       showFilters
-                        ? "bg-[var(--color-primary-600)] text-white"
-                        : "bg-[var(--color-primary-500)] text-white hover:bg-[var(--color-primary-600)]"
+                        ? "bg-[var(--color-primary-400)] text-white"
+                        : "bg-[var(--color-primary-500)] text-white hover:bg-[var(--color-primary-400)] active:bg-[var(--color-primary-300)]"
                     }`}
                   >
                     <Filter className="w-5 h-5" />
@@ -1961,58 +1966,58 @@ export default function ListingsPage() {
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button 
                     onClick={() => handleQuickFilterToggle('nearCampus')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-300 flex items-center gap-1.5 ${
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
                       quickFilters.nearCampus 
-                        ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)] shadow-sm transform scale-105" 
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.nearCampus ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.nearCampus && <CheckCircle className="w-3 h-3" />}
                     </span>
-                    <MapPin className={`w-3 h-3 ${quickFilters.nearCampus ? 'text-[var(--color-primary-600)]' : 'text-gray-500'}`} />
+                    <MapPin className={`w-3 h-3 ${quickFilters.nearCampus ? 'text-white' : 'text-gray-500'}`} />
                     Near Campus
                   </button>
                   <button 
                     onClick={() => handleQuickFilterToggle('furnished')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-300 flex items-center gap-1.5 ${
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
                       quickFilters.furnished 
-                        ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)] shadow-sm transform scale-105" 
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.furnished ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.furnished && <CheckCircle className="w-3 h-3" />}
                     </span>
-                    <Home className={`w-3 h-3 ${quickFilters.furnished ? 'text-[var(--color-primary-600)]' : 'text-gray-500'}`} />
+                    <Sofa className={`w-3 h-3 ${quickFilters.furnished ? 'text-white' : 'text-gray-500'}`} />
                     Furnished
                   </button>
                   <button 
                     onClick={() => handleQuickFilterToggle('petFriendly')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-300 flex items-center gap-1.5 ${
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
                       quickFilters.petFriendly 
-                        ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)] shadow-sm transform scale-105" 
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.petFriendly ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.petFriendly && <CheckCircle className="w-3 h-3" />}
                     </span>
-                    <span className={`${quickFilters.petFriendly ? 'text-[var(--color-primary-600)]' : 'text-gray-500'}`}>🐾</span>
+                    <PawPrintIcon className={`w-3 h-3 ${quickFilters.petFriendly ? 'text-white' : 'text-gray-500'}`} />
                     Pet Friendly
                   </button>
                   <button 
                     onClick={() => handleQuickFilterToggle('availableNow')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-300 flex items-center gap-1.5 ${
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
                       quickFilters.availableNow 
-                        ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)] shadow-sm transform scale-105" 
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.availableNow ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.availableNow && <CheckCircle className="w-3 h-3" />}
                     </span>
-                    <Calendar className={`w-3 h-3 ${quickFilters.availableNow ? 'text-[var(--color-primary-600)]' : 'text-gray-500'}`} />
+                    <Calendar className={`w-3 h-3 ${quickFilters.availableNow ? 'text-white' : 'text-gray-500'}`} />
                     Available Now
                   </button>
                   
@@ -2024,7 +2029,7 @@ export default function ListingsPage() {
                     selectedAmenities.length > 0) && (
                     <button 
                       onClick={handleClearFilters}
-                      className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm hover:bg-red-200 transition-colors flex items-center gap-1.5 animate-fadeIn"
+                      className="px-3 py-1 bg-red-500 text-white rounded-full text-sm hover:bg-red-600 transition-colors duration-200 flex items-center gap-1.5 font-medium"
                     >
                       <X className="w-3 h-3" />
                       Clear All
@@ -2047,122 +2052,34 @@ export default function ListingsPage() {
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* Custom Price Range Slider */}
-                <div ref={priceRangeRef} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                  <div className="flex justify-between mb-3">
-                    <label className="flex items-center gap-2 font-medium text-gray-800">
-                      <span className="text-[var(--color-primary-600)] font-bold">₹</span>
-                      Price Range
-                    </label>
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <span className="bg-[var(--color-primary-50)] text-[var(--color-primary-700)] px-2 py-1 rounded-md border border-[var(--color-primary-200)]">
-                        {priceRangeText[0]} - {priceRangeText[1]}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  {/* Custom dual handle slider */}
-                  <div className="relative pt-5 pb-10">
-                    {/* Background track */}
-                    <div className="absolute w-full h-2 bg-gray-200 rounded-full top-6"></div>
-                    
-                    {/* Colored track between handles */}
-                    <div 
-                      className="absolute h-2 bg-gradient-to-r from-[var(--color-primary-400)] to-[var(--color-secondary-400)] rounded-full top-6"
-                      style={{
-                        left: `${(priceRange[0] / 75000) * 100}%`,
-                        width: `${((priceRange[1] - priceRange[0]) / 75000) * 100}%`
-                      }}
-                    ></div>
-                    
-                    {/* Min Price Handle */}
-                    <div className="relative w-full h-2">
-                      <input
-                        type="range"
-                        min="0"
-                        max="75000"
-                        step="1000"
-                        value={priceRange[0]}
-                        onChange={(e) => {
-                          const newMinPrice = parseInt(e.target.value);
-                          // Ensure min price doesn't exceed max price
-                          if (newMinPrice <= priceRange[1]) {
-                            setPriceRange([newMinPrice, priceRange[1]]);
-                            setLoading(true);
-                          }
-                        }}
-                        className="absolute w-full h-2 opacity-0 cursor-pointer z-30"
-                      />
-                      <div 
-                        className="absolute h-7 w-7 bg-white border-2 border-[var(--color-primary-500)] rounded-full -top-2.5 shadow-md z-20 pointer-events-none flex items-center justify-center hover:scale-110 transition-transform"
-                        style={{ left: `calc(${(priceRange[0] / 75000) * 100}% - 14px)` }}
-                      >
-                        <div className="w-2 h-2 bg-[var(--color-primary-500)] rounded-full"></div>
-                      </div>
-                    </div>
-                    
-                    {/* Max Price Handle */}
-                    <div className="relative w-full h-2">
-                      <input
-                        type="range"
-                        min="0"
-                        max="75000"
-                        step="1000"
-                        value={priceRange[1]}
-                        onChange={(e) => {
-                          const newMaxPrice = parseInt(e.target.value);
-                          // Ensure max price doesn't go below min price
-                          if (newMaxPrice >= priceRange[0]) {
-                            setPriceRange([priceRange[0], newMaxPrice]);
-                            setLoading(true);
-                          }
-                        }}
-                        className="absolute w-full h-2 opacity-0 cursor-pointer z-30"
-                      />
-                      <div 
-                        className="absolute h-7 w-7 bg-white border-2 border-[var(--color-secondary-500)] rounded-full -top-2.5 shadow-md z-20 pointer-events-none flex items-center justify-center hover:scale-110 transition-transform"
-                        style={{ left: `calc(${(priceRange[1] / 75000) * 100}% - 14px)` }}
-                      >
-                        <div className="w-2 h-2 bg-[var(--color-secondary-500)] rounded-full"></div>
-                      </div>
-                    </div>
-                    
-                    {/* Price markers */}
-                    <div className="absolute w-full flex justify-between text-xs text-gray-500 mt-5 px-1">
-                      <div className="flex flex-col items-center">
-                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
-                        <span>₹0</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
-                        <span>₹25K</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
-                        <span>₹50K</span>
-                      </div>
-                      <div className="flex flex-col items-center">
-                        <div className="h-2 w-0.5 bg-gray-300 mb-1"></div>
-                        <span>₹75K+</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* Material UI Price Range Slider */}
+                <MaterialPriceRangeSlider
+                  value={priceRange}
+                  onChange={(newRange) => {
+                    setPriceRange(newRange);
+                    setLoading(true);
+                  }}
+                  min={0}
+                  max={75000}
+                  step={1000}
+                  showLabels={true}
+                  className="w-full"
+                />
 
                 {/* Amenities */}
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                   <label className="flex items-center gap-2 font-medium text-gray-800 mb-4">
-                    <Dumbbell className="w-4 h-4 text-[var(--color-primary-600)]" />
+                    <Dumbbell className="w-4 h-4 text-[var(--color-primary-300)]" />
                     Amenities
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     {amenities.map((amenity) => (
                       <label
                         key={amenity}
-                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors duration-200 ${
                           selectedAmenities.includes(amenity)
-                            ? 'bg-[var(--color-primary-50)] border border-[var(--color-primary-200)]'
-                            : 'hover:bg-gray-100 border border-gray-200'
+                            ? 'bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]'
+                            : 'hover:bg-gray-50 border border-gray-200'
                         }`}
                       >
                         <input
@@ -2171,7 +2088,7 @@ export default function ListingsPage() {
                           onChange={(e) => handleAmenityChange(amenity, e.target.checked)}
                           className="w-4 h-4 text-[var(--color-primary-500)] border-gray-300 rounded-sm focus:ring-[var(--color-primary-500)]"
                         />
-                        <span className="text-sm text-gray-700 flex items-center gap-1">
+                        <span className={`text-sm flex items-center gap-1 ${selectedAmenities.includes(amenity) ? 'text-white' : 'text-gray-700'}`}>
                           {getAmenityIcon(amenity)}
                           {amenity}
                         </span>
@@ -2182,7 +2099,7 @@ export default function ListingsPage() {
                     <div className="mt-2 flex justify-end">
                       <button 
                         onClick={() => setSelectedAmenities([])} 
-                        className="text-xs text-[var(--color-primary-600)] hover:text-[var(--color-primary-700)] font-medium"
+                        className="text-xs bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition-colors duration-200 font-medium"
                       >
                         Clear Selection
                       </button>
@@ -2203,23 +2120,23 @@ export default function ListingsPage() {
                       <button
                         key={key}
                         onClick={() => handleQuickFilterToggle(key as keyof typeof quickFilters)}
-                        className={`w-full flex items-center justify-between p-2 rounded-lg text-sm ${
+                        className={`w-full flex items-center justify-between p-2 rounded-lg text-sm transition-colors duration-200 ${
                           value 
-                            ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]" 
-                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-100"
+                            ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] font-medium" 
+                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
                         }`}
                       >
                         <span className="flex items-center gap-2">
                           {key === 'nearCampus' && <MapPin className="w-4 h-4" />}
-                          {key === 'furnished' && <Home className="w-4 h-4" />}
-                          {key === 'petFriendly' && <span>🐾</span>}
+                          {key === 'furnished' && <Sofa className="w-4 h-4" />}
+                          {key === 'petFriendly' && <PawPrintIcon className="w-4 h-4" />}
                           {key === 'availableNow' && <Calendar className="w-4 h-4" />}
                           {key === 'nearCampus' ? 'Near Campus' : 
                            key === 'furnished' ? 'Furnished' :
                            key === 'petFriendly' ? 'Pet Friendly' :
                            key === 'availableNow' ? 'Available Now' : key}
                         </span>
-                        {value ? <CheckCircle className="w-4 h-4" /> : null}
+                        {value ? <CheckCircle className="w-4 h-4 text-white" /> : null}
                       </button>
                     ))}
                   </div>
@@ -2227,7 +2144,7 @@ export default function ListingsPage() {
                   <div className="mt-auto">
                     <button
                       onClick={handleClearFilters}
-                      className="w-full py-2 px-4 bg-[var(--color-primary-50)] text-[var(--color-primary-600)] rounded-lg hover:bg-[var(--color-primary-100)] transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-[var(--color-primary-200)]"
+                      className="w-full py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 font-medium text-sm flex items-center justify-center gap-2"
                     >
                       <X className="w-4 h-4" />
                       Clear All Filters
@@ -2238,7 +2155,7 @@ export default function ListingsPage() {
 
               {/* Results Counter */}
               <div className="mt-6 border-t border-gray-200 pt-4 flex justify-end">
-                <div className="bg-[var(--color-primary-50)] text-[var(--color-primary-800)] px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 border border-[var(--color-primary-200)] shadow-sm">
+                <div className="bg-[var(--color-primary-500)] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                   <Search className="w-4 h-4" />
                   <span>{filteredProperties.length}</span> 
                   <span>properties found</span>
@@ -2271,7 +2188,7 @@ export default function ListingsPage() {
                   searchTerm || selectedType !== "All" || 
                   priceRange[0] > 0 || priceRange[1] < 75000 || 
                   selectedAmenities.length > 0) && (
-                  <span className="ml-3 px-2 py-1 bg-[var(--color-primary-100)] text-[var(--color-primary-700)] text-xs rounded-md animate-fadeIn flex items-center gap-1">
+                  <span className="ml-3 px-3 py-1.5 bg-[var(--color-primary-500)] text-white text-xs rounded-full flex items-center gap-1 font-medium">
                     <Filter className="w-3 h-3" />
                     Filters Applied
                   </span>
@@ -2287,7 +2204,7 @@ export default function ListingsPage() {
                 <button
                   type="button"
                   onClick={() => setShowSortByModal(!showSortByModal)}
-                  className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-sm bg-white flex items-center gap-2 min-w-[150px] text-gray-600"
+                  className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent text-sm bg-white flex items-center gap-2 min-w-[150px] text-gray-600 hover:border-gray-300 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-lg">
@@ -2313,7 +2230,11 @@ export default function ListingsPage() {
                         setShowSortByModal(false);
                         setLoading(true);
                       }}
-                      className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${sortBy === option.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
+                      className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center transition-colors duration-200 ${
+                        sortBy === option.value 
+                          ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]" 
+                          : "text-gray-700 hover:bg-gray-50 border border-transparent"
+                      }`}
                     >
                       <div className="flex items-center gap-3 w-full">
                         <span className="text-xl flex-shrink-0">{option.icon}</span>
@@ -2322,7 +2243,7 @@ export default function ListingsPage() {
                           <div className="text-xs">{option.description}</div>
                         </div>
                         {sortBy === option.value && (
-                          <span className="ml-auto text-[var(--color-primary-600)]">✓</span>
+                          <span className="ml-auto text-white font-bold">✓</span>
                         )}
                       </div>
                     </button>
@@ -2339,10 +2260,10 @@ export default function ListingsPage() {
                     mode: 'grid'
                   });
                 }}
-                  className={`p-2 rounded-md ${
+                  className={`p-2 rounded-md transition-colors duration-200 ${
                     viewMode === "grid"
-                      ? "bg-white text-[var(--color-primary-600)] shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "bg-[var(--color-primary-500)] text-white"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
                   }`}
                 >
                   <Grid className="w-5 h-5" />
@@ -2354,10 +2275,10 @@ export default function ListingsPage() {
                     mode: 'list'
                   });
                 }}
-                  className={`p-2 rounded-md ${
+                  className={`p-2 rounded-md transition-colors duration-200 ${
                     viewMode === "list"
-                      ? "bg-white text-[var(--color-primary-600)] shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
+                      ? "bg-[var(--color-primary-500)] text-white"
+                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
                   }`}
                 >
                   <List className="w-5 h-5" />
@@ -2678,10 +2599,10 @@ export default function ListingsPage() {
                   <div className="px-6">
                     {/* Quick Features Row - Improved layout */}
                     <div className="flex flex-wrap gap-2 my-4">
-                      {selectedProperty!.furnished && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-lg font-medium border border-green-200"><Home className="w-4 h-4" /> Furnished</span>}
-                      {selectedProperty!.petFriendly && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-sm rounded-lg font-medium border border-blue-200"><Shield className="w-4 h-4" /> Pet Friendly</span>}
+                      {selectedProperty!.furnished && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-lg font-medium border border-green-200"><Sofa className="w-4 h-4" /> Furnished</span>}
+                      {selectedProperty!.petFriendly && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-sm rounded-lg font-medium border border-blue-200"><PawPrintIcon className="w-4 h-4" /> Pet Friendly</span>}
                       {selectedProperty!.parking && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 text-sm rounded-lg font-medium border border-purple-200"><Car className="w-4 h-4" /> Parking</span>}
-                      {selectedProperty!.utilities && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-lg font-medium border border-orange-200"><Wifi className="w-4 h-4" /> Utilities Included</span>}
+                      {selectedProperty!.utilities && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-lg font-medium border border-orange-200"><Zap className="w-4 h-4" /> Utilities Included</span>}
                     </div>
                     
                     {/* Description - Enhanced typography */}
