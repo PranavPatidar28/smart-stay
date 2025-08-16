@@ -187,31 +187,31 @@ const HeroSection = () => {
 
       {/* Mobile/Tablet Hero Section (below lg) */}
       <div className="lg:hidden relative z-10 flex flex-col items-center justify-center w-full min-h-[100svh] px-4 py-8">
-        <div className="w-full max-w-md md:max-w-2xl mx-auto text-center flex flex-col items-center justify-center h-full relative">
+        <div className="w-full max-w-4xl mx-auto text-center flex flex-col items-center justify-center h-full relative">
           
           {/* Trust Badge */}
-          <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-md rounded-full border border-[#8B5CF6]/30 text-[#A78BFA] font-medium mb-6 mt-6 text-sm sm:text-base">
-          Smart, safe, and Secured
+          <div className="inline-block px-4 py-2 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-md rounded-full border border-[#8B5CF6]/30 text-[#A78BFA] font-medium mb-6 mt-6 text-sm lg:text-base">
+            Smart, safe, and Secured
           </div>
           
           {/* Main Heading */}
-          <h1 className="font-bold text-white mb-4 leading-tight text-3xl sm:text-4xl md:text-5xl">
+          <h1 className="font-bold text-white mb-6 leading-tight max-w-3xl text-6xl lg:text-6xl xl:text-6xl 2xl:text-6xl">
             Find Your Perfect
-            <span className="shining-text block mt-2">
+            <span className="shining-text block">
               Student Home
             </span>
           </h1>
           
           {/* Subtitle */}
-          <p className="text-gray-200 mb-8 leading-relaxed font-medium text-base sm:text-lg md:text-xl">
+          <p className="text-gray-300 mb-8 max-w-2xl leading-relaxed font-medium text-lg lg:text-xl">
             Discover verified Hostels, PGs, and Flats near your campus.
             Because finding a room shouldn't feel like an exam.
           </p>
 
           {/* Mobile Search Bar */}
-          <form action="/listings" method="GET" className="w-full max-w-md md:max-w-2xl mx-auto mb-8" role="search" aria-label="Search for student accommodation">
-            <div className="bg-gray-900/20 backdrop-blur-xl rounded-2xl p-2 border border-gray-800/40 shadow-2xl">
-              <div className="flex flex-col gap-2">
+          <form action="/listings" method="GET" className="w-full max-w-4xl mx-auto mb-8" role="search" aria-label="Search for student accommodation">
+            <div className="bg-gray-900/20 backdrop-blur-xl rounded-3xl p-2 sm:p-3 border border-gray-800/40 shadow-2xl">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <div className="flex-1 relative">
                   <input 
                     type="text" 
@@ -219,23 +219,26 @@ const HeroSection = () => {
                     placeholder="Search by university, city, or hostel"
                     autoComplete="off"
                     aria-label="Search by university, city, or hostel"
-                    className="w-full pl-4 pr-4 py-3 text-base rounded-xl bg-gray-900/80 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:bg-gray-900 transition-all duration-200 shadow-lg"
+                    className="w-full pl-4 sm:pl-6 pr-4 sm:pr-6 py-3 sm:py-4 text-sm sm:text-base rounded-2xl bg-gray-900/80 text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8B5CF6] focus:bg-gray-900 transition-all duration-200 shadow-lg"
                   />
                 </div>
-                <button type="submit" aria-label="Search for accommodation" className="group relative overflow-hidden bg-gradient-to-r from-[#8B5CF6] via-[#7C3AED] to-[#6366F1] hover:from-[#A78BFA] hover:via-[#8B5CF6] hover:to-[#818CF8] text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:shadow-[0_12px_48px_rgba(139,92,246,0.6)] hover:scale-105 text-base border border-[#8B5CF6]/30 hover:border-[#A78BFA]/50">
+                <button type="submit" aria-label="Search for accommodation" className="group relative overflow-hidden bg-gradient-to-r from-[#8B5CF6] via-[#7C3AED] to-[#6366F1] hover:from-[#A78BFA] hover:via-[#8B5CF6] hover:to-[#818CF8] text-white px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center gap-3 shadow-[0_8px_32px_rgba(139,92,246,0.4)] hover:shadow-[0_12px_48px_rgba(139,92,246,0.6)] hover:scale-105 text-sm sm:text-base whitespace-nowrap border border-[#8B5CF6]/30 hover:border-[#A78BFA]/50">
                   {/* Animated background shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-500 ease-out"></div>
                   
                   {/* Icon with animation */}
-                  <Search className="w-5 h-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
+                  <Search className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 group-hover:rotate-12 transition-all duration-200" />
                   
                   {/* Text with gradient effect */}
-                  <span className="relative z-10 bg-gradient-to-r from-white to-[#F3E8FF] bg-clip-text text-transparent font-extrabold">
+                  <span className="hidden sm:inline relative z-10 bg-gradient-to-r from-white to-[#F3E8FF] bg-clip-text text-transparent font-extrabold">
                     Explore
+                  </span>
+                  <span className="sm:hidden relative z-10 bg-gradient-to-r from-white to-[#F3E8FF] bg-clip-text text-transparent font-extrabold">
+                    Search
                   </span>
                   
                   {/* Subtle glow effect */}
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </button>
               </div>
             </div>
@@ -243,12 +246,12 @@ const HeroSection = () => {
 
          
           {/* Mobile Staggered Images */}
-          <div className="relative mb-8 w-full max-w-sm sm:max-w-md md:max-w-lg h-[280px] sm:h-[320px] md:h-[380px]">
+          <div className="relative mb-8 w-full max-w-md sm:max-w-lg md:max-w-xl h-[320px] sm:h-[360px] md:h-[420px]">
             {/* Background Glow Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 rounded-2xl blur-xl opacity-60"></div>
             
             {/* Mobile Image 1 - Bottom Left */}
-            <div className="absolute bottom-1 left-1 w-32 h-40 sm:w-36 sm:h-44 md:w-40 md:h-48 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+            <div className="absolute bottom-1 left-1 w-36 h-44 sm:w-40 sm:h-48 md:w-44 md:h-52 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
               <Image 
                 src="/images/Gemini_Generated_Image_LandingPage.png" 
@@ -262,13 +265,13 @@ const HeroSection = () => {
             </div>
 
             {/* Mobile Image 2 - Top Right */}
-            <div className="absolute top-1 right-1 w-32 h-44 sm:w-36 sm:h-48 md:w-40 md:h-52 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
+            <div className="absolute top-1 right-1 w-36 h-48 sm:w-40 sm:h-52 md:w-44 md:h-56 rounded-xl overflow-hidden shadow-xl border border-[#312E81]/40 hover:scale-105 hover:-rotate-1 transition-transform duration-200 ease-out hover:border-[#8B5CF6]/60 z-10 hover:z-20">
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
               <Image 
                 src="/images/Gemini_Generated_Image_plv6quplv6quplv6.png" 
                 alt="Premium student accommodation" 
-                width={128}
-                height={176}
+                width={144}
+                height={192}
                 className="w-full h-full object-cover"
                 loading="lazy"
                 priority={false}
@@ -276,13 +279,13 @@ const HeroSection = () => {
             </div>
 
             {/* Mobile Image 3 - Center (Main) */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-44 h-52 sm:w-48 sm:h-56 md:w-52 md:h-60 rounded-xl overflow-hidden shadow-xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-20 hover:z-30">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-56 sm:w-52 sm:h-60 md:w-56 md:h-64 rounded-xl overflow-hidden shadow-xl border-2 border-[#8B5CF6]/50 hover:scale-105 hover:rotate-1 transition-transform duration-200 ease-out hover:border-[#A78BFA]/80 z-20 hover:z-30">
               <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/50 via-transparent to-transparent rounded-xl"></div>
               <Image 
                 src="/images/Gemini_Generated_Image_4chicb4chicb4chi.png" 
                 alt="Featured luxury student accommodation" 
-                width={176}
-                height={208}
+                width={192}
+                height={224}
                 className="w-full h-full object-cover"
                 loading="eager"
                 priority={true}
@@ -296,42 +299,21 @@ const HeroSection = () => {
 
           {/* Mobile Enhanced Trust Indicators with Stats */}
           <div className="space-y-4">
-            <div className="flex flex-col gap-4 text-gray-200 font-medium text-sm sm:text-base">
+            <div className="flex flex-col gap-4 text-gray-200 font-light text-sm sm:text-base">
               <div className="flex items-center justify-center gap-2">
                 <Star className="w-5 h-5 text-yellow-400 fill-current" aria-hidden="true" />
-                <span>10,000+ Happy Students</span>
+                <span>Trusted by 10,000+ students</span>
               </div>
               <div className="flex items-center justify-center gap-2">
                 <Shield className="w-5 h-5 text-[#A78BFA]" aria-hidden="true" />
-                <span>500+ Verified Properties</span>
+                <span>Verified listings only</span>
               </div>
               <div className="flex items-center justify-center gap-2">
                 <CheckCircle className="w-5 h-5 text-[#818CF8]" aria-hidden="true" />
-                <span>50+ Cities Across India</span>
+                <span>24/7 support</span>
               </div>
             </div>
             
-            {/* Mobile Quick Stats */}
-            <div className="flex flex-wrap justify-center gap-3">
-              <div className="bg-gradient-to-r from-[#8B5CF6]/20 to-[#6366F1]/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-[#8B5CF6]/30">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">4.9★</div>
-                  <div className="text-[#A78BFA] text-xs">Rating</div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-[#10B981]/20 to-[#059669]/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-[#10B981]/30">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">&lt;24hrs</div>
-                  <div className="text-[#34D399] text-xs">Response</div>
-                </div>
-              </div>
-              <div className="bg-gradient-to-r from-[#F59E0B]/20 to-[#D97706]/20 backdrop-blur-sm px-3 py-2 rounded-xl border border-[#F59E0B]/30">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-white">95%</div>
-                  <div className="text-[#FBB042] text-xs">Success</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
