@@ -39,6 +39,7 @@ export default function SettingsPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleToChange, setRoleToChange] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   
   // New role modal component
   const RoleChangeModal = () => {
@@ -137,10 +138,10 @@ export default function SettingsPage() {
               You are about to change your account type to:
             </p>
             
-            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-3 p-4 bg-gray-100 rounded-xl">
               {roleToChange && (
                 <>
-                  <div className="p-2 bg-[var(--color-primary-100)] rounded-full">
+                  <div className="p-2 bg-white rounded-full">
                     {getRoleIcon(roleToChange)}
                   </div>
                   <div>
@@ -177,6 +178,94 @@ export default function SettingsPage() {
                 <UserCheck className="w-4 h-4" />
               )}
               Confirm Change
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // Delete Account Modal Component
+  const DeleteAccountModal = () => {
+    if (!deleteModalOpen) return null;
+    
+    const handleDeleteAccount = async () => {
+      setLoading(true);
+      setErrorMessage("");
+      
+      try {
+        const response = await fetch('/api/user/delete-account', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || 'Failed to delete account');
+        }
+        
+        // Account deleted successfully, sign out and redirect
+        setDeleteModalOpen(false);
+        await signOut({ 
+          redirect: true,
+          callbackUrl: '/'
+        });
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        setErrorMessage(error instanceof Error ? error.message : 'Failed to delete account');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    const handleCancelDelete = () => {
+      setDeleteModalOpen(false);
+    };
+    
+    return (
+      <>
+        {/* Modal backdrop */}
+        <div className="fixed inset-0 bg-black/50 z-50" onClick={handleCancelDelete} />
+        
+        {/* Modal content */}
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl z-50 w-11/12 max-w-md p-6">
+          <div className="text-center mb-6">
+            <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+              <Shield className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Delete Account</h3>
+            <p className="text-gray-600 mt-2">
+              This action cannot be undone. All your data will be permanently deleted.
+            </p>
+          </div>
+          
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">
+              {errorMessage}
+            </div>
+          )}
+          
+          <div className="flex gap-3">
+            <button
+              onClick={handleCancelDelete}
+              className="flex-1 py-2.5 px-4 border border-gray-300 rounded-xl font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteAccount}
+              className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Shield className="w-4 h-4" />
+              )}
+              Delete Account
             </button>
           </div>
         </div>
@@ -496,16 +585,19 @@ export default function SettingsPage() {
         {/* Role Change Modal */}
         {showRoleModal && <RoleChangeModal />}
 
+        {/* Delete Account Modal */}
+        {deleteModalOpen && <DeleteAccountModal />}
+
         <div className="grid md:grid-cols-[250px_1fr] gap-8">
           {/* Sidebar */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-fit p-4">
             <div className="space-y-2">
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                   activeTab === "profile" 
-                    ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" 
-                    : "hover:bg-gray-50"
+                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
+                    : "hover:bg-gray-50 hover:shadow-sm"
                 }`}
               >
                 <User className="w-5 h-5" />
@@ -513,10 +605,10 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={() => setActiveTab("password")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                   activeTab === "password" 
-                    ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" 
-                    : "hover:bg-gray-50"
+                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
+                    : "hover:bg-gray-50 hover:shadow-sm"
                 }`}
               >
                 <Lock className="w-5 h-5" />
@@ -524,10 +616,10 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={() => setActiveTab("notifications")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                   activeTab === "notifications" 
-                    ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" 
-                    : "hover:bg-gray-50"
+                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
+                    : "hover:bg-gray-50 hover:shadow-sm"
                 }`}
               >
                 <Bell className="w-5 h-5" />
@@ -535,10 +627,10 @@ export default function SettingsPage() {
               </button>
               <button
                 onClick={() => setActiveTab("privacy")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
                   activeTab === "privacy" 
-                    ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]" 
-                    : "hover:bg-gray-50"
+                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
+                    : "hover:bg-gray-50 hover:shadow-sm"
                 }`}
               >
                 <Shield className="w-5 h-5" />
@@ -575,7 +667,7 @@ export default function SettingsPage() {
                       </div>
                       <label 
                         htmlFor="profile-picture" 
-                        className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow-md cursor-pointer hover:bg-gray-50"
+                        className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow-md cursor-pointer hover:bg-gray-50 hover:shadow-lg hover:scale-110 transition-all duration-200"
                       >
                         <Camera className="w-4 h-4 text-gray-700" />
                         <input 
@@ -610,7 +702,7 @@ export default function SettingsPage() {
                         {...registerProfile("name")}
                         id="name"
                         type="text"
-                        className={`w-full px-4 py-2.5 rounded-xl border ${
+                        className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
                           profileErrors.name 
                             ? "border-red-300 focus:ring-red-500" 
                             : "border-gray-300 focus:ring-[var(--color-primary-500)]"
@@ -634,7 +726,7 @@ export default function SettingsPage() {
                         {...registerProfile("email")}
                         id="email"
                         type="email"
-                        className={`w-full px-4 py-2.5 rounded-xl border ${
+                        className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
                           profileErrors.email 
                             ? "border-red-300 focus:ring-red-500" 
                             : "border-gray-300 focus:ring-[var(--color-primary-500)]"
@@ -663,7 +755,7 @@ export default function SettingsPage() {
                       {...registerProfile("phone")}
                       id="phone"
                       type="tel"
-                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
                         profileErrors.phone 
                           ? "border-red-300 focus:ring-red-500" 
                           : "border-gray-300 focus:ring-[var(--color-primary-500)]"
@@ -684,70 +776,72 @@ export default function SettingsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                       {/* Student Role Card */}
                       <div 
-                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all hover:border-[var(--color-primary-300)] ${
+                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${
                           selectedRole === "STUDENT" 
-                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] text-white" 
-                            : "border-gray-200"
+                            ? "border-[var(--color-primary-500)] bg-gradient-to-br from-[var(--color-primary-800)] to-[var(--color-primary-900)] text-white shadow-lg" 
+                            : "border-gray-200 hover:bg-gray-50"
                         }`}
                         onClick={() => initiateRoleChange("STUDENT")}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${
-                            selectedRole === "STUDENT" 
-                              ? "bg-[var(--color-primary-100)]" 
-                              : "bg-gray-100"
-                          }`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full bg-gray-100`}>
                             <GraduationCap className={`w-5 h-5 ${
                               selectedRole === "STUDENT" 
-                                ? "text-[var(--color-primary-700)]" 
+                                ? "text-[var(--color-primary-400)]" 
                                 : "text-gray-600"
                             }`} />
+                            
                           </div>
                           <div>
-                            <h3 className="font-medium">Student</h3>
+                          <h3 className={`font-medium ${selectedRole === "STUDENT" ? "text-[var(--color-primary-400)]" : "text-gray-600"}`}>Student</h3>
+                          </div>
+                          </div>
+                          <div>
                             {selectedRole === "STUDENT" && (
-                              <span className="text-xs bg-[var(--color-primary-100)] text-[var(--color-primary-700)] px-2 py-0.5 rounded-full">
+                              <span className="text-xs bg-[var(--color-primary-400)] text-white px-2 py-0.5 rounded-full">
                                 Current
                               </span>
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-600">
                           Browse and book accommodations near your university
                         </p>
                       </div>
                       
                       {/* Landlord Role Card */}
                       <div 
-                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all hover:border-[var(--color-primary-300)] ${
+                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${
                           selectedRole === "LANDLORD" 
-                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] text-white" 
-                            : "border-gray-200"
+                            ? "border-[var(--color-primary-500)] bg-gradient-to-br from-[var(--color-primary-800)] to-[var(--color-primary-900)] text-white shadow-lg" 
+                            : "border-gray-200 hover:bg-gray-50"
                         }`}
                         onClick={() => initiateRoleChange("LANDLORD")}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full ${
-                            selectedRole === "LANDLORD" 
-                              ? "bg-[var(--color-primary-100)]" 
-                              : "bg-gray-100"
-                          }`}>
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full bg-gray-100`}>
                             <Building className={`w-5 h-5 ${
                               selectedRole === "LANDLORD" 
-                                ? "text-[var(--color-primary-700)]" 
+                                ? "text-[var(--color-primary-400)]" 
                                 : "text-gray-600"
                             }`} />
+                            
                           </div>
                           <div>
-                            <h3 className="font-medium">Property Owner</h3>
+                          <h3 className={`font-medium ${selectedRole === "LANDLORD" ? "text-[var(--color-primary-400)]" : "text-gray-600"}`}>Property Owner</h3>
+                          </div>
+                          </div>
+                          <div>
                             {selectedRole === "LANDLORD" && (
-                              <span className="text-xs bg-[var(--color-primary-100)] text-[var(--color-primary-700)] px-2 py-0.5 rounded-full">
+                              <span className="text-xs bg-[var(--color-primary-400)] text-white px-2 py-0.5 rounded-full">
                                 Current
                               </span>
                             )}
                           </div>
                         </div>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-gray-600">
                           List and manage your properties for student rental
                         </p>
                       </div>
@@ -755,10 +849,10 @@ export default function SettingsPage() {
                       {/* Admin Role Card - only show if user is already admin */}
                       {session?.user?.role === "ADMIN" && (
                         <div 
-                          className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all hover:border-[var(--color-primary-300)] ${
+                          className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${
                             selectedRole === "ADMIN" 
-                              ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]" 
-                              : "border-gray-200"
+                              ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] shadow-lg" 
+                              : "border-gray-200 hover:bg-gray-50"
                           }`}
                           onClick={() => initiateRoleChange("ADMIN")}
                         >
@@ -832,7 +926,7 @@ export default function SettingsPage() {
                       {...registerPassword("currentPassword")}
                       id="currentPassword"
                       type="password"
-                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
                         passwordErrors.currentPassword 
                           ? "border-red-300 focus:ring-red-500" 
                           : "border-gray-300 focus:ring-[var(--color-primary-500)]"
@@ -856,7 +950,7 @@ export default function SettingsPage() {
                       {...registerPassword("newPassword")}
                       id="newPassword"
                       type="password"
-                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
                         passwordErrors.newPassword 
                           ? "border-red-300 focus:ring-red-500" 
                           : "border-gray-300 focus:ring-[var(--color-primary-500)]"
@@ -883,7 +977,7 @@ export default function SettingsPage() {
                       {...registerPassword("confirmPassword")}
                       id="confirmPassword"
                       type="password"
-                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
                         passwordErrors.confirmPassword 
                           ? "border-red-300 focus:ring-red-500" 
                           : "border-gray-300 focus:ring-[var(--color-primary-500)]"
@@ -950,13 +1044,13 @@ export default function SettingsPage() {
                           <h4 className="font-medium">Email Notifications</h4>
                           <p className="text-sm text-gray-500">Receive notifications via email</p>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
+                        <label className="relative inline-flex items-center cursor-pointer group">
                           <input 
                             type="checkbox" 
                             {...registerNotification("emailNotifications")} 
                             className="sr-only peer" 
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)]"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
                       </div>
                       
@@ -965,13 +1059,13 @@ export default function SettingsPage() {
                           <h4 className="font-medium">Booking Updates</h4>
                           <p className="text-sm text-gray-500">Get notified about your booking status</p>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
+                        <label className="relative inline-flex items-center cursor-pointer group">
                           <input 
                             type="checkbox" 
                             {...registerNotification("bookingNotifications")} 
                             className="sr-only peer" 
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)]"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
                       </div>
                       
@@ -980,13 +1074,13 @@ export default function SettingsPage() {
                           <h4 className="font-medium">New Messages</h4>
                           <p className="text-sm text-gray-500">Get notified when you receive messages</p>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
+                        <label className="relative inline-flex items-center cursor-pointer group">
                           <input 
                             type="checkbox" 
                             {...registerNotification("messageNotifications")} 
                             className="sr-only peer" 
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)]"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
                       </div>
                       
@@ -995,13 +1089,13 @@ export default function SettingsPage() {
                           <h4 className="font-medium">Marketing & Promotions</h4>
                           <p className="text-sm text-gray-500">Receive offers and promotional content</p>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer">
+                        <label className="relative inline-flex items-center cursor-pointer group">
                           <input 
                             type="checkbox" 
                             {...registerNotification("marketingNotifications")} 
                             className="sr-only peer" 
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)]"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
                       </div>
                     </div>
@@ -1042,26 +1136,26 @@ export default function SettingsPage() {
                     <div className="space-y-3">
                       <Link 
                         href="/privacy-policy" 
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all duration-200 group"
                       >
-                        <span className="font-medium">Privacy Policy</span>
-                        <ExternalLink className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium group-hover:text-[var(--color-primary-600)] transition-colors">Privacy Policy</span>
+                        <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-[var(--color-primary-500)] transition-colors" />
                       </Link>
                       
                       <Link 
                         href="/terms-of-service" 
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all duration-200 group"
                       >
-                        <span className="font-medium">Terms of Service</span>
-                        <ExternalLink className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium group-hover:text-[var(--color-primary-600)] transition-colors">Terms of Service</span>
+                        <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-[var(--color-primary-500)] transition-colors" />
                       </Link>
                       
                       <Link 
                         href="/cookie-policy" 
-                        className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all duration-200 group"
                       >
-                        <span className="font-medium">Cookie Policy</span>
-                        <ExternalLink className="w-4 h-4 text-gray-500" />
+                        <span className="font-medium group-hover:text-[var(--color-primary-600)] transition-colors">Cookie Policy</span>
+                        <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-[var(--color-primary-500)] transition-colors" />
                       </Link>
                     </div>
                   </div>
@@ -1074,11 +1168,11 @@ export default function SettingsPage() {
                      
                       
                       <button 
-                        className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl hover:bg-red-50 hover:border-red-200 hover:border hover:shadow-sm transition-all duration-200 group"
                         onClick={() => setDeleteModalOpen(true)}
                       >
-                        <span className="font-medium text-red-600">Delete Your Account</span>
-                        <p className="text-sm text-gray-500 mt-1">
+                        <span className="font-medium text-red-600 group-hover:text-red-700 transition-colors">Delete Your Account</span>
+                        <p className="text-sm text-gray-500 mt-1 group-hover:text-red-600 transition-colors">
                           Permanently delete your account and all associated data
                         </p>
                       </button>

@@ -13,23 +13,8 @@
   "categories": ["education", "lifestyle", "travel"],
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "16x16 32x32",
-      "type": "image/x-icon"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "/android-chrome-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/android-chrome-512x512.png",
-      "sizes": "512x512",
+      "src": "/houseLogo.png",
+      "sizes": "any",
       "type": "image/png"
     }
   ],

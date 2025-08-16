@@ -1,5 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { csrfMiddleware } from "./middleware-csrf";
 
 export default withAuth(
   function middleware(req) {
@@ -39,6 +40,12 @@ export default withAuth(
     // Protect other authenticated routes
     if (isProtectedPage && !isAuth) {
       return NextResponse.redirect(new URL("/auth/signin", req.url));
+    }
+
+    // Apply CSRF protection for authenticated users
+    if (isAuth) {
+      const response = NextResponse.next();
+      return csrfMiddleware(req, response);
     }
 
     return null;

@@ -2385,14 +2385,7 @@ export default function OwnerDashboard() {
     }
   };
 
-  useEffect(() => {
-    if (selectedPropertyToEdit && userId) {
-      // Only track events if we have both a property and user ID
-      trackAnalyticsEvent("property_view", selectedPropertyToEdit.id);
-    }
-    // Only fire when modal opens for a new property
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPropertyToEdit?.id, userId]);
+  // Do not track property views when owners open the edit modal to avoid inflating view counts
 
   // Fetch analytics data when analytics tab is selected
   useEffect(() => {

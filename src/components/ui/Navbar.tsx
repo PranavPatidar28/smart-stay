@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X, Search, Heart, Building2, Home, User, Settings } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import UserMenu from "./UserMenu";
 import { useSession } from "next-auth/react";
 import RoleRequiredModal from "./RoleRequiredModal";
@@ -12,7 +12,9 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [currentPage, setCurrentPage] = useState("landing");
+  const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   
   // Check if we're on the home page
@@ -68,6 +70,27 @@ export default function Navbar() {
     }
   };
 
+  // Instant navigation handler
+  const handleInstantNavigation = (href: string, requiresRole?: string | null) => {
+    if (requiresRole && session && (session?.user as { role?: string | null })?.role !== requiresRole) {
+      setShowRoleModal(true);
+      return;
+    }
+
+    setIsNavigating(true);
+    
+    // Use router.push for instant navigation
+    router.push(href);
+    
+    // Close mobile menu if open
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+    }
+    
+    // Reset navigation state after a brief delay
+    setTimeout(() => setIsNavigating(false), 100);
+  };
+
   const navLinks = [
     { 
       href: "/", 
@@ -121,6 +144,9 @@ export default function Navbar() {
         links: isScrolled
           ? 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
           : 'text-white/90 hover:text-white hover:bg-white/10',
+        linksActive: isScrolled
+          ? 'text-[var(--color-primary-600)] bg-gray-100'
+          : 'text-white bg-white/10',
         mobileMenu: isScrolled ? 'bg-white/95 backdrop-blur-xl' : 'bg-black/20 backdrop-blur-xl',
         mobileLinks: isScrolled
           ? 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
@@ -156,6 +182,7 @@ export default function Navbar() {
               <Link 
                 href="/" 
                 className={`transition-all duration-300 ${styles.logoHover}`}
+                prefetch={true}
               >
                 <span className={`text-2xl font-extrabold tracking-tight ${styles.logo} transition-all duration-300 transform hover:scale-105`}>
                   Smart<span className="font-black">Stay</span>
@@ -166,16 +193,16 @@ export default function Navbar() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
               {navLinks.slice(1).map((link) => (
-                <Link
+                <button
                   key={link.href}
-                  href={handleNavigation(link.href, link.requiresRole)}
-                  onClick={(e) => handleLinkClick(e, link.requiresRole)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 hover:scale-105
-                      ${currentPage === link.href ? `${styles.linksActive}` : `${styles.links}`}`}
+                  onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
+                  aria-current={currentPage === link.href ? 'page' : undefined}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-200 hover:scale-105 ${currentPage === link.href ? `${styles.linksActive}` : `${styles.links}`} ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
+                  disabled={isNavigating}
                 >
                   {link.icon}
                   <span className="font-medium">{link.label}</span>
-                </Link>
+                </button>
               ))}
             </div>
 
@@ -211,19 +238,18 @@ export default function Navbar() {
           role="dialog"
           aria-modal="true"
           tabIndex={-1}
-          className="fixed inset-0 z-[60] flex flex-col bg-gradient-to-b from-white/95 to-white/98 backdrop-blur-2xl border-b border-gray-200/50 shadow-2xl transition-all duration-500 ease-out animate-slide-down"
+          className="fixed inset-0 z-[60] flex flex-col bg-gradient-to-b from-white/95 to-white/98 backdrop-blur-2xl border-b border-gray-200/50 shadow-2xl transition-all duration-300 ease-out animate-slide-down"
         >
           {/* Header with Logo and Close Button */}
           <div className="flex items-center justify-between px-6 py-6 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-white/50">
-            <Link
-              href="/"
-              onClick={() => setIsMenuOpen(false)}
+            <button
+              onClick={() => handleInstantNavigation("/", null)}
               className="group"
             >
               <span className="text-2xl font-extrabold bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent transition-all duration-300 group-hover:scale-105">
                 Smart<span className="font-black">Stay</span>
               </span>
-            </Link>
+            </button>
             <button
               aria-label="Close menu"
               onClick={() => setIsMenuOpen(false)}
@@ -247,19 +273,16 @@ export default function Navbar() {
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Navigation</h3>
               <nav className="space-y-2">
                 {navLinks.map((link, index) => (
-                  <Link
+                  <button
                     key={link.href}
-                    href={handleNavigation(link.href, link.requiresRole)}
-                    onClick={(e) => {
-                      handleLinkClick(e, link.requiresRole);
-                      setIsMenuOpen(false);
-                    }}
-                    className={`flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
+                    onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
+                    className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
                       pathname === link.href 
                         ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]' 
                         : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
-                    }`}
+                    } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${index * 100}ms` }}
+                    disabled={isNavigating}
                   >
                     <div className={`p-2 rounded-xl transition-all duration-200 ${
                       pathname === link.href 
@@ -274,7 +297,7 @@ export default function Navbar() {
                         {link.requiresRole}
                       </span>
                     )}
-                  </Link>
+                  </button>
                 ))}
               </nav>
             </div>
@@ -284,19 +307,16 @@ export default function Navbar() {
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">More</h3>
               <nav className="space-y-2">
                 {additionalLinks.map((link, index) => (
-                  <Link
+                  <button
                     key={link.href}
-                    href={handleNavigation(link.href, link.requiresRole)}
-                    onClick={(e) => {
-                      handleLinkClick(e, link.requiresRole);
-                      setIsMenuOpen(false);
-                    }}
-                    className={`flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
+                    onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
+                    className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
                       pathname === link.href 
                         ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]' 
                         : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
-                    }`}
+                    } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${(index + navLinks.length) * 100}ms` }}
+                    disabled={isNavigating}
                   >
                     <div className={`p-2 rounded-xl transition-all duration-200 ${
                       pathname === link.href 
@@ -306,7 +326,7 @@ export default function Navbar() {
                       {link.icon}
                     </div>
                     <span className="flex-1">{link.label}</span>
-                  </Link>
+                  </button>
                 ))}
               </nav>
             </div>

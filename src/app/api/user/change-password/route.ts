@@ -4,13 +4,21 @@ import { hashPassword, verifyPassword } from '@/lib/auth'
 import { z } from 'zod'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
+import { authRateLimit } from '@/lib/rate-limit'
+import { withCSRFProtection } from '@/lib/csrf'
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withCSRFProtection(async (request: NextRequest) => {
+  // Apply rate limiting
+  const rateLimitResult = authRateLimit(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   try {
     const session = await getServerSession(authOptions)
     
@@ -73,4 +81,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}) 

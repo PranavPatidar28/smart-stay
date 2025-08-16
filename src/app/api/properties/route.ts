@@ -46,7 +46,6 @@ export async function GET(request: NextRequest) {
     const petFriendly = searchParams.get('petFriendly') === 'true'
     const availableNow = searchParams.get('availableNow') === 'true'
     const amenities = searchParams.getAll('amenities')
-
     const skip = (page - 1) * limit
 
     // Build where clause
@@ -78,7 +77,6 @@ export async function GET(request: NextRequest) {
         { location: { contains: search, mode: 'insensitive' } },
       ]
     }
-
     // Add quick filters
     if (furnished) where.furnished = true
     if (petFriendly) where.petFriendly = true

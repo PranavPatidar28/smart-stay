@@ -3,8 +3,16 @@ import { prisma } from '@/lib/db'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../../auth/[...nextauth]/route'
 import { verifyPassword } from '@/lib/auth'
+import { authRateLimit } from '@/lib/rate-limit'
+import { withCSRFProtection } from '@/lib/csrf'
 
-export async function POST(request: NextRequest) {
+export const POST = withCSRFProtection(async (request: NextRequest) => {
+  // Apply rate limiting
+  const rateLimitResult = authRateLimit(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   try {
     const session = await getServerSession(authOptions)
     
@@ -72,4 +80,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}) 

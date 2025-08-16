@@ -433,66 +433,73 @@ class ApiClient {
   }
 }
 
-export async function trackAnalyticsEvent(eventType: string, propertyId?: string, options: Record<string, unknown> = {}) {
+export type AnalyticsEventType =
+  | 'property_view'
+  | 'booking_request'
+  | 'inquiry'
+  | 'phone_contact'
+  | 'email_contact'
+  | 'property_card_contact'
+  | 'favorites_property_contact'
+  | 'favorite_added'
+  | 'favorite_removed'
+  | 'property_shared'
+  | 'review_submitted'
+  | 'search_performed'
+  | 'filter_applied'
+  | 'sort_applied'
+  | 'quick_filter_applied'
+  | 'filters_cleared'
+  | 'view_mode_changed';
+
+export async function trackAnalyticsEvent(
+  eventType: AnalyticsEventType,
+  propertyId?: string,
+  options: Record<string, unknown> = {}
+): Promise<void> {
   try {
-    // Validate inputs
     if (!eventType || typeof eventType !== 'string') {
-      console.warn('Invalid eventType for analytics tracking:', eventType);
-      return { error: true };
+      return;
     }
 
-    // Sanitize propertyId if provided
-    const sanitizedPropertyId = propertyId && typeof propertyId === 'string' ? propertyId.trim() : undefined;
-    
-    const payload = { 
-      eventType, 
-      propertyId: sanitizedPropertyId, 
-      ...options 
+    const sanitizedPropertyId = typeof propertyId === 'string' && propertyId.trim().length > 0
+      ? propertyId.trim()
+      : undefined;
+
+    // Split known top-level fields from generic metadata
+    const { bookingId, inquiryId, ...metadata } = options || {};
+
+    const payload: Record<string, unknown> = {
+      eventType,
+      ...(sanitizedPropertyId ? { propertyId: sanitizedPropertyId } : {}),
+      ...(bookingId ? { bookingId } : {}),
+      ...(inquiryId ? { inquiryId } : {}),
+      ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
     };
-    
-    // Safely stringify the payload
-    let jsonBody;
-    try {
-      jsonBody = JSON.stringify(payload);
-    } catch (stringifyError) {
-      console.error('JSON stringify error:', stringifyError);
-      return { error: true };
-    }
-    
-    // Don't block the main functionality if analytics fails
-    // Add a timeout to prevent hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-    
-    try {
-      const res = await fetch('/api/analytics/track', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: jsonBody,
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!res.ok) {
-        console.warn(`Analytics tracking failed for ${eventType}: ${res.status}`);
-        return { error: true };
+
+    const json = JSON.stringify(payload);
+
+    // Prefer sendBeacon for non-blocking delivery
+    if (typeof navigator !== 'undefined' && 'sendBeacon' in navigator) {
+      try {
+        const blob = new Blob([json], { type: 'application/json' });
+        const sent = navigator.sendBeacon('/api/analytics/track', blob);
+        if (sent) return;
+        // If sendBeacon returns false, fall back to fetch below
+      } catch {
+        // fall through to fetch
       }
-      
-      return await res.json();
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      if (fetchError.name === 'AbortError') {
-        console.warn('Analytics tracking timed out');
-      } else {
-        console.warn('Analytics tracking fetch error:', fetchError);
-      }
-      return { error: true };
     }
-  } catch (error) {
-    // Log but don't throw - analytics should never break the main app
-    console.warn('Analytics event error (non-blocking):', error);
-    return { error: true };
+
+    // Fallback: fire-and-forget fetch with keepalive
+    void fetch('/api/analytics/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: json,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Swallow errors — analytics should never block user flows
   }
 }
 

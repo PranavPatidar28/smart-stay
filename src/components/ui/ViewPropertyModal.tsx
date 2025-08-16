@@ -1,5 +1,5 @@
 import {
-  Bed, Building2, Calendar, CheckCircle, ChevronDown, Dumbbell, Eye, Home, MapPin, Phone, Star, User, Wifi, X, Shield, Car, Mail, BookOpen, Heart, Bath
+  Bed, Building2, Calendar, CheckCircle, ChevronDown, Dumbbell, Eye, Home, MapPin, Phone, Star, User, Wifi, X, Shield, Car, Mail, BookOpen, Heart, Bath, MessageSquare, Loader2
 } from 'lucide-react';
 import React, { useEffect, useState, useCallback } from 'react';
 
@@ -40,11 +40,25 @@ type Property = {
   longitude?: number;
 };
 
+type Review = {
+  id: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string;
+    image?: string;
+  };
+};
+
 type ViewPropertyModalProps = {
   property: Property;
   isOpen?: boolean;
   onClose: () => void;
   onToggleFavorite: (propertyId: string) => void;
+  reviews?: Review[];
+  reviewsLoading?: boolean;
 };
 
 // --- Utility: Responsive Hook ---
@@ -326,7 +340,7 @@ const DesktopPropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOp
 };
 
 // --- Mobile Modal ---
-const MobilePropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOpen = true, onClose, onToggleFavorite }) => {
+const MobilePropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOpen = true, onClose, onToggleFavorite, reviews = [], reviewsLoading = false }) => {
   const [mobileModalFavorite, setMobileModalFavorite] = useState(property.isFavorite);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   useEffect(() => {
@@ -374,14 +388,14 @@ const MobilePropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOpe
           <>
             <button
               onClick={e => { e.stopPropagation(); setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length); }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               aria-label="Previous image"
             >
               <ChevronDown className="w-5 h-5 rotate-90 text-gray-800" />
             </button>
             <button
               onClick={e => { e.stopPropagation(); setCurrentImageIndex((currentImageIndex + 1) % property.images.length); }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               aria-label="Next image"
             >
               <ChevronDown className="w-5 h-5 -rotate-90 text-gray-800" />
@@ -389,76 +403,175 @@ const MobilePropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOpe
           </>
         )}
         {property.images.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/70 px-3 py-1 rounded-full text-white text-xs flex items-center gap-1">
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-medium border border-white/20 shadow-xl flex items-center gap-1">
             <Eye className="w-3 h-3" />
             <span>{currentImageIndex + 1}/{property.images.length}</span>
           </div>
         )}
-        <div className="absolute top-2 right-2 px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white">
+        <div className="absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg z-10 bg-green-500 text-white border border-white/30 backdrop-blur-sm">
           {property.isAvailable ? "Available Now" : "Not Available"}
         </div>
-        <div className="absolute top-2 left-2 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] px-3 py-1.5 rounded-xl text-white font-bold flex items-center gap-1">
+        <div className="absolute top-2 left-2 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] px-3 py-1.5 rounded-xl shadow-xl border border-white/60 text-white font-bold flex items-center gap-1">
           <span>₹{property.price.toLocaleString()}</span>
           <span className="text-xs font-normal opacity-90">/month</span>
+        </div>
+        <div className="absolute top-12 left-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-300)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
+          <Building2 className="w-4 h-4 text-[var(--color-primary-300)]" />
+          {property.type}
         </div>
       </div>
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 pb-24">
         <h2 className="text-xl font-bold mt-4 mb-2">{property.title}</h2>
-        <div className="flex items-center gap-2 text-[var(--color-primary-700)] text-xs bg-[var(--color-primary-50)] px-2 py-1 rounded-lg mb-2">
-          <MapPin className="w-3 h-3 text-[var(--color-primary-500)]" />
-          <span>{property.location}</span>
-        </div>
-        <div className="flex items-center gap-1 mb-2">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star key={star} className={`w-3 h-3 ${star <= Math.round(property.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
-          ))}
-          <span className="text-xs font-semibold text-yellow-700">{property.rating}</span>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2 text-[var(--color-primary-700)] text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
+            <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
+            <span>{property.location}</span>
+          </div>
+          <div className="flex items-center gap-2 bg-gradient-to-br from-yellow-50 to-yellow-100 px-3 py-1.5 rounded-lg shadow-sm border border-yellow-200">
+            <div className="flex">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} className={`w-4 h-4 ${star <= Math.round(property.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+              ))}
+            </div>
+            <span className="text-sm font-semibold text-yellow-700">{property.rating}</span>
+          </div>
         </div>
         <div className="flex gap-2 my-2">
           <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs"><Bed className="w-3 h-3" />{property.bedrooms} Beds</span>
           <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs"><Bath className="w-3 h-3" />{property.bathrooms} Baths</span>
           <span className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs"><Calendar className="w-3 h-3" />{property.availableFrom ? new Date(property.availableFrom).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : 'Now'}</span>
         </div>
-        <div className="flex flex-wrap gap-1 my-2">
-          {property.furnished && <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded"><Home className="w-3 h-3" />Furnished</span>}
-          {property.petFriendly && <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"><Shield className="w-3 h-3" />Pet Friendly</span>}
-          {property.parking && <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded"><Car className="w-3 h-3" />Parking</span>}
-          {property.utilities && <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded"><Wifi className="w-3 h-3" />Utilities</span>}
+        <div className="flex flex-wrap gap-2 my-2">
+          {property.furnished && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-lg font-medium border border-green-200"><Home className="w-4 h-4" /> Furnished</span>}
+          {property.petFriendly && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-sm rounded-lg font-medium border border-blue-200"><Shield className="w-4 h-4" /> Pet Friendly</span>}
+          {property.parking && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 text-sm rounded-lg font-medium border border-purple-200"><Car className="w-4 h-4" /> Parking</span>}
+          {property.utilities && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-lg font-medium border border-orange-200"><Wifi className="w-4 h-4" /> Utilities Included</span>}
         </div>
-        <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 my-4">
-          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-1"><BookOpen className="w-3 h-3 text-[var(--color-primary-600)]" />Description</h4>
-          <p className="text-gray-700 text-sm">{property.description}</p>
+        <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 my-4">
+          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <BookOpen className="w-4 h-4 text-[var(--color-primary-600)]" />
+            </div>
+            Description
+          </h4>
+          <p className="text-gray-700 text-sm leading-relaxed">{property.description}</p>
         </div>
+        
+        {/* Reviews Section - Mobile version */}
+        <div className="my-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
+          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <MessageSquare className="w-4 h-4 text-[var(--color-primary-600)]" />
+            </div>
+            Reviews ({property._count?.reviews || 0})
+          </h4>
+          
+          {/* Review List */}
+          <div className="space-y-3 mb-4">
+            {reviewsLoading ? (
+              <div className="flex justify-center items-center py-4">
+                <Loader2 className="w-6 h-6 text-[var(--color-primary-500)] animate-spin" />
+              </div>
+            ) : reviews.length > 0 ? (
+              <>
+                {reviews.slice(0, 3).map(review => (
+                  <div key={review.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
+                          {review.user.image ? (
+                            <img 
+                              src={review.user.image} 
+                              alt={review.user.name} 
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <span className="text-xs font-bold text-white">{review.user.name.charAt(0)}</span>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm">{review.user.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star 
+                              key={star} 
+                              className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {review.comment && (
+                      <p className="text-gray-700 text-xs mt-2 leading-relaxed">{review.comment}</p>
+                    )}
+                  </div>
+                ))}
+                
+                {reviews.length > 3 && (
+                  <div className="text-center py-2 text-sm text-gray-500">
+                    +{reviews.length - 3} more reviews
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-4 bg-white rounded-lg border border-gray-200">
+                <div className="text-gray-500 mb-2">No reviews yet</div>
+                <div className="text-sm text-gray-400">Be the first to leave a review!</div>
+              </div>
+            )}
+          </div>
+        </div>
+        
         <div className="my-4">
-          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-1"><Dumbbell className="w-3 h-3 text-[var(--color-primary-600)]" />Amenities</h4>
+          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <Dumbbell className="w-4 h-4 text-[var(--color-primary-600)]" />
+            </div>
+            Amenities
+          </h4>
           <div className="grid grid-cols-2 gap-2">
             {property.amenities.map((amenity, idx) => (
-              <div key={`${property.id}-amenity-${idx}`} className="flex items-center gap-1 p-2 bg-gray-50 rounded border border-gray-100">
-                {getAmenityIcon(amenity.amenity.name)}
-                <span className="text-xs text-gray-800">{amenity.amenity.name}</span>
+              <div key={`${property.id}-amenity-${idx}`} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+                  {getAmenityIcon(amenity.amenity.name)}
+                </div>
+                <span className="text-sm text-gray-800">{amenity.amenity.name}</span>
               </div>
             ))}
           </div>
         </div>
-        <div className="my-4 bg-[var(--color-primary-50)] p-3 rounded-lg border border-[var(--color-primary-100)]">
-          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-1"><User className="w-3 h-3 text-[var(--color-primary-600)]" />Property Owner</h4>
-          <div className="flex items-center gap-2">
+        <div className="my-4 bg-[var(--color-primary-50)] p-3 rounded-xl border border-[var(--color-primary-100)]">
+          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <User className="w-4 h-4 text-[var(--color-primary-600)]" />
+            </div>
+            Property Owner
+          </h4>
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-secondary-500)] rounded-full flex items-center justify-center text-base font-bold text-white">
               {property.owner.name.charAt(0)}
             </div>
             <div>
-              <div className="flex items-center gap-1 mb-1">
+              <div className="flex items-center gap-2 mb-1">
                 <p className="text-sm font-semibold text-gray-900">{property.owner.name}</p>
                 {property.owner.verified && (
-                  <span className="px-1 py-0.5 bg-green-100 text-green-700 text-[10px] rounded-full font-medium flex items-center gap-1"><CheckCircle className="w-3 h-3" />Verified</span>
+                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Verified
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-1">
-                <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 <span className="text-xs text-gray-700">{property.owner.rating || '4.8'}</span>
                 <span className="text-xs text-gray-500">•</span>
-                <span className="text-xs text-gray-500">Response: ~2h</span>
+                <span className="text-xs text-gray-500">Response time: ~2 hours</span>
               </div>
             </div>
           </div>
@@ -470,15 +583,17 @@ const MobilePropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOpe
           <Calendar className="w-5 h-5" />
           <span>Book Viewing</span>
         </button>
-        <button className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl flex items-center justify-center">
-          <Phone className="w-5 h-5" />
-        </button>
-        <button className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl flex items-center justify-center">
-          <Mail className="w-5 h-5" />
-        </button>
-        <button onClick={handleMobileFavoriteToggle} className="p-2 rounded-xl flex items-center justify-center" aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}>
-          <Heart className={`w-6 h-6 ${mobileModalFavorite ? "text-red-500 fill-red-500" : "text-gray-400 stroke-[2px] hover:text-red-400"}`} />
-        </button>
+        <div className="flex gap-2">
+          <button className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl flex items-center justify-center shadow-md hover:shadow-lg">
+            <Phone className="w-5 h-5" />
+          </button>
+          <button className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl flex items-center justify-center shadow-md hover:shadow-lg">
+            <Mail className="w-5 h-5" />
+          </button>
+          <button onClick={handleMobileFavoriteToggle} className="p-2.5 rounded-xl flex items-center justify-center" aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}>
+            <Heart className={`w-7 h-7 ${mobileModalFavorite ? "text-red-500 fill-red-500" : "text-gray-400 stroke-[2px] hover:text-red-400"}`} />
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1337,7 +1337,7 @@ export default function FavoritesPage() {
       setBookingNote('');
       
       // Track analytics
-      trackAnalyticsEvent('viewing_booked', selectedProperty.id);
+      trackAnalyticsEvent('booking_request', selectedProperty.id);
     } catch (error) {
       console.error('Error booking viewing:', error);
       showError('Failed to book viewing. Please try again.');

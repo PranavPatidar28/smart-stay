@@ -4,6 +4,7 @@ import ToastProvider from "@/components/providers/ToastProvider";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from 'next'
+import { prefetchCriticalPages } from "@/lib/navigation"
 
 export const metadata: Metadata = {
   title: {
@@ -95,6 +96,11 @@ export const metadata: Metadata = {
     'msapplication-tap-highlight': 'no',
     'theme-color': '#8B5CF6',
   },
+  icons: {
+    apple: '/houseLogo.png',
+    icon: '/houseLogo.png',
+    shortcut: '/houseLogo.png',
+  },
 }
 
 export default function RootLayout({
@@ -105,13 +111,19 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/houseLogo.png" />
+        <link rel="apple-touch-icon" href="/houseLogo.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#8B5CF6" />
         <meta name="msapplication-TileColor" content="#8B5CF6" />
         <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
+        
+        {/* Prefetch critical pages for instant navigation */}
+        <link rel="prefetch" href="/listings" />
+        <link rel="prefetch" href="/favorites" />
+        <link rel="prefetch" href="/owner-dashboard" />
+        <link rel="prefetch" href="/settings" />
         
         {/* Structured Data for Rich Snippets */}
         <script
@@ -140,7 +152,7 @@ export default function RootLayout({
                              "@type": "Organization",
                "name": "SmartStay",
                "url": "https://smart-stay-navy.vercel.app",
-               "logo": "https://smart-stay-navy.vercel.app/images/logo.png",
+               "logo": "https://smart-stay-navy.vercel.app/houseLogo.png",
                "description": "Student accommodation platform connecting students with verified properties",
                "founder": {
                  "@type": "Person",
@@ -170,8 +182,38 @@ export default function RootLayout({
           {children}
           <ToastProvider />
         </AuthProvider>
-        <Analytics/>
-        <SpeedInsights/>
+        <Analytics />
+        <SpeedInsights />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Prefetch critical pages for instant navigation
+              (function() {
+                if ('requestIdleCallback' in window) {
+                  requestIdleCallback(function() {
+                    const links = ['/listings', '/favorites', '/owner-dashboard', '/settings'];
+                    links.forEach(href => {
+                      const link = document.createElement('link');
+                      link.rel = 'prefetch';
+                      link.href = href;
+                      document.head.appendChild(link);
+                    });
+                  });
+                } else {
+                  setTimeout(function() {
+                    const links = ['/listings', '/favorites', '/owner-dashboard', '/settings'];
+                    links.forEach(href => {
+                      const link = document.createElement('link');
+                      link.rel = 'prefetch';
+                      link.href = href;
+                      document.head.appendChild(link);
+                    });
+                  }, 1000);
+                }
+              })();
+            `
+          }}
+        />
       </body>
     </html>
   );

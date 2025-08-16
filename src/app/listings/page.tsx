@@ -397,6 +397,13 @@ interface MobilePropertyModalProps {
   onPhoneContact: (propertyId: string) => void;
   onEmailContact: (propertyId: string) => void;
   onShare: (propertyId: string) => void;
+  reviews: Review[];
+  reviewsLoading: boolean;
+  userReview: { rating: number; comment: string };
+  setUserReview: (review: { rating: number; comment: string }) => void;
+  isSubmittingReview: boolean;
+  submitReview: () => void;
+  session: any;
 }
 
 const MobilePropertyModal = ({ 
@@ -406,7 +413,14 @@ const MobilePropertyModal = ({
   onBookViewing,
   onPhoneContact,
   onEmailContact,
-  onShare
+  onShare,
+  reviews,
+  reviewsLoading,
+  userReview,
+  setUserReview,
+  isSubmittingReview,
+  submitReview,
+  session
 }: MobilePropertyModalProps) => {
   const [mobileModalFavorite, setMobileModalFavorite] = useState(property.isFavorite);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -464,11 +478,11 @@ const MobilePropertyModal = ({
         </div>
       </div>
       {/* Image Gallery */}
-      <div className="relative w-full h-64 bg-gray-100 flex items-center justify-center">
+      <div className="relative w-full h-64 bg-gray-900 flex items-center justify-center">
         <Image
           src={property.images[currentImageIndex]?.url || '/images/placeholder.png'}
           alt={property.title}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           width={600}
           height={400}
           onError={e => (e.currentTarget.src = '/images/placeholder.png')}
@@ -481,7 +495,7 @@ const MobilePropertyModal = ({
                 e.stopPropagation(); 
                 setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length); 
               }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow rounded-full p-2"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               aria-label="Previous image"
             >
               <ChevronDown className="w-5 h-5 rotate-90 text-gray-800" />
@@ -491,7 +505,7 @@ const MobilePropertyModal = ({
                 e.stopPropagation(); 
                 setCurrentImageIndex((currentImageIndex + 1) % property.images.length); 
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow rounded-full p-2"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               aria-label="Next image"
             >
               <ChevronDown className="w-5 h-5 -rotate-90 text-gray-800" />
@@ -500,30 +514,42 @@ const MobilePropertyModal = ({
         )}
         {/* Image Counter */}
         {property.images.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/70 px-3 py-1 rounded-full text-white text-xs flex items-center gap-1">
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-medium border border-white/20 shadow-xl flex items-center gap-1">
             <Eye className="w-4 h-4" />
             <span>{currentImageIndex + 1}/{property.images.length}</span>
           </div>
         )}
         {/* Status Badge */}
-        <div className={`absolute top-2 left-2 px-3 py-1 rounded-full text-xs font-semibold shadow ${property.isAvailable ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
-          {property.isAvailable ? "Available" : "Not Available"}
+        <div className="absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg z-10 bg-green-500 text-white border border-white/30 backdrop-blur-sm">
+          {property.isAvailable ? "Available Now" : "Not Available"}
         </div>
         {/* Price Badge */}
-        <div className="absolute top-2 right-2 bg-white/90 px-4 py-1 rounded-xl shadow text-lg font-bold text-gray-900 border border-gray-100">
-          ₹{property.price.toLocaleString()}<span className="block text-xs font-normal text-gray-600">/month</span>
+        <div className="absolute top-2 left-2 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] px-3 py-1.5 rounded-xl shadow-xl border border-white/60 text-white font-bold flex items-center gap-1">
+          <span>₹{property.price.toLocaleString()}</span>
+          <span className="text-xs font-normal opacity-90">/month</span>
+        </div>
+        {/* Property type badge */}
+        <div className="absolute top-12 left-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-300)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
+          <Building2 className="w-4 h-4 text-[var(--color-primary-300)]" />
+          {property.type}
         </div>
       </div>
       {/* Property Info */}
       <div className="p-4 flex flex-col gap-3">
         <h2 className="font-bold text-xl text-gray-900 mb-1">{property.title}</h2>
-        <div className="flex items-center gap-2 text-gray-600 text-sm">
-          <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
-          <span>{property.location}</span>
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          <Star className="w-4 h-4 text-yellow-400 fill-current" />
-          <span className="text-sm font-semibold text-gray-700">{property.rating}</span>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2 text-[var(--color-primary-700)] text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
+            <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
+            <span>{property.location}</span>
+          </div>
+          <div className="flex items-center gap-2 bg-gradient-to-br from-yellow-50 to-yellow-100 px-3 py-1.5 rounded-lg shadow-sm border border-yellow-200">
+            <div className="flex">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} className={`w-4 h-4 ${star <= Math.round(property.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
+              ))}
+            </div>
+            <span className="text-sm font-semibold text-yellow-700">{property.rating}</span>
+          </div>
         </div>
         {/* Property Stats */}
         <div className="flex gap-6 mt-2">
@@ -545,41 +571,185 @@ const MobilePropertyModal = ({
         </div>
         {/* Features */}
         <div className="flex flex-wrap gap-2 mt-2">
-          {property.furnished && <span className="flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium"><Sofa className="w-3 h-3" />Furnished</span>}
-          {property.petFriendly && <span className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"><PawPrintIcon className="w-3 h-3" />Pet Friendly</span>}
-          {property.parking && <span className="flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium"><Car className="w-3 h-3" />Parking</span>}
-          {property.utilities && <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full font-medium"><Zap className="w-3 h-3" />Utilities</span>}
+          {property.furnished && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-lg font-medium border border-green-200"><Sofa className="w-4 h-4" /> Furnished</span>}
+          {property.petFriendly && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-sm rounded-lg font-medium border border-blue-200"><PawPrintIcon className="w-4 h-4" /> Pet Friendly</span>}
+          {property.parking && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 text-sm rounded-lg font-medium border border-purple-200"><Car className="w-4 h-4" /> Parking</span>}
+          {property.utilities && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-lg font-medium border border-orange-200"><Zap className="w-4 h-4" /> Utilities Included</span>}
         </div>
         {/* Amenities */}
         <div className="mt-3">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-            <Dumbbell className="w-4 h-4 text-[var(--color-primary-600)]" />
+            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <Dumbbell className="w-4 h-4 text-[var(--color-primary-600)]" />
+            </div>
             Amenities
           </h4>
-          <div className="flex flex-wrap gap-2">
-            {property.amenities.slice(0, 6).map((amenity, idx) => (
-              <span key={`${property.id}-amenity-${idx}-${amenity.amenity.name}`} className="flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                {/* Use getAmenityIcon if available in scope */}
-                {typeof getAmenityIcon === 'function' ? getAmenityIcon(amenity.amenity.name) : null}{amenity.amenity.name}
-              </span>
+          <div className="grid grid-cols-2 gap-2">
+            {property.amenities.map((amenity, idx) => (
+              <div key={`${property.id}-amenity-${idx}`} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+                  {getAmenityIcon(amenity.amenity.name)}
+                </div>
+                <span className="text-gray-800 text-sm">{amenity.amenity.name}</span>
+              </div>
             ))}
-            {property.amenities.length > 6 && <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">+{property.amenities.length - 6} more</span>}
           </div>
         </div>
         {/* Description */}
         {property.description && (
           <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 my-4">
             <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[var(--color-primary-600)]" />
+              <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+                <BookOpen className="w-4 h-4 text-[var(--color-primary-600)]" />
+              </div>
               Description
             </h4>
             <p className="text-gray-700 text-sm leading-relaxed">{property.description}</p>
           </div>
         )}
-        {/* Owner Info */}
-        <div className="my-4 bg-[var(--color-primary-50)] p-3 rounded-xl border border-[var(--color-primary-100)]">
+        
+        {/* Reviews Section - Mobile version */}
+        <div className="my-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-            <User className="w-4 h-4 text-[var(--color-primary-600)]" />
+            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <MessageSquare className="w-4 h-4 text-[var(--color-primary-600)]" />
+            </div>
+            Reviews ({property._count?.reviews || 0})
+          </h4>
+          
+          {/* Review List */}
+          <div className="space-y-3 mb-4">
+            {reviewsLoading ? (
+              <div className="flex justify-center items-center py-4">
+                <Loader2 className="w-6 h-6 text-[var(--color-primary-500)] animate-spin" />
+              </div>
+            ) : reviews.length > 0 ? (
+              <>
+                {reviews.slice(0, 3).map(review => (
+                  <div key={review.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
+                          {review.user.image ? (
+                            <img 
+                              src={review.user.image} 
+                              alt={review.user.name} 
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          ) : (
+                            <span className="text-xs font-bold text-white">{review.user.name.charAt(0)}</span>
+                          )}
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm">{review.user.name}</div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map(star => (
+                            <Star 
+                              key={star} 
+                              className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    {review.comment && (
+                      <p className="text-gray-700 text-xs mt-2 leading-relaxed">{review.comment}</p>
+                    )}
+                  </div>
+                ))}
+                
+                {reviews.length > 3 && (
+                  <div className="text-center py-2 text-sm text-gray-500">
+                    +{reviews.length - 3} more reviews
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-4 bg-white rounded-lg border border-gray-200">
+                <div className="text-gray-500 mb-2">No reviews yet</div>
+                <div className="text-sm text-gray-400">Be the first to leave a review!</div>
+              </div>
+            )}
+          </div>
+          
+          {/* Leave a Review Form */}
+          {session?.user ? (
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+                  <MessageSquare className="w-4 h-4 text-[var(--color-primary-600)]" />
+                </div>
+                Leave a Review
+              </h4>
+              
+              {/* Rating Selection */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setUserReview({ ...userReview, rating: star })}
+                      className="focus:outline-none"
+                    >
+                      <Star 
+                        className={`w-6 h-6 ${
+                          star <= userReview.rating 
+                            ? 'text-yellow-400 fill-yellow-400' 
+                            : 'text-gray-300 hover:text-yellow-200'
+                        }`} 
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Comment Input */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Comment (optional)</label>
+                <textarea
+                  value={userReview.comment}
+                  onChange={(e) => setUserReview({ ...userReview, comment: e.target.value })}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent resize-none"
+                  placeholder="Share your experience..."
+                  rows={3}
+                />
+              </div>
+              
+              {/* Submit Button */}
+              <button
+                onClick={submitReview}
+                disabled={isSubmittingReview}
+                className="w-full py-3 px-4 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmittingReview ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+                Submit Review
+              </button>
+            </div>
+          ) : (
+            <div className="text-center py-4 bg-[var(--color-primary-50)] rounded-lg border border-[var(--color-primary-200)]">
+              <p className="text-[var(--color-primary-700)]">Please sign in to leave a review</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Owner Info */}
+        <div className="my-4 bg-[var(--color-primary-800)] p-3 rounded-xl border border-[var(--color-primary-500)]">
+          <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <User className="w-4 h-4 text-[var(--color-primary-600)]" />
+            </div>
             Property Owner
           </h4>
           <div className="flex items-center gap-3">
@@ -598,6 +768,8 @@ const MobilePropertyModal = ({
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 <span className="text-sm text-gray-700">{property.owner.rating || '4.8'}</span>
+                <span className="text-xs text-gray-500">•</span>
+                <span className="text-xs text-gray-500">Response time: ~2 hours</span>
               </div>
             </div>
           </div>
@@ -611,18 +783,29 @@ const MobilePropertyModal = ({
               <Calendar className="w-5 h-5" />
               Book Viewing
             </button>
-           <button 
-             onClick={() => onPhoneContact(property.id)}
-             className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-           >
-              <Phone className="w-5 h-5" />
-            </button>
-           <button 
-             onClick={() => onEmailContact(property.id)}
-             className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-           >
-              <Mail className="w-5 h-5" />
-            </button>
+           <div className="flex gap-3">
+             <button 
+               onClick={() => onPhoneContact(property.id)}
+               className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+             >
+                <Phone className="w-5 h-5" />
+              </button>
+              <button 
+                onClick={() => onEmailContact(property.id)}
+                className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+              >
+                 <Mail className="w-5 h-5" />
+               </button>
+               <button 
+                 onClick={handleMobileFavoriteToggle} 
+                 className="p-2.5 rounded-xl flex items-center justify-center"
+                 aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}
+               >
+                 <Heart 
+                   className={`w-7 h-7 ${mobileModalFavorite ? "text-red-500 fill-red-500" : "text-gray-400 stroke-[2px] hover:text-red-400"}`} 
+                 />
+               </button>
+             </div>
           </div>
       </div>
     </div>
@@ -830,7 +1013,7 @@ export default function ListingsPage() {
     hasPrev: false
   });
   const [userReview, setUserReview] = useState({
-    rating: 5,
+    rating: 0,
     comment: ''
   });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -1214,9 +1397,7 @@ export default function ListingsPage() {
     
     // Track analytics (non-blocking)
     const eventType = wasAlreadyFavorite ? 'favorite_removed' : 'favorite_added';
-    trackAnalyticsEvent(eventType, id).catch(() => {
-      // Silently ignore analytics errors
-    });
+    trackAnalyticsEvent(eventType, id);
     
     // Perform API operation in background
     try {
@@ -1596,11 +1777,7 @@ export default function ListingsPage() {
 
   useEffect(() => {
     if (showModal && selectedProperty) {
-      // Track analytics asynchronously without blocking the UI
-      trackAnalyticsEvent('property_view', selectedProperty.id).catch((error) => {
-        console.error('Analytics tracking error (non-blocking):', error);
-        // Silently ignore analytics errors - they should never break the main app
-      });
+      trackAnalyticsEvent('property_view', selectedProperty.id);
     }
     // Only fire when modal opens for a new property
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1751,7 +1928,7 @@ export default function ListingsPage() {
     
     // Track search analytics if search term is not empty
     if (e.target.value.trim()) {
-      trackAnalyticsEvent('search_performed', 'search', {
+      trackAnalyticsEvent('search_performed', undefined, {
         searchTerm: e.target.value.trim(),
         searchType: 'text'
       });
@@ -1766,7 +1943,7 @@ export default function ListingsPage() {
     }
     
     // Track filter analytics
-    trackAnalyticsEvent('filter_applied', 'filter', {
+    trackAnalyticsEvent('filter_applied', undefined, {
       filterType: 'amenity',
       filterValue: amenity,
       action: checked ? 'added' : 'removed'
@@ -1777,7 +1954,7 @@ export default function ListingsPage() {
     setSortBy(e.target.value);
     
     // Track sort analytics
-    trackAnalyticsEvent('sort_applied', 'sort', {
+    trackAnalyticsEvent('sort_applied', undefined, {
       sortBy: e.target.value
     });
   };
@@ -1787,7 +1964,7 @@ export default function ListingsPage() {
     setQuickFilters(prev => ({ ...prev, [filter]: newValue }));
     
     // Track quick filter analytics
-    trackAnalyticsEvent('quick_filter_applied', 'filter', {
+    trackAnalyticsEvent('quick_filter_applied', undefined, {
       filterType: filter,
       filterValue: newValue
     });
@@ -1808,7 +1985,7 @@ export default function ListingsPage() {
     });
     
     // Track clear filters analytics
-    trackAnalyticsEvent('filters_cleared', 'filter', {
+    trackAnalyticsEvent('filters_cleared', undefined, {
       action: 'clear_all'
     });
   };
@@ -2256,7 +2433,7 @@ export default function ListingsPage() {
                 <button
                   onClick={() => {
                   setViewMode("grid");
-                  trackAnalyticsEvent('view_mode_changed', 'view', {
+                  trackAnalyticsEvent('view_mode_changed', undefined, {
                     mode: 'grid'
                   });
                 }}
@@ -2271,7 +2448,7 @@ export default function ListingsPage() {
                 <button
                   onClick={() => {
                   setViewMode("list");
-                  trackAnalyticsEvent('view_mode_changed', 'view', {
+                  trackAnalyticsEvent('view_mode_changed', undefined, {
                     mode: 'list'
                   });
                 }}
@@ -2383,6 +2560,13 @@ export default function ListingsPage() {
               property={selectedProperty!} 
               toggleFavorite={toggleFavorite}
               closePropertyModal={closePropertyModal}
+              reviews={reviews}
+              reviewsLoading={reviewsLoading}
+              userReview={userReview}
+              setUserReview={setUserReview}
+              isSubmittingReview={isSubmittingReview}
+              submitReview={submitReview}
+              session={session}
               onBookViewing={(propertyId) => {
                 closePropertyModal();
                 setTimeout(() => {
@@ -2496,8 +2680,8 @@ export default function ListingsPage() {
                     </div>
                     
                     {/* Property type badge */}
-                    <div className="absolute top-18 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-700)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-[var(--color-primary-600)]" />
+                    <div className="absolute top-18 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-300)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
+                      <Building2 className="w-4 h-4 text-[var(--color-primary-300)]" />
                       {selectedProperty!.type}
                     </div>
                     
@@ -2529,10 +2713,10 @@ export default function ListingsPage() {
                   )}
                   
                   {/* Key Property Stats - Feature row at bottom */}
-                  <div className="hidden lg:flex justify-between items-center px-6 py-4 bg-gray-800 text-white border-t border-gray-700">
+                  <div className="hidden lg:flex justify-between items-center px-6 py-5 bg-gray-800 text-white border-t border-gray-700">
                     <div className="flex items-center gap-2">
-                      <div className="bg-gray-700 p-2 rounded-lg">
-                        <Bed className="w-5 h-5 text-[var(--color-primary-300)]" />
+                      <div className="bg-gray-900 p-2 rounded-lg">
+                        <Bed className="w-5 h-5 text-[var(--color-primary-900)]" />
                       </div>
                       <div>
                         <div className="font-semibold text-lg">{selectedProperty!.bedrooms}</div>
@@ -2541,8 +2725,8 @@ export default function ListingsPage() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <div className="bg-gray-700 p-2 rounded-lg">
-                        <Bath className="w-5 h-5 text-[var(--color-primary-300)]" />
+                      <div className="bg-gray-900 p-2 rounded-lg">
+                        <Bath className="w-5 h-5 text-[var(--color-primary-900)]" />
                       </div>
                       <div>
                         <div className="font-semibold text-lg">{selectedProperty!.bathrooms}</div>
@@ -2551,8 +2735,8 @@ export default function ListingsPage() {
                     </div>
                     
                     <div className="flex items-center gap-2">
-                      <div className="bg-gray-700 p-2 rounded-lg">
-                        <Calendar className="w-5 h-5 text-[var(--color-primary-300)]" />
+                      <div className="bg-gray-900 p-2 rounded-lg">
+                        <Calendar className="w-5 h-5 text-[var(--color-primary-900)]" />
                       </div>
                       <div>
                         <div className="font-semibold text-sm">
@@ -2575,7 +2759,7 @@ export default function ListingsPage() {
                     
                     {/* Location and Rating Row */}
                     <div className="flex justify-between items-center mt-3">
-                      <div className="flex items-center gap-2 text-[var(--color-primary-700)] text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
+                      <div className="flex items-center gap-2 text-white text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
                         <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
                         <span>{selectedProperty!.location}</span>
                       </div>
@@ -2836,7 +3020,7 @@ export default function ListingsPage() {
                       <div className="flex gap-3">
                         <button 
                           onClick={handlePhoneContact}
-                          className="p-3.5 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+                          className="p-3.5 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-white rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                           <Phone className="w-5 h-5" />
                         </button>

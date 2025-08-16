@@ -82,6 +82,18 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+model OtpVerification {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  otp       String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@map("otp_verifications")
+}
+
 model Property {
   id             String         @id @default(cuid())
   title          String
