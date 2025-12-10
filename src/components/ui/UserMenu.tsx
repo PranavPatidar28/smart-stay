@@ -6,6 +6,7 @@ import { LogOut, Settings, Heart, Home, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from 'next/image';
+import { Role, getRoleLabel } from "@/types/role";
 
 interface UserMenuProps {
   isInMobileMenu?: boolean;
@@ -64,10 +65,10 @@ export default function UserMenu({ isInMobileMenu = false }: UserMenuProps) {
         <Link
           href="/auth/signin"
           className={`transition-colors font-medium ${isInMobileMenu
-              ? "text-[var(--color-primary-400)] hover:text-[var(--color-primary-600)]"
-              : isHomePage && !isScrolled
-                ? "text-white hover:text-white/80"
-                : "text-gray-600 hover:text-[var(--color-primary-600)]"
+            ? "text-[var(--color-primary-400)] hover:text-[var(--color-primary-600)]"
+            : isHomePage && !isScrolled
+              ? "text-white hover:text-white/80"
+              : "text-gray-600 hover:text-[var(--color-primary-600)]"
             }`}
         >
           Sign In
@@ -145,8 +146,8 @@ export default function UserMenu({ isInMobileMenu = false }: UserMenuProps) {
       ? "hover:bg-white/10"
       : "hover:bg-gray-100";
 
-  // Get user role from session
-  const userRole = (session?.user as { role?: string | null })?.role;
+  // Get user role from session with type safety
+  const userRole = session?.user?.role as Role | null;
 
   return (
     <div className="relative" ref={menuRef}>
@@ -171,7 +172,7 @@ export default function UserMenu({ isInMobileMenu = false }: UserMenuProps) {
                 <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-600)] to-[var(--color-secondary-600)] drop-shadow username-gradient">{session?.user?.name}</p>
                 <p className="text-sm text-gray-600">{session?.user?.email}</p>
                 <span className="inline-block mt-1 px-2 py-1 border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-800)] text-[var(--color-primary-400)] text-xs rounded-full font-medium">
-                  {userRole || "Student"}
+                  {getRoleLabel(userRole)}
                 </span>
               </div>
             </div>

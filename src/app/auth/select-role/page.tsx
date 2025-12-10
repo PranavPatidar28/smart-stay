@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { Role, ROLES } from "@/types/role";
 
 export default function SelectRole() {
-  const [selectedRole, setSelectedRole] = useState<"STUDENT" | "LANDLORD" | null>(null);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
@@ -22,7 +23,7 @@ export default function SelectRole() {
       router.push("/");
       return;
     }
-  }, [session, status, router]);
+  }, [session, isPending, router]);
 
   const handleRoleSelection = async () => {
     if (!selectedRole) {
@@ -41,7 +42,8 @@ export default function SelectRole() {
       });
 
       if (response.ok) {
-        // Force session refresh
+        // Full page navigation to ensure session is completely refreshed
+        // This is needed because router.push doesn't reload useSession() subscribers
         window.location.href = "/";
       }
     } finally {
@@ -74,27 +76,20 @@ export default function SelectRole() {
             <p className="text-sm text-gray-500">You can change this later in your profile settings</p>
           </div>
 
-          {/* Error Message */}
-          {/* {error && ( // This block was removed as per edit hint
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-              {error}
-            </div>
-          )} */}
-
           {/* Role Selection */}
           <div className="space-y-4 mb-8">
             <button
               onClick={() => setSelectedRole("STUDENT")}
               className={`w-full p-6 rounded-xl border-2 transition-all duration-200 text-left ${selectedRole === "STUDENT"
-                  ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
-                  : "border-gray-200 hover:border-gray-300"
+                ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
+                : "border-gray-200 hover:border-gray-300"
                 }`}
             >
               <div className="flex items-center gap-4">
                 <div className="text-3xl">👨‍🎓</div>
                 <div>
-                  <div className="font-semibold text-lg">Student</div>
-                  <div className="text-sm text-gray-600">I&apos;m looking for accommodation</div>
+                  <div className="font-semibold text-lg">{ROLES.STUDENT.label}</div>
+                  <div className="text-sm text-gray-600">{ROLES.STUDENT.description}</div>
                 </div>
               </div>
             </button>
@@ -102,15 +97,15 @@ export default function SelectRole() {
             <button
               onClick={() => setSelectedRole("LANDLORD")}
               className={`w-full p-6 rounded-xl border-2 transition-all duration-200 text-left ${selectedRole === "LANDLORD"
-                  ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
-                  : "border-gray-200 hover:border-gray-300"
+                ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
+                : "border-gray-200 hover:border-gray-300"
                 }`}
             >
               <div className="flex items-center gap-4">
                 <div className="text-3xl">🏠</div>
                 <div>
-                  <div className="font-semibold text-lg">Landlord</div>
-                  <div className="text-sm text-gray-600">I&apos;m renting out properties</div>
+                  <div className="font-semibold text-lg">{ROLES.LANDLORD.label}</div>
+                  <div className="text-sm text-gray-600">{ROLES.LANDLORD.description}</div>
                 </div>
               </div>
             </button>

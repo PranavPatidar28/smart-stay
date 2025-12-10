@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { Role } from "@/types/role";
 
 /**
  * Get the current session on the server side.
@@ -24,9 +25,23 @@ export async function getCurrentUser() {
 /**
  * Check if the current user has a specific role.
  */
-export async function hasRole(role: string) {
+export async function hasRole(role: Role): Promise<boolean> {
     const user = await getCurrentUser();
     return user?.role === role;
+}
+
+/**
+ * Check if the current user is a landlord.
+ */
+export async function isLandlord(): Promise<boolean> {
+    return hasRole('LANDLORD');
+}
+
+/**
+ * Check if the current user is a student.
+ */
+export async function isStudent(): Promise<boolean> {
+    return hasRole('STUDENT');
 }
 
 /**
@@ -40,3 +55,4 @@ export async function requireAuth() {
     }
     return session;
 }
+

@@ -2,12 +2,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, AlertTriangle, ArrowRight, X } from "lucide-react";
+import { Role, ROLES, getRoleLabel } from "@/types/role";
 
 interface RoleRequiredModalProps {
   isOpen: boolean;
   onClose: () => void;
-  requiredRole: "STUDENT" | "LANDLORD" | "ADMIN";
-  currentRole?: string;
+  requiredRole: Role;
+  currentRole?: Role | null;
   actionType: string;
 }
 
@@ -61,18 +62,16 @@ export default function RoleRequiredModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div 
-        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${
-          isAnimating ? 'opacity-100' : 'opacity-0'
-        }`}
+      <div
+        className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ${isAnimating ? 'opacity-100' : 'opacity-0'
+          }`}
         onClick={handleClose}
       />
-      
+
       {/* Modal */}
-      <div 
-        className={`relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 transition-all duration-300 ${
-          isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
-        }`}
+      <div
+        className={`relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 transition-all duration-300 ${isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
+          }`}
       >
         {/* Close button */}
         <button
@@ -81,27 +80,27 @@ export default function RoleRequiredModal({
         >
           <X className="w-5 h-5" />
         </button>
-        
+
         {/* Content */}
         <div className="p-6">
           {/* Icon */}
           <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="w-8 h-8 text-amber-600" />
           </div>
-          
+
           {/* Title */}
           <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
             Account Role Required
           </h3>
-          
+
           {/* Message */}
           <p className="text-gray-600 text-center mb-6">
-            You need a <span className="font-semibold text-[var(--color-primary-600)]">{requiredRole.toLowerCase()}</span> account to {actionType}.
+            You need a <span className="font-semibold text-[var(--color-primary-600)]">{getRoleLabel(requiredRole).toLowerCase()}</span> account to {actionType}.
             {currentRole && (
-              <> Your current role is <span className="font-semibold">{currentRole.toLowerCase()}</span>.</>
+              <> Your current role is <span className="font-semibold">{getRoleLabel(currentRole).toLowerCase()}</span>.</>
             )}
           </p>
-          
+
           {/* Illustration */}
           <div className="bg-gray-50 rounded-xl p-4 mb-6">
             <div className="flex items-center justify-center gap-4">
@@ -109,20 +108,20 @@ export default function RoleRequiredModal({
                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-gray-500" />
                 </div>
-                <span className="text-sm text-gray-500 mt-2">Student</span>
+                <span className="text-sm text-gray-500 mt-2">{ROLES.STUDENT.label}</span>
               </div>
-              
+
               <ArrowRight className="w-5 h-5 text-gray-400" />
-              
+
               <div className="flex flex-col items-center">
                 <div className="w-10 h-10 rounded-full bg-[var(--color-primary-100)] flex items-center justify-center">
                   <Building2 className="w-5 h-5 text-[var(--color-primary-600)]" />
                 </div>
-                <span className="text-sm text-[var(--color-primary-600)] font-medium mt-2">Landlord</span>
+                <span className="text-sm text-[var(--color-primary-600)] font-medium mt-2">{ROLES.LANDLORD.label}</span>
               </div>
             </div>
           </div>
-          
+
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3">
             <button

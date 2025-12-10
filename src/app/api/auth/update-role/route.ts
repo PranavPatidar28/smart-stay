@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { getSession } from "@/lib/auth-server";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { isValidRole } from "@/types/role";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
+    // Get the current session
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
@@ -15,42 +19,26 @@ export async function POST(request: NextRequest) {
 
     const { role } = await request.json();
 
-    // Retrieve the current user to check their role
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      select: { role: true }
-    });
-
-    // Validate role change
-    // Only allow ADMIN role if the user already has it
-    const allowedRoles = ["STUDENT", "LANDLORD"];
-    if (currentUser?.role === "ADMIN") {
-      allowedRoles.push("ADMIN");
-    }
-
-    if (!role || !allowedRoles.includes(role)) {
+    // Type-safe validation - only STUDENT and LANDLORD are valid
+    if (!isValidRole(role)) {
       return NextResponse.json(
-        { error: "Invalid role" },
+        { error: "Invalid role. Must be STUDENT or LANDLORD." },
         { status: 400 }
       );
     }
 
-
-    // Update the user's role
-    const updatedUser = await prisma.user.update({
-      where: { email: session.user.email },
-      data: { role },
+    // Use Better Auth's updateUser API to update role
+    // This properly updates the session/cookie cache
+    const updatedUser = await auth.api.updateUser({
+      headers: await headers(),
+      body: {
+        role: role,
+      },
     });
-
 
     return NextResponse.json({
       success: true,
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        name: updatedUser.name,
-        role: updatedUser.role,
-      },
+      user: updatedUser,
     });
   } catch (error) {
     console.error("Error updating user role:", error);

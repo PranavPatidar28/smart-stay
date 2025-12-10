@@ -356,7 +356,6 @@ model InquiryEvent {
 enum UserRole {
   STUDENT
   LANDLORD
-  ADMIN
 }
 
 enum PropertyType {

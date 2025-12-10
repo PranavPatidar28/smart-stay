@@ -6,7 +6,7 @@ import { getSession } from '@/lib/auth-server'
 const updateProfileSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   phone: z.string().min(10).max(15).optional(),
-  role: z.enum(['STUDENT', 'LANDLORD', 'ADMIN']).optional(),
+  role: z.enum(['STUDENT', 'LANDLORD']).optional(),
 })
 
 export async function GET() {

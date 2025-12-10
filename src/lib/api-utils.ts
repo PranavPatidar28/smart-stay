@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
+import { Role } from '@/types/role'
 
 export interface ApiResponse<T = unknown> {
   data?: T
@@ -77,7 +78,7 @@ export async function requireAuth() {
   return session
 }
 
-export async function requireRole(requiredRole: string) {
+export async function requireRole(requiredRole: Role) {
   const session = await requireAuth()
 
   if (session.user.role !== requiredRole) {
@@ -85,6 +86,14 @@ export async function requireRole(requiredRole: string) {
   }
 
   return session
+}
+
+export async function requireLandlord() {
+  return requireRole('LANDLORD')
+}
+
+export async function requireStudent() {
+  return requireRole('STUDENT')
 }
 
 export function validatePaginationParams(searchParams: URLSearchParams) {
@@ -158,9 +167,11 @@ export function validatePropertyData(data: {
   title: string;
   location: string;
   price: number;
+  bedrooms: number;
+  bathrooms: number;
   type: string;
 }) {
-  const requiredFields = ['title', 'location', 'price', 'type']
+  const requiredFields: (keyof typeof data)[] = ['title', 'location', 'price', 'bedrooms', 'type']
   const missingFields = requiredFields.filter(field => !data[field])
 
   if (missingFields.length > 0) {

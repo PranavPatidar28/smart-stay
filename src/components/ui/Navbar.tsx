@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import UserMenu from "./UserMenu";
 import { authClient } from "@/lib/auth-client";
 import RoleRequiredModal from "./RoleRequiredModal";
+import { Role, getRoleLabel } from "@/types/role";
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,15 +45,18 @@ export default function Navbar() {
     };
   }, [isMenuOpen]);
 
+  // Get user role with type safety
+  const userRole = session?.user?.role as Role | null;
+
   // Handle navigation with role check
-  const handleNavigation = (href: string, requiresRole?: string | null) => {
+  const handleNavigation = (href: string, requiresRole?: Role | null) => {
     if (!requiresRole || !session) {
       // If no specific role required or user not logged in, navigate normally
       return href;
     }
 
     // Check if user has the required role
-    if ((session?.user as { role?: string | null })?.role === requiresRole) {
+    if (userRole === requiresRole) {
       return href;
     } else {
       // Don't navigate, show the modal instead
@@ -61,18 +65,18 @@ export default function Navbar() {
   };
 
   // Handle click for role-restricted links
-  const handleLinkClick = (e: React.MouseEvent, requiresRole?: string | null) => {
+  const handleLinkClick = (e: React.MouseEvent, requiresRole?: Role | null) => {
     if (!requiresRole || !session) return;
 
-    if ((session?.user as { role?: string | null })?.role !== requiresRole) {
+    if (userRole !== requiresRole) {
       e.preventDefault();
       setShowRoleModal(true);
     }
   };
 
   // Instant navigation handler
-  const handleInstantNavigation = (href: string, requiresRole?: string | null) => {
-    if (requiresRole && session && (session?.user as { role?: string | null })?.role !== requiresRole) {
+  const handleInstantNavigation = (href: string, requiresRole?: Role | null) => {
+    if (requiresRole && session && userRole !== requiresRole) {
       setShowRoleModal(true);
       return;
     }
@@ -91,7 +95,7 @@ export default function Navbar() {
     setTimeout(() => setIsNavigating(false), 100);
   };
 
-  const navLinks = [
+  const navLinks: { href: string; label: string; icon: React.ReactNode; requiresRole: Role | null }[] = [
     {
       href: "/",
       label: "Home",
@@ -118,7 +122,7 @@ export default function Navbar() {
     },
   ];
 
-  const additionalLinks = [
+  const additionalLinks: { href: string; label: string; icon: React.ReactNode; requiresRole: Role | null }[] = [
     {
       href: "/settings",
       label: "Settings",
@@ -277,22 +281,22 @@ export default function Navbar() {
                     key={link.href}
                     onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
                     className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${pathname === link.href
-                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
-                        : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
+                      ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
+                      : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
                       } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${index * 100}ms` }}
                     disabled={isNavigating}
                   >
                     <div className={`p-2 rounded-xl transition-all duration-200 ${pathname === link.href
-                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]'
-                        : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
+                      ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
                       }`}>
                       {link.icon}
                     </div>
                     <span className="flex-1">{link.label}</span>
                     {link.requiresRole && (
                       <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">
-                        {link.requiresRole}
+                        {getRoleLabel(link.requiresRole)}
                       </span>
                     )}
                   </button>
@@ -309,15 +313,15 @@ export default function Navbar() {
                     key={link.href}
                     onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
                     className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${pathname === link.href
-                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
-                        : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
+                      ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
+                      : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
                       } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${(index + navLinks.length) * 100}ms` }}
                     disabled={isNavigating}
                   >
                     <div className={`p-2 rounded-xl transition-all duration-200 ${pathname === link.href
-                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]'
-                        : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
+                      ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]'
+                      : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
                       }`}>
                       {link.icon}
                     </div>
@@ -353,7 +357,7 @@ export default function Navbar() {
         isOpen={showRoleModal}
         onClose={() => setShowRoleModal(false)}
         requiredRole="LANDLORD"
-        currentRole={(session?.user as { role?: string | null })?.role || ""}
+        currentRole={userRole}
         actionType="list properties"
       />
 

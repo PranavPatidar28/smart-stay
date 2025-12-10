@@ -1,4 +1,5 @@
 import { ApiResponse } from './api-utils'
+import { Role } from '@/types/role'
 
 // Types
 export interface Property {
@@ -120,7 +121,7 @@ export interface User {
   name: string
   email: string
   phone?: string
-  role: string
+  role: Role | null
   verified: boolean
   image?: string
   createdAt: string
@@ -184,7 +185,7 @@ class ApiClient {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
-    
+
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -195,7 +196,7 @@ class ApiClient {
 
     try {
       const response = await fetch(url, config)
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
@@ -221,7 +222,7 @@ class ApiClient {
         }
       }
     })
-    
+
     return this.request<ApiResponse<Property[]>>(`/properties?${params.toString()}`)
   }
 
@@ -261,7 +262,7 @@ class ApiClient {
         }
       }
     })
-    
+
     return this.request<ApiResponse<Property[]>>(`/search?${params.toString()}`)
   }
 
@@ -287,7 +288,7 @@ class ApiClient {
   async getBookings(status?: string, page = 1, limit = 10): Promise<ApiResponse<Booking[]>> {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (status) params.append('status', status)
-    
+
     return this.request<ApiResponse<Booking[]>>(`/bookings?${params.toString()}`)
   }
 
@@ -356,7 +357,7 @@ class ApiClient {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (propertyId) params.append('propertyId', propertyId)
     if (status) params.append('status', status)
-    
+
     return this.request<ApiResponse<Inquiry[]>>(`/inquiries?${params.toString()}`)
   }
 
@@ -381,7 +382,7 @@ class ApiClient {
   async getNotifications(unreadOnly = false, page = 1, limit = 10): Promise<ApiResponse<Notification[]>> {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     if (unreadOnly) params.append('unread', 'true')
-    
+
     return this.request<ApiResponse<Notification[]>>(`/notifications?${params.toString()}`)
   }
 
@@ -423,7 +424,7 @@ class ApiClient {
     const params = new URLSearchParams()
     if (category) params.append('category', category)
     if (search) params.append('search', search)
-    
+
     return this.request(`/amenities?${params.toString()}`)
   }
 
@@ -497,7 +498,7 @@ export async function trackAnalyticsEvent(
       headers: { 'Content-Type': 'application/json' },
       body: json,
       keepalive: true,
-    }).catch(() => {});
+    }).catch(() => { });
   } catch {
     // Swallow errors — analytics should never block user flows
   }

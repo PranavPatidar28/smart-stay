@@ -17,11 +17,11 @@ import {
   UserCheck,
   Building,
   GraduationCap,
-  ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/ui/Navbar";
 import Image from 'next/image';
+import { Role, ROLES, getRoleLabel, isValidRole } from "@/types/role";
 
 // Form validation
 import { useForm } from "react-hook-form";
@@ -36,9 +36,9 @@ export default function SettingsPage() {
   const [roleLoading, setRoleLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [showRoleModal, setShowRoleModal] = useState(false);
-  const [roleToChange, setRoleToChange] = useState<string | null>(null);
+  const [roleToChange, setRoleToChange] = useState<Role | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   // New role modal component
@@ -66,17 +66,15 @@ export default function SettingsPage() {
           throw new Error(result.error || 'Failed to update role');
         }
 
-        // Close modal and show success message
+        // Show success message briefly, then reload to refresh all session state
         setShowRoleModal(false);
-        setSuccessMessage("Account role updated successfully! Refreshing session...");
+        setSuccessMessage("Account role updated successfully! Refreshing...");
 
-        // Force session refresh by signing out and redirecting to sign in page
-        // This ensures the session is completely refreshed with new role information
-        setTimeout(async () => {
-          // Use signOut with a redirect to force a complete session refresh
-          await authClient.signOut();
-          window.location.href = `/auth/signin?callbackUrl=${encodeURIComponent('/settings')}&message=${encodeURIComponent('Please sign in again to apply your new account type')}`;
-        }, 1500);
+        // Reload the page to refresh the session state across all components
+        // This is the most reliable way to ensure Navbar and other components get updated
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       } catch (error) {
         console.error('Error updating role:', error);
         setErrorMessage(error instanceof Error ? error.message : 'Failed to update role');
@@ -90,29 +88,14 @@ export default function SettingsPage() {
       setRoleToChange(null);
     };
 
-    const getRoleIcon = (role: string) => {
+    const getRoleIcon = (role: Role) => {
       switch (role) {
         case "STUDENT":
           return <GraduationCap className="w-6 h-6" />;
         case "LANDLORD":
           return <Building className="w-6 h-6" />;
-        case "ADMIN":
-          return <ShieldCheck className="w-6 h-6" />;
         default:
           return <UserCog className="w-6 h-6" />;
-      }
-    };
-
-    const getRoleName = (role: string) => {
-      switch (role) {
-        case "STUDENT":
-          return "Student";
-        case "LANDLORD":
-          return "Property Owner/Landlord";
-        case "ADMIN":
-          return "Administrator";
-        default:
-          return role;
       }
     };
 
@@ -143,13 +126,9 @@ export default function SettingsPage() {
                     {getRoleIcon(roleToChange)}
                   </div>
                   <div>
-                    <h4 className="font-medium text-lg">{getRoleName(roleToChange)}</h4>
+                    <h4 className="font-medium text-lg">{getRoleLabel(roleToChange)}</h4>
                     <p className="text-sm text-gray-500">
-                      {roleToChange === "LANDLORD"
-                        ? "You'll be able to list and manage properties"
-                        : roleToChange === "ADMIN"
-                          ? "You'll have administrative access to the platform"
-                          : "You'll be able to browse and book accommodations"}
+                      {ROLES[roleToChange].description}
                     </p>
                   </div>
                 </>
@@ -347,7 +326,8 @@ export default function SettingsPage() {
   useEffect(() => {
     if (isPending === false && session?.user?.id) {
       // Set the initial selected role from session
-      setSelectedRole(session?.user?.role || "STUDENT");
+      const role = session?.user?.role as Role | null;
+      setSelectedRole(role || 'STUDENT');
 
       // Fetch user profile data
       fetch('/api/user/profile')
@@ -361,7 +341,7 @@ export default function SettingsPage() {
             });
 
             // Update selected role if it exists in the profile
-            if (data.role) {
+            if (data.role && isValidRole(data.role)) {
               setSelectedRole(data.role);
             }
           }
@@ -535,7 +515,7 @@ export default function SettingsPage() {
   };
 
   // Handler for initiating role change
-  const initiateRoleChange = (role: string) => {
+  const initiateRoleChange = (role: Role) => {
     // Don't do anything if it's the same role
     if (role === selectedRole) return;
 
@@ -817,40 +797,6 @@ export default function SettingsPage() {
                           List and manage your properties for student rental
                         </p>
                       </div>
-
-                      {/* Admin Role Card - only show if user is already admin */}
-                      {session?.user?.role === "ADMIN" && (
-                        <div
-                          className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${selectedRole === "ADMIN"
-                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] shadow-lg"
-                            : "border-gray-200 hover:bg-gray-50"
-                            }`}
-                          onClick={() => initiateRoleChange("ADMIN")}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${selectedRole === "ADMIN"
-                              ? "bg-[var(--color-primary-100)]"
-                              : "bg-gray-100"
-                              }`}>
-                              <ShieldCheck className={`w-5 h-5 ${selectedRole === "ADMIN"
-                                ? "text-[var(--color-primary-700)]"
-                                : "text-gray-600"
-                                }`} />
-                            </div>
-                            <div>
-                              <h3 className="font-medium">Administrator</h3>
-                              {selectedRole === "ADMIN" && (
-                                <span className="text-xs bg-[var(--color-primary-100)] text-[var(--color-primary-700)] px-2 py-0.5 rounded-full">
-                                  Current
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            Manage the platform and moderate content
-                          </p>
-                        </div>
-                      )}
                     </div>
 
                     <p className="text-sm text-gray-500">
