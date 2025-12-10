@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { prisma } from "@/lib/prisma";
-import { authOptions } from "../[...nextauth]/route";
+import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth-server";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    
+    const session = await getSession();
+
     if (!session?.user?.email) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -21,14 +20,14 @@ export async function POST(request: NextRequest) {
       where: { email: session.user.email },
       select: { role: true }
     });
-    
+
     // Validate role change
     // Only allow ADMIN role if the user already has it
     const allowedRoles = ["STUDENT", "LANDLORD"];
     if (currentUser?.role === "ADMIN") {
       allowedRoles.push("ADMIN");
     }
-    
+
     if (!role || !allowedRoles.includes(role)) {
       return NextResponse.json(
         { error: "Invalid role" },
@@ -36,14 +35,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    
+
     // Update the user's role
     const updatedUser = await prisma.user.update({
       where: { email: session.user.email },
       data: { role },
     });
 
-    
+
     return NextResponse.json({
       success: true,
       user: {
@@ -60,4 +59,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-} 
+}

@@ -1,9 +1,9 @@
 "use client";
 
-import { signIn, getSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, Phone, CheckCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, Phone } from "lucide-react";
 import Link from "next/link";
 
 export default function SignUp() {
@@ -26,14 +26,13 @@ export default function SignUp() {
   const [resendDisabled, setResendDisabled] = useState(false);
   const router = useRouter();
 
+  const { data: session } = authClient.useSession();
+
   useEffect(() => {
-    // Check if user is already signed in
-    getSession().then((session) => {
-      if (session) {
-        router.push("/");
-      }
-    });
-  }, [router]);
+    if (session) {
+      router.push("/");
+    }
+  }, [session, router]);
 
   // OTP Timer effect
   useEffect(() => {
@@ -95,7 +94,6 @@ export default function SignUp() {
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -104,9 +102,13 @@ export default function SignUp() {
   const handleGoogleSignUp = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/" });
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
     } catch (error) {
       setIsLoading(false);
+      setErrors({ general: "Failed to sign up with Google" });
     }
   };
 
@@ -126,7 +128,7 @@ export default function SignUp() {
 
       if (response.ok) {
         setOtpSent(true);
-        setOtpTimer(60); // 60 seconds countdown
+        setOtpTimer(60);
         setResendDisabled(true);
         setErrors({});
       } else {
@@ -142,7 +144,7 @@ export default function SignUp() {
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -150,8 +152,8 @@ export default function SignUp() {
     setIsLoading(true);
 
     try {
-      // Call the registration API endpoint with OTP verification
-      const response = await fetch('/api/auth/register', {
+      // First verify OTP and create the user via our custom API
+      const registerResponse = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -163,28 +165,27 @@ export default function SignUp() {
           otp: otp
         }),
       });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
+
+      const registerData = await registerResponse.json();
+
+      if (!registerResponse.ok) {
+        throw new Error(registerData.error || 'Registration failed');
       }
-      
-      // Registration successful, now sign in with credentials
-      const result = await signIn('credentials', {
+
+      // Registration successful, now sign in with Better Auth
+      const result = await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
-        redirect: false,
       });
-      
-      if (result?.error) {
-        throw new Error(result.error);
+
+      if (result.error) {
+        throw new Error(result.error.message || 'Sign in failed');
       }
-      
-      // Redirect to home
+
       router.push('/');
-    } catch (error: any) {
-      setErrors({ general: error.message || 'Registration failed. Please try again.' });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      setErrors({ general: message });
     } finally {
       setIsLoading(false);
     }
@@ -277,16 +278,15 @@ export default function SignUp() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                    errors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.name ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="Enter your full name"
                   required
                 />
               </div>
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.name}
                 </p>
               )}
@@ -302,33 +302,32 @@ export default function SignUp() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                    errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-24 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="Enter your email"
                   required
                 />
-                                 <button
-                   type="button"
-                   onClick={sendOTP}
-                   disabled={isLoading || otpSent}
-                   className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
-                 >
-                   {isLoading ? (
-                     <>
-                       <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                       Sending...
-                     </>
-                   ) : otpSent ? (
-                     'OTP Sent'
-                   ) : (
-                     'Send OTP'
-                   )}
-                 </button>
+                <button
+                  type="button"
+                  onClick={sendOTP}
+                  disabled={isLoading || otpSent}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 px-3 py-1 text-xs bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Sending...
+                    </>
+                  ) : otpSent ? (
+                    'OTP Sent'
+                  ) : (
+                    'Send OTP'
+                  )}
+                </button>
               </div>
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.email}
                 </p>
               )}
@@ -346,9 +345,8 @@ export default function SignUp() {
                       type="text"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value)}
-                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                        errors.otp ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.otp ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                        }`}
                       placeholder="Enter 6-digit OTP"
                       maxLength={6}
                       required
@@ -361,8 +359,8 @@ export default function SignUp() {
                       disabled={resendDisabled || isLoading}
                       className="text-sm text-blue-600 hover:text-blue-700 underline disabled:text-gray-400 disabled:cursor-not-allowed flex items-center gap-1"
                     >
-                      {resendDisabled 
-                        ? `Resend in ${otpTimer}s` 
+                      {resendDisabled
+                        ? `Resend in ${otpTimer}s`
                         : isLoading ? (
                           <>
                             <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -382,7 +380,7 @@ export default function SignUp() {
                 </div>
                 {errors.otp && (
                   <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                    <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                    <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                     {errors.otp}
                   </p>
                 )}
@@ -399,16 +397,15 @@ export default function SignUp() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                    errors.phone ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.phone ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="Enter your phone number"
                   required
                 />
               </div>
               {errors.phone && (
                 <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.phone}
                 </p>
               )}
@@ -422,11 +419,10 @@ export default function SignUp() {
                 <button
                   type="button"
                   onClick={() => handleInputChange("role", "STUDENT")}
-                  className={`p-3 rounded-xl border-2 transition-all duration-200 text-left hover:scale-105 ${
-                    formData.role === "STUDENT"
+                  className={`p-3 rounded-xl border-2 transition-all duration-200 text-left hover:scale-105 ${formData.role === "STUDENT"
                       ? "border-blue-500 bg-blue-50 shadow-md text-blue-600"
                       : "border-gray-200 hover:border-gray-300 text-slate-600"
-                  }`}
+                    }`}
                 >
                   <div className="text-lg mb-1">👨‍🎓</div>
                   <div className="font-medium">Student</div>
@@ -435,11 +431,10 @@ export default function SignUp() {
                 <button
                   type="button"
                   onClick={() => handleInputChange("role", "LANDLORD")}
-                  className={`p-3 rounded-xl border-2 transition-all duration-200 text-left hover:scale-105 ${
-                    formData.role === "LANDLORD"
+                  className={`p-3 rounded-xl border-2 transition-all duration-200 text-left hover:scale-105 ${formData.role === "LANDLORD"
                       ? "border-blue-500 bg-blue-50 shadow-md text-blue-600"
                       : "border-gray-200 hover:border-gray-300 text-slate-600"
-                  }`}
+                    }`}
                 >
                   <div className="text-lg mb-1">🏠</div>
                   <div className="font-medium">Landlord</div>
@@ -458,9 +453,8 @@ export default function SignUp() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                    errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="Create a password"
                   required
                 />
@@ -474,7 +468,7 @@ export default function SignUp() {
               </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.password}
                 </p>
               )}
@@ -490,9 +484,8 @@ export default function SignUp() {
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                    errors.confirmPassword ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.confirmPassword ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="Confirm your password"
                   required
                 />
@@ -506,7 +499,7 @@ export default function SignUp() {
               </div>
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.confirmPassword}
                 </p>
               )}
@@ -539,7 +532,7 @@ export default function SignUp() {
             </div>
             {errors.terms && (
               <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                 {errors.terms}
               </p>
             )}

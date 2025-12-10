@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
+import { getSession } from '@/lib/auth-server'
 
 const updateInquirySchema = z.object({
   status: z.enum(['PENDING', 'RESPONDED', 'CLOSED']),
@@ -13,8 +12,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },

@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
-import { verifyPassword } from '@/lib/auth'
+import { getSession } from '@/lib/auth-server'
+import { verifyPassword } from '@/lib/password'
 import { authRateLimit } from '@/lib/rate-limit'
-import { withCSRFProtection } from '@/lib/csrf'
 
-export const POST = withCSRFProtection(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   // Apply rate limiting
   const rateLimitResult = authRateLimit(request);
   if (rateLimitResult) {
@@ -14,8 +12,8 @@ export const POST = withCSRFProtection(async (request: NextRequest) => {
   }
 
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -55,7 +53,7 @@ export const POST = withCSRFProtection(async (request: NextRequest) => {
       }
 
       const isPasswordValid = await verifyPassword(password, user.password)
-      
+
       if (!isPasswordValid) {
         return NextResponse.json(
           { error: 'Password is incorrect' },
@@ -80,4 +78,4 @@ export const POST = withCSRFProtection(async (request: NextRequest) => {
       { status: 500 }
     )
   }
-}) 
+}

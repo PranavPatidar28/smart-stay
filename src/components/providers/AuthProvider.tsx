@@ -1,12 +1,13 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
 import { ReactNode } from "react";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
+// Better Auth doesn't require a session provider wrapper
+// The authClient handles session state internally using nanostores
 export default function AuthProvider({ children }: AuthProviderProps) {
-  return <SessionProvider>{children}</SessionProvider>;
-} 
+  return <>{children}</>;
+}

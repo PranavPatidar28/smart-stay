@@ -1,6 +1,6 @@
 "use client";
 
-import { signIn, getSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft, User, AlertCircle } from "lucide-react";
@@ -16,14 +16,13 @@ export default function SignIn() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
 
+  const { data: session } = authClient.useSession();
+
   useEffect(() => {
-    // Check if user is already signed in
-    getSession().then((session) => {
-      if (session) {
-        router.push("/");
-      }
-    });
-  }, [router]);
+    if (session) {
+      router.push("/");
+    }
+  }, [session, router]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -44,7 +43,6 @@ export default function SignIn() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -53,15 +51,19 @@ export default function SignIn() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     try {
-      await signIn("google", { callbackUrl: "/" });
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
     } catch (error) {
       setIsLoading(false);
+      setErrors({ general: "Failed to sign in with Google" });
     }
   };
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -69,38 +71,23 @@ export default function SignIn() {
     setIsLoading(true);
 
     try {
-      const result = await signIn('credentials', {
+      const result = await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
-        redirect: false,
       });
-      
-      if (result?.error) {
-        throw new Error(result.error);
+
+      if (result.error) {
+        throw new Error(result.error.message || "Invalid credentials");
       }
-      
-      // Redirect to home
-      router.push('/');
-    } catch (error: any) {
-      // Handle different types of authentication errors
-      let errorMessage = 'Invalid email or password. Please try again.';
-      
-      if (error.message) {
-        switch (error.message) {
-          case 'CredentialsSignin':
-            errorMessage = 'Invalid email or password. Please check your credentials and try again.';
-            break;
-          case 'EmailNotVerified':
-            errorMessage = 'Please verify your email address before signing in.';
-            break;
-          case 'AccountLocked':
-            errorMessage = 'Your account has been temporarily locked. Please try again later.';
-            break;
-          default:
-            errorMessage = error.message;
-        }
+
+      router.push("/");
+    } catch (error: unknown) {
+      let errorMessage = "Invalid email or password. Please try again.";
+
+      if (error instanceof Error && error.message) {
+        errorMessage = error.message;
       }
-      
+
       setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
@@ -194,9 +181,8 @@ export default function SignIn() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                    errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.email ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="Enter your email"
                   required
                 />
@@ -219,9 +205,8 @@ export default function SignIn() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${
-                    errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
-                  }`}
+                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 placeholder-gray-500 ${errors.password ? 'border-red-300 focus:ring-red-500' : 'border-gray-200'
+                    }`}
                   placeholder="Enter your password"
                   required
                 />
@@ -276,7 +261,7 @@ export default function SignIn() {
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link
                 href="/auth/signup"
                 className="text-blue-600 hover:text-blue-700 font-medium underline"

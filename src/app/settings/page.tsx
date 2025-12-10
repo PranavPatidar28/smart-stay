@@ -1,16 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { 
-  User, 
-  Lock, 
-  Bell, 
-  Shield, 
-  ExternalLink, 
-  Save, 
-  Loader2, 
+import {
+  User,
+  Lock,
+  Bell,
+  Shield,
+  ExternalLink,
+  Save,
+  Loader2,
   Camera,
   CheckCircle2,
   UserCog,
@@ -29,7 +29,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 export default function SettingsPage() {
-  const { data: session, status, update: updateSession } = useSession();
+  const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(false);
@@ -40,17 +40,17 @@ export default function SettingsPage() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [roleToChange, setRoleToChange] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  
+
   // New role modal component
   const RoleChangeModal = () => {
     if (!showRoleModal) return null;
-    
+
     const handleConfirmRoleChange = async () => {
       if (!roleToChange) return;
-      
+
       setRoleLoading(true);
       setErrorMessage("");
-      
+
       try {
         const response = await fetch('/api/auth/update-role', {
           method: 'POST',
@@ -65,19 +65,17 @@ export default function SettingsPage() {
         if (!response.ok) {
           throw new Error(result.error || 'Failed to update role');
         }
-        
+
         // Close modal and show success message
         setShowRoleModal(false);
         setSuccessMessage("Account role updated successfully! Refreshing session...");
-        
+
         // Force session refresh by signing out and redirecting to sign in page
         // This ensures the session is completely refreshed with new role information
         setTimeout(async () => {
           // Use signOut with a redirect to force a complete session refresh
-          await signOut({ 
-            redirect: true,
-            callbackUrl: `/auth/signin?callbackUrl=${encodeURIComponent('/settings')}&message=${encodeURIComponent('Please sign in again to apply your new account type')}`
-          });
+          await authClient.signOut();
+          window.location.href = `/auth/signin?callbackUrl=${encodeURIComponent('/settings')}&message=${encodeURIComponent('Please sign in again to apply your new account type')}`;
         }, 1500);
       } catch (error) {
         console.error('Error updating role:', error);
@@ -86,12 +84,12 @@ export default function SettingsPage() {
         setRoleLoading(false);
       }
     };
-    
+
     const handleCancelRoleChange = () => {
       setShowRoleModal(false);
       setRoleToChange(null);
     };
-    
+
     const getRoleIcon = (role: string) => {
       switch (role) {
         case "STUDENT":
@@ -104,7 +102,7 @@ export default function SettingsPage() {
           return <UserCog className="w-6 h-6" />;
       }
     };
-    
+
     const getRoleName = (role: string) => {
       switch (role) {
         case "STUDENT":
@@ -117,27 +115,27 @@ export default function SettingsPage() {
           return role;
       }
     };
-    
+
     return (
       <>
         {/* Modal backdrop */}
         <div className="fixed inset-0 bg-black/50 z-50" onClick={handleCancelRoleChange} />
-        
+
         {/* Modal content */}
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl z-50 w-11/12 max-w-md p-6">
           <h3 className="text-xl font-bold mb-4 text-center">Change Account Type</h3>
-          
+
           {errorMessage && (
             <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">
               {errorMessage}
             </div>
           )}
-          
+
           <div className="mb-6">
             <p className="text-gray-600 mb-3">
               You are about to change your account type to:
             </p>
-            
+
             <div className="flex items-center gap-3 p-4 bg-gray-100 rounded-xl">
               {roleToChange && (
                 <>
@@ -147,7 +145,7 @@ export default function SettingsPage() {
                   <div>
                     <h4 className="font-medium text-lg">{getRoleName(roleToChange)}</h4>
                     <p className="text-sm text-gray-500">
-                      {roleToChange === "LANDLORD" 
+                      {roleToChange === "LANDLORD"
                         ? "You'll be able to list and manage properties"
                         : roleToChange === "ADMIN"
                           ? "You'll have administrative access to the platform"
@@ -158,7 +156,7 @@ export default function SettingsPage() {
               )}
             </div>
           </div>
-          
+
           <div className="flex gap-3">
             <button
               onClick={handleCancelRoleChange}
@@ -188,11 +186,11 @@ export default function SettingsPage() {
   // Delete Account Modal Component
   const DeleteAccountModal = () => {
     if (!deleteModalOpen) return null;
-    
+
     const handleDeleteAccount = async () => {
       setLoading(true);
       setErrorMessage("");
-      
+
       try {
         const response = await fetch('/api/user/delete-account', {
           method: 'DELETE',
@@ -205,13 +203,11 @@ export default function SettingsPage() {
           const result = await response.json();
           throw new Error(result.error || 'Failed to delete account');
         }
-        
+
         // Account deleted successfully, sign out and redirect
         setDeleteModalOpen(false);
-        await signOut({ 
-          redirect: true,
-          callbackUrl: '/'
-        });
+        await authClient.signOut();
+        window.location.href = '/';
       } catch (error) {
         console.error('Error deleting account:', error);
         setErrorMessage(error instanceof Error ? error.message : 'Failed to delete account');
@@ -219,16 +215,16 @@ export default function SettingsPage() {
         setLoading(false);
       }
     };
-    
+
     const handleCancelDelete = () => {
       setDeleteModalOpen(false);
     };
-    
+
     return (
       <>
         {/* Modal backdrop */}
         <div className="fixed inset-0 bg-black/50 z-50" onClick={handleCancelDelete} />
-        
+
         {/* Modal content */}
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl z-50 w-11/12 max-w-md p-6">
           <div className="text-center mb-6">
@@ -240,13 +236,13 @@ export default function SettingsPage() {
               This action cannot be undone. All your data will be permanently deleted.
             </p>
           </div>
-          
+
           {errorMessage && (
             <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm">
               {errorMessage}
             </div>
           )}
-          
+
           <div className="flex gap-3">
             <button
               onClick={handleCancelDelete}
@@ -297,9 +293,9 @@ export default function SettingsPage() {
   });
 
   // Form hooks
-  const { 
-    register: registerProfile, 
-    handleSubmit: handleProfileSubmit, 
+  const {
+    register: registerProfile,
+    handleSubmit: handleProfileSubmit,
     formState: { errors: profileErrors },
     reset: resetProfile
   } = useForm({
@@ -311,9 +307,9 @@ export default function SettingsPage() {
     }
   });
 
-  const { 
-    register: registerPassword, 
-    handleSubmit: handlePasswordSubmit, 
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
     formState: { errors: passwordErrors },
     reset: resetPassword
   } = useForm({
@@ -325,9 +321,9 @@ export default function SettingsPage() {
     }
   });
 
-  const { 
-    register: registerNotification, 
-    handleSubmit: handleNotificationSubmit, 
+  const {
+    register: registerNotification,
+    handleSubmit: handleNotificationSubmit,
     formState: { errors: notificationErrors },
     reset: resetNotification
   } = useForm({
@@ -342,17 +338,17 @@ export default function SettingsPage() {
 
   // Redirect if not logged in
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (isPending === false && !session) {
       router.push("/auth/signin");
     }
-  }, [status, router]);
-  
+  }, [isPending, session, router]);
+
   // Fetch user data and notification preferences
   useEffect(() => {
-    if (status === "authenticated" && session?.user?.id) {
+    if (isPending === false && session?.user?.id) {
       // Set the initial selected role from session
       setSelectedRole(session?.user?.role || "STUDENT");
-      
+
       // Fetch user profile data
       fetch('/api/user/profile')
         .then(res => res.json())
@@ -363,7 +359,7 @@ export default function SettingsPage() {
               email: data.email || "",
               phone: data.phone || "",
             });
-            
+
             // Update selected role if it exists in the profile
             if (data.role) {
               setSelectedRole(data.role);
@@ -371,7 +367,7 @@ export default function SettingsPage() {
           }
         })
         .catch(err => console.error('Error fetching profile:', err));
-      
+
       // Fetch notification preferences
       fetch('/api/user/notifications')
         .then(res => res.json())
@@ -387,7 +383,7 @@ export default function SettingsPage() {
         })
         .catch(err => console.error('Error fetching notification settings:', err));
     }
-  }, [status, session, resetProfile, resetNotification]);
+  }, [isPending, session, resetProfile, resetNotification]);
 
   // Update profile info
   const onProfileSubmit = async (data: { name: string; email: string; phone?: string }) => {
@@ -406,16 +402,9 @@ export default function SettingsPage() {
       }
 
       const updatedUser = await response.json();
-      
-      // Update session with new user data
-      await updateSession({
-        ...session,
-        user: {
-          ...session?.user,
-          name: updatedUser.name,
-        },
-      });
-      
+
+      // Profile updated - session will be refreshed on next page load
+
       setSuccessMessage("Profile updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
@@ -445,7 +434,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         throw new Error(result.error || 'Failed to update password');
       }
-      
+
       setSuccessMessage("Password updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetPassword();
@@ -473,7 +462,7 @@ export default function SettingsPage() {
       if (!response.ok) {
         throw new Error(result.error || 'Failed to update notification settings');
       }
-      
+
       setSuccessMessage("Notification settings updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
@@ -486,35 +475,35 @@ export default function SettingsPage() {
   // Update profile picture
   const handleProfilePictureUpdate = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0]) return;
-    
+
     const file = e.target.files[0];
     if (file.size > 1024 * 1024) {
       alert("File is too large. Maximum size is 1MB.");
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
       // In a real implementation, we would use FormData to upload the file
       // For now, we'll use FileReader to convert the file to a data URL
       const reader = new FileReader();
-      
+
       reader.onload = async (event) => {
         if (!event.target?.result) {
           throw new Error("Failed to read file");
         }
-        
+
         // Get image data as base64 string
         const imageData = event.target.result as string;
-        
+
         // Send the image data to the server
         const response = await fetch('/api/user/upload-photo', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ 
+          body: JSON.stringify({
             imageData: imageData,
             imageUrl: imageData, // For this demo, we'll use the data URL directly
           }),
@@ -525,22 +514,16 @@ export default function SettingsPage() {
         if (!response.ok) {
           throw new Error(result.error || 'Failed to upload profile picture');
         }
-        
+
         if (result.image) {
           // Update session with new user data only if the image was actually changed
-          await updateSession({
-            ...session,
-            user: {
-              ...session?.user,
-              image: result.image,
-            },
-          });
-          
+          // Profile picture updated
+
           setSuccessMessage("Profile picture updated successfully!");
           setTimeout(() => setSuccessMessage(""), 3000);
         }
       };
-      
+
       // Start reading the file
       reader.readAsDataURL(file);
     } catch (error) {
@@ -555,13 +538,13 @@ export default function SettingsPage() {
   const initiateRoleChange = (role: string) => {
     // Don't do anything if it's the same role
     if (role === selectedRole) return;
-    
+
     setRoleToChange(role);
     setShowRoleModal(true);
   };
 
   // Loading state
-  if (status === "loading") {
+  if (isPending) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-[var(--color-primary-500)] animate-spin" />
@@ -581,7 +564,7 @@ export default function SettingsPage() {
             <span>{successMessage}</span>
           </div>
         )}
-        
+
         {/* Role Change Modal */}
         {showRoleModal && <RoleChangeModal />}
 
@@ -594,44 +577,40 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                  activeTab === "profile" 
-                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
-                    : "hover:bg-gray-50 hover:shadow-sm"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activeTab === "profile"
+                  ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm"
+                  : "hover:bg-gray-50 hover:shadow-sm"
+                  }`}
               >
                 <User className="w-5 h-5" />
                 <span className="font-medium">Profile Information</span>
               </button>
               <button
                 onClick={() => setActiveTab("password")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                  activeTab === "password" 
-                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
-                    : "hover:bg-gray-50 hover:shadow-sm"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activeTab === "password"
+                  ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm"
+                  : "hover:bg-gray-50 hover:shadow-sm"
+                  }`}
               >
                 <Lock className="w-5 h-5" />
                 <span className="font-medium">Password & Security</span>
               </button>
               <button
                 onClick={() => setActiveTab("notifications")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                  activeTab === "notifications" 
-                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
-                    : "hover:bg-gray-50 hover:shadow-sm"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activeTab === "notifications"
+                  ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm"
+                  : "hover:bg-gray-50 hover:shadow-sm"
+                  }`}
               >
                 <Bell className="w-5 h-5" />
                 <span className="font-medium">Notifications</span>
               </button>
               <button
                 onClick={() => setActiveTab("privacy")}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${
-                  activeTab === "privacy" 
-                    ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm" 
-                    : "hover:bg-gray-50 hover:shadow-sm"
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200 ${activeTab === "privacy"
+                  ? "border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-900)] text-[var(--color-primary-400)] shadow-sm"
+                  : "hover:bg-gray-50 hover:shadow-sm"
+                  }`}
               >
                 <Shield className="w-5 h-5" />
                 <span className="font-medium">Privacy & Data</span>
@@ -645,7 +624,7 @@ export default function SettingsPage() {
             {activeTab === "profile" && (
               <div className="animate-fade-in-up">
                 <h2 className="text-2xl font-semibold mb-6">Profile Information</h2>
-                
+
                 {/* Profile Picture */}
                 <div className="mb-8">
                   <div className="flex items-center gap-6">
@@ -665,15 +644,15 @@ export default function SettingsPage() {
                           </span>
                         )}
                       </div>
-                      <label 
-                        htmlFor="profile-picture" 
+                      <label
+                        htmlFor="profile-picture"
                         className="absolute -bottom-1 -right-1 bg-white p-1.5 rounded-full shadow-md cursor-pointer hover:bg-gray-50 hover:shadow-lg hover:scale-110 transition-all duration-200"
                       >
                         <Camera className="w-4 h-4 text-gray-700" />
-                        <input 
-                          type="file" 
-                          id="profile-picture" 
-                          className="hidden" 
+                        <input
+                          type="file"
+                          id="profile-picture"
+                          className="hidden"
                           accept="image/*"
                           onChange={handleProfilePictureUpdate}
                         />
@@ -687,13 +666,13 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Name */}
                     <div>
-                      <label 
-                        htmlFor="name" 
+                      <label
+                        htmlFor="name"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
                         Full Name
@@ -702,22 +681,21 @@ export default function SettingsPage() {
                         {...registerProfile("name")}
                         id="name"
                         type="text"
-                        className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
-                          profileErrors.name 
-                            ? "border-red-300 focus:ring-red-500" 
-                            : "border-gray-300 focus:ring-[var(--color-primary-500)]"
-                        } focus:border-transparent focus:outline-none focus:ring-2`}
+                        className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${profileErrors.name
+                          ? "border-red-300 focus:ring-red-500"
+                          : "border-gray-300 focus:ring-[var(--color-primary-500)]"
+                          } focus:border-transparent focus:outline-none focus:ring-2`}
                         placeholder="Your name"
                       />
                       {profileErrors.name && (
                         <p className="mt-1 text-sm text-red-600">{profileErrors.name.message}</p>
                       )}
                     </div>
-                    
+
                     {/* Email */}
                     <div>
-                      <label 
-                        htmlFor="email" 
+                      <label
+                        htmlFor="email"
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
                         Email Address
@@ -726,11 +704,10 @@ export default function SettingsPage() {
                         {...registerProfile("email")}
                         id="email"
                         type="email"
-                        className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
-                          profileErrors.email 
-                            ? "border-red-300 focus:ring-red-500" 
-                            : "border-gray-300 focus:ring-[var(--color-primary-500)]"
-                        } focus:border-transparent focus:outline-none focus:ring-2`}
+                        className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${profileErrors.email
+                          ? "border-red-300 focus:ring-red-500"
+                          : "border-gray-300 focus:ring-[var(--color-primary-500)]"
+                          } focus:border-transparent focus:outline-none focus:ring-2`}
                         placeholder="your.email@example.com"
                         disabled
                       />
@@ -742,11 +719,11 @@ export default function SettingsPage() {
                       </p>
                     </div>
                   </div>
-                  
+
                   {/* Phone */}
                   <div>
-                    <label 
-                      htmlFor="phone" 
+                    <label
+                      htmlFor="phone"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
                       Phone Number
@@ -755,47 +732,44 @@ export default function SettingsPage() {
                       {...registerProfile("phone")}
                       id="phone"
                       type="tel"
-                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
-                        profileErrors.phone 
-                          ? "border-red-300 focus:ring-red-500" 
-                          : "border-gray-300 focus:ring-[var(--color-primary-500)]"
-                      } focus:border-transparent focus:outline-none focus:ring-2`}
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${profileErrors.phone
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-[var(--color-primary-500)]"
+                        } focus:border-transparent focus:outline-none focus:ring-2`}
                       placeholder="Your phone number"
                     />
                     {profileErrors.phone && (
                       <p className="mt-1 text-sm text-red-600">{profileErrors.phone.message}</p>
                     )}
                   </div>
-                  
+
                   {/* User Role */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Account Type
                     </label>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                       {/* Student Role Card */}
-                      <div 
-                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${
-                          selectedRole === "STUDENT" 
-                            ? "border-[var(--color-primary-500)] bg-gradient-to-br from-[var(--color-primary-800)] to-[var(--color-primary-900)] text-white shadow-lg" 
-                            : "border-gray-200 hover:bg-gray-50"
-                        }`}
+                      <div
+                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${selectedRole === "STUDENT"
+                          ? "border-[var(--color-primary-500)] bg-gradient-to-br from-[var(--color-primary-800)] to-[var(--color-primary-900)] text-white shadow-lg"
+                          : "border-gray-200 hover:bg-gray-50"
+                          }`}
                         onClick={() => initiateRoleChange("STUDENT")}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full bg-gray-100`}>
-                            <GraduationCap className={`w-5 h-5 ${
-                              selectedRole === "STUDENT" 
-                                ? "text-[var(--color-primary-400)]" 
+                            <div className={`p-2 rounded-full bg-gray-100`}>
+                              <GraduationCap className={`w-5 h-5 ${selectedRole === "STUDENT"
+                                ? "text-[var(--color-primary-400)]"
                                 : "text-gray-600"
-                            }`} />
-                            
-                          </div>
-                          <div>
-                          <h3 className={`font-medium ${selectedRole === "STUDENT" ? "text-[var(--color-primary-400)]" : "text-gray-600"}`}>Student</h3>
-                          </div>
+                                }`} />
+
+                            </div>
+                            <div>
+                              <h3 className={`font-medium ${selectedRole === "STUDENT" ? "text-[var(--color-primary-400)]" : "text-gray-600"}`}>Student</h3>
+                            </div>
                           </div>
                           <div>
                             {selectedRole === "STUDENT" && (
@@ -809,29 +783,27 @@ export default function SettingsPage() {
                           Browse and book accommodations near your university
                         </p>
                       </div>
-                      
+
                       {/* Landlord Role Card */}
-                      <div 
-                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${
-                          selectedRole === "LANDLORD" 
-                            ? "border-[var(--color-primary-500)] bg-gradient-to-br from-[var(--color-primary-800)] to-[var(--color-primary-900)] text-white shadow-lg" 
-                            : "border-gray-200 hover:bg-gray-50"
-                        }`}
+                      <div
+                        className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${selectedRole === "LANDLORD"
+                          ? "border-[var(--color-primary-500)] bg-gradient-to-br from-[var(--color-primary-800)] to-[var(--color-primary-900)] text-white shadow-lg"
+                          : "border-gray-200 hover:bg-gray-50"
+                          }`}
                         onClick={() => initiateRoleChange("LANDLORD")}
                       >
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-full bg-gray-100`}>
-                            <Building className={`w-5 h-5 ${
-                              selectedRole === "LANDLORD" 
-                                ? "text-[var(--color-primary-400)]" 
+                            <div className={`p-2 rounded-full bg-gray-100`}>
+                              <Building className={`w-5 h-5 ${selectedRole === "LANDLORD"
+                                ? "text-[var(--color-primary-400)]"
                                 : "text-gray-600"
-                            }`} />
-                            
-                          </div>
-                          <div>
-                          <h3 className={`font-medium ${selectedRole === "LANDLORD" ? "text-[var(--color-primary-400)]" : "text-gray-600"}`}>Property Owner</h3>
-                          </div>
+                                }`} />
+
+                            </div>
+                            <div>
+                              <h3 className={`font-medium ${selectedRole === "LANDLORD" ? "text-[var(--color-primary-400)]" : "text-gray-600"}`}>Property Owner</h3>
+                            </div>
                           </div>
                           <div>
                             {selectedRole === "LANDLORD" && (
@@ -845,28 +817,25 @@ export default function SettingsPage() {
                           List and manage your properties for student rental
                         </p>
                       </div>
-                      
+
                       {/* Admin Role Card - only show if user is already admin */}
                       {session?.user?.role === "ADMIN" && (
-                        <div 
-                          className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${
-                            selectedRole === "ADMIN" 
-                              ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] shadow-lg" 
-                              : "border-gray-200 hover:bg-gray-50"
-                          }`}
+                        <div
+                          className={`border rounded-xl p-4 flex flex-col gap-3 cursor-pointer transition-all duration-300 hover:border-[var(--color-primary-300)] hover:shadow-lg hover:scale-[1.02] ${selectedRole === "ADMIN"
+                            ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)] shadow-lg"
+                            : "border-gray-200 hover:bg-gray-50"
+                            }`}
                           onClick={() => initiateRoleChange("ADMIN")}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-full ${
-                              selectedRole === "ADMIN" 
-                                ? "bg-[var(--color-primary-100)]" 
-                                : "bg-gray-100"
-                            }`}>
-                              <ShieldCheck className={`w-5 h-5 ${
-                                selectedRole === "ADMIN" 
-                                  ? "text-[var(--color-primary-700)]" 
-                                  : "text-gray-600"
-                              }`} />
+                            <div className={`p-2 rounded-full ${selectedRole === "ADMIN"
+                              ? "bg-[var(--color-primary-100)]"
+                              : "bg-gray-100"
+                              }`}>
+                              <ShieldCheck className={`w-5 h-5 ${selectedRole === "ADMIN"
+                                ? "text-[var(--color-primary-700)]"
+                                : "text-gray-600"
+                                }`} />
                             </div>
                             <div>
                               <h3 className="font-medium">Administrator</h3>
@@ -883,7 +852,7 @@ export default function SettingsPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     <p className="text-sm text-gray-500">
                       Changing your account type will affect what you can do on the platform. Your data will be preserved across account types.
                     </p>
@@ -912,12 +881,12 @@ export default function SettingsPage() {
             {activeTab === "password" && (
               <div className="animate-fade-in-up">
                 <h2 className="text-2xl font-semibold mb-6">Password & Security</h2>
-                
+
                 <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="space-y-6">
                   {/* Current Password */}
                   <div>
-                    <label 
-                      htmlFor="currentPassword" 
+                    <label
+                      htmlFor="currentPassword"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
                       Current Password
@@ -926,22 +895,21 @@ export default function SettingsPage() {
                       {...registerPassword("currentPassword")}
                       id="currentPassword"
                       type="password"
-                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
-                        passwordErrors.currentPassword 
-                          ? "border-red-300 focus:ring-red-500" 
-                          : "border-gray-300 focus:ring-[var(--color-primary-500)]"
-                      } focus:border-transparent focus:outline-none focus:ring-2`}
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${passwordErrors.currentPassword
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-[var(--color-primary-500)]"
+                        } focus:border-transparent focus:outline-none focus:ring-2`}
                       placeholder="Enter your current password"
                     />
                     {passwordErrors.currentPassword && (
                       <p className="mt-1 text-sm text-red-600">{passwordErrors.currentPassword.message}</p>
                     )}
                   </div>
-                  
+
                   {/* New Password */}
                   <div>
-                    <label 
-                      htmlFor="newPassword" 
+                    <label
+                      htmlFor="newPassword"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
                       New Password
@@ -950,11 +918,10 @@ export default function SettingsPage() {
                       {...registerPassword("newPassword")}
                       id="newPassword"
                       type="password"
-                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
-                        passwordErrors.newPassword 
-                          ? "border-red-300 focus:ring-red-500" 
-                          : "border-gray-300 focus:ring-[var(--color-primary-500)]"
-                      } focus:border-transparent focus:outline-none focus:ring-2`}
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${passwordErrors.newPassword
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-[var(--color-primary-500)]"
+                        } focus:border-transparent focus:outline-none focus:ring-2`}
                       placeholder="Create new password"
                     />
                     {passwordErrors.newPassword && (
@@ -964,11 +931,11 @@ export default function SettingsPage() {
                       Password should be at least 8 characters with a mix of letters, numbers & symbols
                     </p>
                   </div>
-                  
+
                   {/* Confirm Password */}
                   <div>
-                    <label 
-                      htmlFor="confirmPassword" 
+                    <label
+                      htmlFor="confirmPassword"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
                       Confirm New Password
@@ -977,11 +944,10 @@ export default function SettingsPage() {
                       {...registerPassword("confirmPassword")}
                       id="confirmPassword"
                       type="password"
-                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${
-                        passwordErrors.confirmPassword 
-                          ? "border-red-300 focus:ring-red-500" 
-                          : "border-gray-300 focus:ring-[var(--color-primary-500)]"
-                      } focus:border-transparent focus:outline-none focus:ring-2`}
+                      className={`w-full px-4 py-2.5 rounded-xl border transition-all duration-200 hover:border-[var(--color-primary-300)] ${passwordErrors.confirmPassword
+                        ? "border-red-300 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-[var(--color-primary-500)]"
+                        } focus:border-transparent focus:outline-none focus:ring-2`}
                       placeholder="Confirm your new password"
                     />
                     {passwordErrors.confirmPassword && (
@@ -1032,12 +998,12 @@ export default function SettingsPage() {
               <div className="animate-fade-in-up">
                 <h2 className="text-2xl font-semibold mb-6">Notification Settings</h2>
                 <h3 className="text-lg font-medium mb-3 text-gray-500">NOTE: Notifications are currently under development and will be implemented in the future.</h3>
-                
+
                 <form onSubmit={handleNotificationSubmit(onNotificationSubmit)} className="space-y-8">
                   {/* Email Notifications */}
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Email Notifications</h3>
-                    
+
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1045,55 +1011,55 @@ export default function SettingsPage() {
                           <p className="text-sm text-gray-500">Receive notifications via email</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer group">
-                          <input 
-                            type="checkbox" 
-                            {...registerNotification("emailNotifications")} 
-                            className="sr-only peer" 
+                          <input
+                            type="checkbox"
+                            {...registerNotification("emailNotifications")}
+                            className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium">Booking Updates</h4>
                           <p className="text-sm text-gray-500">Get notified about your booking status</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer group">
-                          <input 
-                            type="checkbox" 
-                            {...registerNotification("bookingNotifications")} 
-                            className="sr-only peer" 
+                          <input
+                            type="checkbox"
+                            {...registerNotification("bookingNotifications")}
+                            className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium">New Messages</h4>
                           <p className="text-sm text-gray-500">Get notified when you receive messages</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer group">
-                          <input 
-                            type="checkbox" 
-                            {...registerNotification("messageNotifications")} 
-                            className="sr-only peer" 
+                          <input
+                            type="checkbox"
+                            {...registerNotification("messageNotifications")}
+                            className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium">Marketing & Promotions</h4>
                           <p className="text-sm text-gray-500">Receive offers and promotional content</p>
                         </div>
                         <label className="relative inline-flex items-center cursor-pointer group">
-                          <input 
-                            type="checkbox" 
-                            {...registerNotification("marketingNotifications")} 
-                            className="sr-only peer" 
+                          <input
+                            type="checkbox"
+                            {...registerNotification("marketingNotifications")}
+                            className="sr-only peer"
                           />
                           <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--color-primary-500)] group-hover:bg-gray-300 peer-checked:group-hover:bg-[var(--color-primary-600)]"></div>
                         </label>
@@ -1124,7 +1090,7 @@ export default function SettingsPage() {
             {activeTab === "privacy" && (
               <div className="animate-fade-in-up">
                 <h2 className="text-2xl font-semibold mb-6">Privacy & Data</h2>
-                
+
                 <div className="space-y-8">
                   {/* Data Usage Section */}
                   <div>
@@ -1132,26 +1098,26 @@ export default function SettingsPage() {
                     <p className="text-gray-600 mb-4">
                       We're committed to protecting your personal information and being transparent about how we use your data.
                     </p>
-                    
+
                     <div className="space-y-3">
-                      <Link 
-                        href="/privacy-policy" 
+                      <Link
+                        href="/privacy-policy"
                         className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all duration-200 group"
                       >
                         <span className="font-medium group-hover:text-[var(--color-primary-600)] transition-colors">Privacy Policy</span>
                         <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-[var(--color-primary-500)] transition-colors" />
                       </Link>
-                      
-                      <Link 
-                        href="/terms-of-service" 
+
+                      <Link
+                        href="/terms-of-service"
                         className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all duration-200 group"
                       >
                         <span className="font-medium group-hover:text-[var(--color-primary-600)] transition-colors">Terms of Service</span>
                         <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-[var(--color-primary-500)] transition-colors" />
                       </Link>
-                      
-                      <Link 
-                        href="/cookie-policy" 
+
+                      <Link
+                        href="/cookie-policy"
                         className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-[var(--color-primary-300)] hover:shadow-sm transition-all duration-200 group"
                       >
                         <span className="font-medium group-hover:text-[var(--color-primary-600)] transition-colors">Cookie Policy</span>
@@ -1159,15 +1125,15 @@ export default function SettingsPage() {
                       </Link>
                     </div>
                   </div>
-                  
+
                   {/* Account Data Section */}
                   <div>
                     <h3 className="text-lg font-medium mb-3">Your Account Data</h3>
-                    
+
                     <div className="space-y-4">
-                     
-                      
-                      <button 
+
+
+                      <button
                         className="w-full text-left px-4 py-3 bg-gray-50 rounded-xl hover:bg-red-50 hover:border-red-200 hover:border hover:shadow-sm transition-all duration-200 group"
                         onClick={() => setDeleteModalOpen(true)}
                       >
@@ -1186,4 +1152,5 @@ export default function SettingsPage() {
       </div>
     </div>
 
-  )}
+  )
+}

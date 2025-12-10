@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { hashPassword, verifyPassword } from '@/lib/auth'
+import { hashPassword, verifyPassword } from '@/lib/password'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
+import { getSession } from '@/lib/auth-server'
 import { authRateLimit } from '@/lib/rate-limit'
-import { withCSRFProtection } from '@/lib/csrf'
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
   newPassword: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-export const POST = withCSRFProtection(async (request: NextRequest) => {
+export async function POST(request: NextRequest) {
   // Apply rate limiting
   const rateLimitResult = authRateLimit(request);
   if (rateLimitResult) {
@@ -20,8 +18,8 @@ export const POST = withCSRFProtection(async (request: NextRequest) => {
   }
 
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -50,7 +48,7 @@ export const POST = withCSRFProtection(async (request: NextRequest) => {
 
     // Verify current password
     const isPasswordValid = await verifyPassword(validatedData.currentPassword, user.password)
-    
+
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
@@ -60,7 +58,7 @@ export const POST = withCSRFProtection(async (request: NextRequest) => {
 
     // Hash and update new password
     const hashedPassword = await hashPassword(validatedData.newPassword)
-    
+
     await prisma.user.update({
       where: { id: user.id },
       data: { password: hashedPassword }
@@ -81,4 +79,4 @@ export const POST = withCSRFProtection(async (request: NextRequest) => {
       { status: 500 }
     )
   }
-}) 
+}

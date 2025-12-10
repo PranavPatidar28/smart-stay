@@ -1,68 +1,31 @@
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
-import { csrfMiddleware } from "./middleware-csrf";
+import { NextRequest, NextResponse } from "next/server";
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token;
-    const isAuth = !!token;
-    const isAuthPage = req.nextUrl.pathname.startsWith("/auth");
-    const isProtectedPage = req.nextUrl.pathname.startsWith("/owner-dashboard") || 
-                           req.nextUrl.pathname.startsWith("/favorites") ||
-                           req.nextUrl.pathname.startsWith("/profile");
-    const isRoleSelectionPage = req.nextUrl.pathname === "/auth/select-role";
+export async function middleware(request: NextRequest) {
+  const sessionCookie = request.cookies.get("better-auth.session_token");
+  const isAuth = !!sessionCookie;
+  const pathname = request.nextUrl.pathname;
 
-    // If user is on an auth page and is already authenticated, redirect to home
-    if (isAuthPage && isAuth && !isRoleSelectionPage) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
+  const isAuthPage = pathname.startsWith("/auth");
+  const isRoleSelectionPage = pathname === "/auth/select-role";
+  const isProtectedPage =
+    pathname.startsWith("/owner-dashboard") ||
+    pathname.startsWith("/favorites") ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/settings");
 
-    // If user is authenticated but doesn't have a role, redirect to role selection
-    if (isAuth && !token?.role && !isRoleSelectionPage && !isAuthPage) {
-      return NextResponse.redirect(new URL("/auth/select-role", req.url));
-    }
-
-    // If user has a role and tries to access role selection page, redirect to home
-    if (isAuth && token?.role && isRoleSelectionPage) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
-
-    // Protect dashboard routes for landlords only
-    if (req.nextUrl.pathname.startsWith("/owner-dashboard")) {
-      if (!isAuth) {
-        return NextResponse.redirect(new URL("/auth/signin", req.url));
-      }
-      if (token?.role !== "LANDLORD") {
-        return NextResponse.redirect(new URL("/", req.url));
-      }
-    }
-
-    // Protect other authenticated routes
-    if (isProtectedPage && !isAuth) {
-      return NextResponse.redirect(new URL("/auth/signin", req.url));
-    }
-
-    // Apply CSRF protection for authenticated users
-    if (isAuth) {
-      const response = NextResponse.next();
-      return csrfMiddleware(req, response);
-    }
-
-    return null;
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // Allow access to auth pages without authentication
-        if (req.nextUrl.pathname.startsWith("/auth")) {
-          return true;
-        }
-        // For other protected routes, require authentication
-        return !!token;
-      },
-    },
+  // If user is on an auth page and is already authenticated, redirect to home
+  // Exception: allow access to role selection page
+  if (isAuthPage && isAuth && !isRoleSelectionPage) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
-);
+
+  // Redirect unauthenticated users to sign-in for protected pages
+  if (isProtectedPage && !isAuth) {
+    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  }
+
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: [
@@ -71,7 +34,5 @@ export const config = {
     "/favorites/:path*",
     "/profile/:path*",
     "/settings/:path*",
-    // "/" is removed so home page is public
-    // "/listings" is not included, so it remains public
   ],
-}; 
+};

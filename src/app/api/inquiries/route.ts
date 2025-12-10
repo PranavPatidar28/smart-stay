@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../auth/[...nextauth]/route'
+import { getSession } from '@/lib/auth-server'
 
 const createInquirySchema = z.object({
   propertyId: z.string().cuid(),
@@ -11,8 +10,8 @@ const createInquirySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -29,11 +28,11 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where: Record<string, unknown> = {}
-    
+
     if (propertyId) {
       where.propertyId = propertyId
     }
-    
+
     if (status) {
       where.status = status
     }
@@ -114,8 +113,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },

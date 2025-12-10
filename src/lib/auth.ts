@@ -1,58 +1,54 @@
-import bcrypt from 'bcryptjs'
-import { prisma } from './prisma'
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { prisma } from "./prisma";
 
-export async function hashPassword(password: string): Promise<string> {
-  const saltRounds = 12
-  return bcrypt.hash(password, saltRounds)
-}
+export const auth = betterAuth({
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword)
-}
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 6,
+  },
 
-export async function createUser(data: {
-  email: string
-  name: string
-  password: string
-  phone?: string
-  role?: 'STUDENT' | 'LANDLORD' | 'ADMIN'
-}) {
-  const hashedPassword = await hashPassword(data.password)
-  
-  return prisma.user.create({
-    data: {
-      ...data,
-      password: hashedPassword,
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      role: true,
-      verified: true,
-      createdAt: true,
-    },
-  })
-}
+  },
 
-export async function getUserByEmail(email: string) {
-  return prisma.user.findUnique({
-    where: { email },
-  })
-}
-
-export async function getUserById(id: string) {
-  return prisma.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      role: true,
-      verified: true,
-      createdAt: true,
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: null,
+        input: true,
+      },
+      phone: {
+        type: "string",
+        required: false,
+        defaultValue: null,
+        input: true,
+      },
+      verified: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
     },
-  })
-} 
+  },
+
+  session: {
+    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    updateAge: 60 * 60 * 24, // Update session every 24 hours
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 5, // 5 minutes cache
+    },
+  },
+});
+
+export type Session = typeof auth.$Infer.Session;
+export type User = typeof auth.$Infer.Session.user;

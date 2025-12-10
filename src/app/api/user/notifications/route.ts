@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
+import { getSession } from '@/lib/auth-server'
 
 // This would normally be in its own model, but for simplicity we're creating it here
 // In a real app, you'd extend the User model or create a separate UserPreferences model
@@ -14,8 +13,8 @@ const notificationSchema = z.object({
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -42,8 +41,8 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -56,7 +55,7 @@ export async function PUT(request: NextRequest) {
 
     // In a real app, we would update this in the database
     // For demo purposes, we're just returning the validated data
-    
+
     // Example of how this would be saved in a real app:
     // await prisma.userPreferences.upsert({
     //   where: { userId: session.user.id },

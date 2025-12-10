@@ -6,7 +6,7 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting database seeding...')
 
-  // Clear existing data
+  // Clear existing data (including Better Auth tables)
   await prisma.notification.deleteMany()
   await prisma.review.deleteMany()
   await prisma.booking.deleteMany()
@@ -16,6 +16,9 @@ async function main() {
   await prisma.propertyImage.deleteMany()
   await prisma.property.deleteMany()
   await prisma.amenity.deleteMany()
+  await prisma.session.deleteMany()
+  await prisma.account.deleteMany()
+  await prisma.verification.deleteMany()
   await prisma.user.deleteMany()
 
   console.log('🗑️  Cleared existing data')
@@ -28,25 +31,25 @@ async function main() {
     { name: 'Laundry', category: 'Laundry', icon: 'washing-machine' },
     { name: 'AC', category: 'Climate', icon: 'snowflake' },
     { name: 'Heating', category: 'Climate', icon: 'thermometer' },
-    
+
     // Security
     { name: 'Security System', category: 'Security', icon: 'shield' },
     { name: 'CCTV', category: 'Security', icon: 'video' },
     { name: 'Gated Community', category: 'Security', icon: 'lock' },
-    
+
     // Parking & Transport
     { name: 'Parking', category: 'Transport', icon: 'car' },
     { name: 'Bike Storage', category: 'Transport', icon: 'bike' },
     { name: 'Near Bus Stop', category: 'Transport', icon: 'bus' },
     { name: 'Near Metro', category: 'Transport', icon: 'train' },
-    
+
     // Recreation
     { name: 'Gym', category: 'Recreation', icon: 'dumbbell' },
     { name: 'Pool', category: 'Recreation', icon: 'swimming' },
     { name: 'Garden', category: 'Recreation', icon: 'tree' },
     { name: 'Study Room', category: 'Recreation', icon: 'book-open' },
     { name: 'Common Room', category: 'Recreation', icon: 'users' },
-    
+
     // Additional Features
     { name: 'Furnished', category: 'Furniture', icon: 'sofa' },
     { name: 'Pet Friendly', category: 'Pets', icon: 'paw' },
@@ -58,14 +61,14 @@ async function main() {
   ]
 
   const createdAmenities = await Promise.all(
-    amenities.map(amenity => 
+    amenities.map(amenity =>
       prisma.amenity.create({ data: amenity })
     )
   )
 
   console.log(`✅ Created ${createdAmenities.length} amenities`)
 
-  // Create users
+  // Create users with Better Auth Account model for passwords
   const hashedPassword = await bcrypt.hash('password123', 12)
 
   const users = [
@@ -75,6 +78,7 @@ async function main() {
       phone: '+91-9876543210',
       role: UserRole.LANDLORD,
       verified: true,
+      emailVerified: true,
       image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
     },
     {
@@ -83,6 +87,7 @@ async function main() {
       phone: '+91-9876543211',
       role: UserRole.LANDLORD,
       verified: true,
+      emailVerified: true,
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     },
     {
@@ -91,6 +96,7 @@ async function main() {
       phone: '+91-9876543212',
       role: UserRole.LANDLORD,
       verified: false,
+      emailVerified: false,
       image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
     },
     {
@@ -99,6 +105,7 @@ async function main() {
       phone: '+91-9876543213',
       role: UserRole.STUDENT,
       verified: true,
+      emailVerified: true,
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     },
     {
@@ -107,6 +114,7 @@ async function main() {
       phone: '+91-9876543214',
       role: UserRole.STUDENT,
       verified: true,
+      emailVerified: true,
       image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face',
     },
     {
@@ -115,6 +123,7 @@ async function main() {
       phone: '+91-9876543215',
       role: UserRole.STUDENT,
       verified: false,
+      emailVerified: false,
       image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
     },
     {
@@ -123,6 +132,7 @@ async function main() {
       phone: '+91-9876543216',
       role: UserRole.LANDLORD,
       verified: true,
+      emailVerified: true,
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     },
     {
@@ -131,17 +141,31 @@ async function main() {
       phone: '+91-9876543217',
       role: UserRole.LANDLORD,
       verified: true,
+      emailVerified: true,
       image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
     },
   ]
 
+  // Create users and their accounts (Better Auth stores passwords in Account)
   const createdUsers = await Promise.all(
-    users.map(user => 
-      prisma.user.create({ data: user })
-    )
+    users.map(async (user) => {
+      const createdUser = await prisma.user.create({ data: user })
+
+      // Create credential account for the user (Better Auth pattern)
+      await prisma.account.create({
+        data: {
+          userId: createdUser.id,
+          accountId: createdUser.id,
+          providerId: 'credential',
+          password: hashedPassword,
+        }
+      })
+
+      return createdUser
+    })
   )
 
-  console.log(`✅ Created ${createdUsers.length} users`)
+  console.log(`✅ Created ${createdUsers.length} users with accounts`)
 
   // Create properties
   const properties = [
@@ -486,7 +510,7 @@ async function main() {
   const createdProperties = await Promise.all(
     properties.map(async (property) => {
       const { images, amenities, ...propertyData } = property
-      
+
       const createdProperty = await prisma.property.create({
         data: propertyData,
       })
@@ -761,7 +785,7 @@ async function main() {
 
     if (propertyReviews.length > 0) {
       const averageRating = propertyReviews.reduce((sum, review) => sum + review.rating, 0) / propertyReviews.length
-      
+
       await prisma.property.update({
         where: { id: property.id },
         data: { rating: averageRating },

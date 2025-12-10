@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '../../auth/[...nextauth]/route'
+import { getSession } from '@/lib/auth-server'
 
 const updateReviewSchema = z.object({
   rating: z.number().min(1).max(5).optional(),
@@ -14,8 +13,8 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -96,8 +95,8 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-    
+    const session = await getSession()
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -134,7 +133,7 @@ export async function DELETE(
       select: { rating: true },
     })
 
-    const averageRating = remainingReviews.length > 0 
+    const averageRating = remainingReviews.length > 0
       ? remainingReviews.reduce((sum, review) => sum + review.rating, 0) / remainingReviews.length
       : 0
 

@@ -33,7 +33,7 @@ const backgroundPatternStyles = `
     animation: pulse 4s ease-in-out infinite;
   }
 `;
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import {
   showSuccess,
   showError,
@@ -188,8 +188,8 @@ const generatePlaceholderActivities = (properties: Property[]): Activity[] => {
       idx === 0
         ? `Property "${property.title}" has been viewed recently`
         : idx === 1
-        ? `New inquiry received for "${property.title}"`
-        : `Recent payment activity for "${property.title}"`,
+          ? `New inquiry received for "${property.title}"`
+          : `Recent payment activity for "${property.title}"`,
     time: idx === 0 ? "Today" : idx === 1 ? "Yesterday" : "Last week",
     propertyId: parseInt(property.id),
     propertyTitle: property.title,
@@ -358,8 +358,8 @@ function PropertyModal({
         typeof amenity === "string"
           ? amenity
           : amenity.amenity
-          ? amenity.amenity.name
-          : ""
+            ? amenity.amenity.name
+            : ""
       )
       .filter(Boolean);
   }, [initialValues?.amenities]);
@@ -403,10 +403,10 @@ function PropertyModal({
       typeof initialValues?.image === "string"
         ? initialValues.image
         : typeof initialValues?.image === "object" && initialValues?.image
-        ? (initialValues.image as any).url || ""
-        : processedImages.length > 0
-        ? processedImages[0]
-        : "",
+          ? (initialValues.image as any).url || ""
+          : processedImages.length > 0
+            ? processedImages[0]
+            : "",
     description: initialValues?.description || "",
     bedrooms: initialValues?.bedrooms || 1,
     bathrooms: initialValues?.bathrooms || 1,
@@ -732,39 +732,39 @@ function PropertyModal({
 
         // Clean the data and add required properties for Property type
         const cleanData: Property & { images: string[]; amenities: string[] } =
-          {
-            id: String(form.id), // Convert to string for Property type
-            title: form.title,
-            description: form.description,
-            location: form.location,
-            latitude: form.latitude,
-            longitude: form.longitude,
-            price: form.price,
-            type: form.type,
-            status: form.status,
-            views: 0, // Default value for new properties
-            inquiries: 0, // Default value for new properties
-            rating: 0, // Default value for new properties
-            image: form.image,
-            lastUpdated: new Date().toISOString(), // Current date
-            bedrooms: form.bedrooms,
-            bathrooms: form.bathrooms,
-            availableFrom: form.availableFrom,
-            virtualTourUrl: form.virtualTourUrl,
-            seoKeywords: form.seoKeywords,
-            contactPhone: form.contactPhone,
-            contactEmail: form.contactEmail,
-            deposit: form.deposit,
-            utilities: form.utilities,
-            petFriendly: form.petFriendly,
-            furnished: form.furnished,
-            parking: form.parking,
-            amenities: form.amenities,
-            images: processedImages,
-            // Optional properties with defaults
-            earnings: 0,
-            occupancy: 0,
-          };
+        {
+          id: String(form.id), // Convert to string for Property type
+          title: form.title,
+          description: form.description,
+          location: form.location,
+          latitude: form.latitude,
+          longitude: form.longitude,
+          price: form.price,
+          type: form.type,
+          status: form.status,
+          views: 0, // Default value for new properties
+          inquiries: 0, // Default value for new properties
+          rating: 0, // Default value for new properties
+          image: form.image,
+          lastUpdated: new Date().toISOString(), // Current date
+          bedrooms: form.bedrooms,
+          bathrooms: form.bathrooms,
+          availableFrom: form.availableFrom,
+          virtualTourUrl: form.virtualTourUrl,
+          seoKeywords: form.seoKeywords,
+          contactPhone: form.contactPhone,
+          contactEmail: form.contactEmail,
+          deposit: form.deposit,
+          utilities: form.utilities,
+          petFriendly: form.petFriendly,
+          furnished: form.furnished,
+          parking: form.parking,
+          amenities: form.amenities,
+          images: processedImages,
+          // Optional properties with defaults
+          earnings: 0,
+          occupancy: 0,
+        };
 
         // Call onSave and don't reset isSubmitting here - let parent component control this
         onSave(cleanData);
@@ -894,13 +894,12 @@ function PropertyModal({
                     >
                       <div
                         className={`flex items-center justify-center w-9 h-9 rounded-full border-2 transition-all duration-300
-                        ${
-                          step > idx
+                        ${step > idx
                             ? "bg-[var(--color-primary-500)] border-[var(--color-primary-500)] text-white"
                             : step === idx
-                            ? "bg-white border-[var(--color-primary-500)] text-[var(--color-primary-600)] shadow-lg"
-                            : "bg-gray-100 border-gray-300 text-gray-400"
-                        }
+                              ? "bg-white border-[var(--color-primary-500)] text-[var(--color-primary-600)] shadow-lg"
+                              : "bg-gray-100 border-gray-300 text-gray-400"
+                          }
                       `}
                       >
                         <span className="font-bold text-base">{idx + 1}</span>
@@ -914,11 +913,10 @@ function PropertyModal({
                     {idx < 4 && (
                       <div
                         className={`flex-1 h-1 mx-1 sm:mx-2 rounded-full transition-all duration-300
-                        ${
-                          step > idx
+                        ${step > idx
                             ? "bg-[var(--color-primary-500)]"
                             : "bg-gray-200"
-                        }`}
+                          }`}
                       ></div>
                     )}
                   </div>
@@ -942,11 +940,10 @@ function PropertyModal({
                           onChange={(e) =>
                             handleChange("title", e.target.value)
                           }
-                          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${
-                            validationErrors.title
-                              ? "border-red-300"
-                              : "border-gray-200"
-                          }`}
+                          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${validationErrors.title
+                            ? "border-red-300"
+                            : "border-gray-200"
+                            }`}
                           placeholder="e.g., Modern Student Apartment Near Campus"
                         />
                         <FileText className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -987,11 +984,10 @@ function PropertyModal({
                               handleChange("longitude", undefined);
                             }
                           }}
-                          className={`w-full px-10 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${
-                            touched.location && !form.location
-                              ? "border-red-300"
-                              : "border-gray-200"
-                          }`}
+                          className={`w-full px-10 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${touched.location && !form.location
+                            ? "border-red-300"
+                            : "border-gray-200"
+                            }`}
                           placeholder="e.g., 2 km from University Campus"
                           onFocus={() => setShowLocationSuggestions(true)}
                           onBlur={() =>
@@ -1036,11 +1032,10 @@ function PropertyModal({
                             type="button"
                             onClick={() => handleChange("type", type.value)}
                             className={`group w-full h-full p-6 rounded-2xl border-2 transition-all duration-300 shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer
-          ${
-            form.type === type.value
-              ? "border-[var(--color-primary-500)] bg-[var(--color-primary-600)] scale-105 shadow-2xl"
-              : "border-gray-200 bg-white hover:border-[var(--color-primary-300)] hover:scale-105"
-          }`}
+          ${form.type === type.value
+                                ? "border-[var(--color-primary-500)] bg-[var(--color-primary-600)] scale-105 shadow-2xl"
+                                : "border-gray-200 bg-white hover:border-[var(--color-primary-300)] hover:scale-105"
+                              }`}
                             aria-pressed={form.type === type.value}
                           >
                             <span className="text-5xl mb-2">{type.icon}</span>
@@ -1234,11 +1229,10 @@ function PropertyModal({
 
                   {/* Drag & Drop Area */}
                   <div
-                    className={`border-2 border-dashed rounded-xl p-8 mt-4 text-center transition-all duration-200 ${
-                      isDragging
-                        ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
-                        : "border-gray-300 hover:border-gray-400"
-                    }`}
+                    className={`border-2 border-dashed rounded-xl p-8 mt-4 text-center transition-all duration-200 ${isDragging
+                      ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
+                      : "border-gray-300 hover:border-gray-400"
+                      }`}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
@@ -1508,11 +1502,10 @@ function PropertyModal({
                         <button
                           key={category}
                           onClick={() => setSelectedAmenityCategory(category)}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            selectedAmenityCategory === category
-                              ? "bg-[var(--color-primary-500)] text-white"
-                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                          }`}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedAmenityCategory === category
+                            ? "bg-[var(--color-primary-500)] text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            }`}
                         >
                           {category}
                         </button>
@@ -1607,11 +1600,10 @@ function PropertyModal({
                               e.target.value || undefined
                             )
                           }
-                          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${
-                            validationErrors.contactPhone
-                              ? "border-red-300"
-                              : "border-gray-200"
-                          }`}
+                          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${validationErrors.contactPhone
+                            ? "border-red-300"
+                            : "border-gray-200"
+                            }`}
                           placeholder="+91 xxxxxxxxxx"
                         />
                         <Smartphone className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -1638,11 +1630,10 @@ function PropertyModal({
                               e.target.value || undefined
                             )
                           }
-                          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${
-                            validationErrors.contactEmail
-                              ? "border-red-300"
-                              : "border-gray-200"
-                          }`}
+                          className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent ${validationErrors.contactEmail
+                            ? "border-red-300"
+                            : "border-gray-200"
+                            }`}
                           placeholder="contact@example.com"
                         />
                         <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -1917,11 +1908,10 @@ function PropertyModal({
                 <button
                   onClick={handleSave}
                   disabled={!isValid || isSubmitting}
-                  className={`px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-md flex items-center gap-2 ${
-                    !isValid || isSubmitting
-                      ? "opacity-70 cursor-not-allowed"
-                      : ""
-                  }`}
+                  className={`px-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-md flex items-center gap-2 ${!isValid || isSubmitting
+                    ? "opacity-70 cursor-not-allowed"
+                    : ""
+                    }`}
                 >
                   {isSubmitting ? (
                     <>
@@ -1949,7 +1939,7 @@ function PropertyModal({
 }
 
 export default function OwnerDashboard() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const [properties, setProperties] = useState<Property[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -2029,7 +2019,7 @@ export default function OwnerDashboard() {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
             errorData.message ||
-              `Failed to fetch properties: ${response.status}`
+            `Failed to fetch properties: ${response.status}`
           );
         }
 
@@ -2041,10 +2031,10 @@ export default function OwnerDashboard() {
             // Extract amenity names from the complex amenity objects
             const amenityNames = Array.isArray(property.amenities)
               ? property.amenities
-                  .map((a: any) =>
-                    typeof a === "string" ? a : a.amenity ? a.amenity.name : ""
-                  )
-                  .filter(Boolean)
+                .map((a: any) =>
+                  typeof a === "string" ? a : a.amenity ? a.amenity.name : ""
+                )
+                .filter(Boolean)
               : [];
 
             // Get first image URL if available
@@ -2112,16 +2102,16 @@ export default function OwnerDashboard() {
   const averageOccupancy =
     properties.length > 0
       ? Math.round(
-          properties.reduce((sum, p) => sum + (p.occupancy || 0), 0) /
-            properties.length
-        )
+        properties.reduce((sum, p) => sum + (p.occupancy || 0), 0) /
+        properties.length
+      )
       : 0;
   const averageRating =
     properties.length > 0
       ? (
-          properties.reduce((sum, p) => sum + (p.rating || 0), 0) /
-          properties.length
-        ).toFixed(2)
+        properties.reduce((sum, p) => sum + (p.rating || 0), 0) /
+        properties.length
+      ).toFixed(2)
       : "0";
 
   const filteredProperties = properties.filter((property) => {
@@ -2207,12 +2197,12 @@ export default function OwnerDashboard() {
       // Ensure images are strings (URLs) not objects
       const imageUrls = Array.isArray(newProperty.images)
         ? newProperty.images.map((img) => {
-            if (typeof img === "string") return img;
-            if (img && typeof img === "object") {
-              return (img as any).url || "";
-            }
-            return "";
-          })
+          if (typeof img === "string") return img;
+          if (img && typeof img === "object") {
+            return (img as any).url || "";
+          }
+          return "";
+        })
         : [];
 
       const cleanData = {
@@ -2247,10 +2237,10 @@ export default function OwnerDashboard() {
       // Process amenities from the API response to extract names
       const amenityNames = Array.isArray(createdProperty.amenities)
         ? createdProperty.amenities
-            .map((a: any) =>
-              typeof a === "string" ? a : a.amenity ? a.amenity.name : ""
-            )
-            .filter(Boolean)
+          .map((a: any) =>
+            typeof a === "string" ? a : a.amenity ? a.amenity.name : ""
+          )
+          .filter(Boolean)
         : [];
 
       setProperties([
@@ -2295,12 +2285,12 @@ export default function OwnerDashboard() {
       // Ensure images are strings (URLs) not objects
       const imageUrls = Array.isArray(updatedProperty.images)
         ? updatedProperty.images.map((img) => {
-            if (typeof img === "string") return img;
-            if (img && typeof img === "object") {
-              return (img as any).url || "";
-            }
-            return "";
-          })
+          if (typeof img === "string") return img;
+          if (img && typeof img === "object") {
+            return (img as any).url || "";
+          }
+          return "";
+        })
         : [];
 
       const cleanData = {
@@ -2341,10 +2331,10 @@ export default function OwnerDashboard() {
       // Process amenities from the API response to extract names
       const amenityNames = Array.isArray(updatedPropertyData.amenities)
         ? updatedPropertyData.amenities
-            .map((a: any) =>
-              typeof a === "string" ? a : a.amenity ? a.amenity.name : ""
-            )
-            .filter(Boolean)
+          .map((a: any) =>
+            typeof a === "string" ? a : a.amenity ? a.amenity.name : ""
+          )
+          .filter(Boolean)
         : [];
 
       // Update the properties state with proper fallbacks for missing data
@@ -2352,14 +2342,14 @@ export default function OwnerDashboard() {
         properties.map((p) =>
           p.id === updatedProperty.id
             ? {
-                ...p,
-                ...updatedPropertyData,
-                image: propertyImage,
-                status: updatedPropertyData.status || p.status,
-                earnings: updatedPropertyData.earnings || p.earnings || 0,
-                occupancy: updatedPropertyData.occupancy || p.occupancy || 0,
-                amenities: amenityNames,
-              }
+              ...p,
+              ...updatedPropertyData,
+              image: propertyImage,
+              status: updatedPropertyData.status || p.status,
+              earnings: updatedPropertyData.earnings || p.earnings || 0,
+              occupancy: updatedPropertyData.occupancy || p.occupancy || 0,
+              amenities: amenityNames,
+            }
             : p
         )
       );
@@ -2685,10 +2675,10 @@ export default function OwnerDashboard() {
                           statusOption?.color === "green"
                             ? "bg-green-100 text-green-700"
                             : statusOption?.color === "blue"
-                            ? "bg-blue-100 text-blue-700"
-                            : statusOption?.color === "yellow"
-                            ? "bg-amber-100 text-amber-700"
-                            : "bg-gray-100 text-gray-700";
+                              ? "bg-blue-100 text-blue-700"
+                              : statusOption?.color === "yellow"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-gray-100 text-gray-700";
 
                         return (
                           <>
@@ -2707,11 +2697,10 @@ export default function OwnerDashboard() {
                     </button>
 
                     <div
-                      className={`absolute z-40 mt-2 w-[260px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden left-0 transition-all duration-200 origin-top ${
-                        showStatusModal
-                          ? "opacity-100 scale-100"
-                          : "opacity-0 scale-95 pointer-events-none"
-                      }`}
+                      className={`absolute z-40 mt-2 w-[260px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden left-0 transition-all duration-200 origin-top ${showStatusModal
+                        ? "opacity-100 scale-100"
+                        : "opacity-0 scale-95 pointer-events-none"
+                        }`}
                     >
                       <div className="max-h-[280px] overflow-y-auto p-2">
                         {STATUS_OPTIONS.map((status) => (
@@ -2721,23 +2710,21 @@ export default function OwnerDashboard() {
                               setSelectedStatus(status.value);
                               setShowStatusModal(false);
                             }}
-                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center gap-3 ${
-                              selectedStatus === status.value
-                                ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
-                                : ""
-                            }`}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center gap-3 ${selectedStatus === status.value
+                              ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                              : ""
+                              }`}
                           >
                             <div className="flex items-center gap-3 w-full">
                               <span
-                                className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
-                                  status.color === "green"
-                                    ? "bg-green-100 text-green-700"
-                                    : status.color === "blue"
+                                className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${status.color === "green"
+                                  ? "bg-green-100 text-green-700"
+                                  : status.color === "blue"
                                     ? "bg-blue-100 text-blue-700"
                                     : status.color === "yellow"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-gray-100 text-gray-700"
-                                }`}
+                                      ? "bg-amber-100 text-amber-700"
+                                      : "bg-gray-100 text-gray-700"
+                                  }`}
                               >
                                 {status.icon}
                               </span>
@@ -2794,11 +2781,10 @@ export default function OwnerDashboard() {
                     </button>
 
                     <div
-                      className={`absolute z-40 mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden right-0 transition-all duration-200 origin-top ${
-                        showPropertyTypeModal
-                          ? "opacity-100 scale-100"
-                          : "opacity-0 scale-95 pointer-events-none"
-                      }`}
+                      className={`absolute z-40 mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden right-0 transition-all duration-200 origin-top ${showPropertyTypeModal
+                        ? "opacity-100 scale-100"
+                        : "opacity-0 scale-95 pointer-events-none"
+                        }`}
                     >
                       <div className="p-2 border-b border-gray-100">
                         <button
@@ -2806,11 +2792,10 @@ export default function OwnerDashboard() {
                             setSelectedPropertyType("all");
                             setShowPropertyTypeModal(false);
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${
-                            selectedPropertyType === "all"
-                              ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
-                              : ""
-                          }`}
+                          className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${selectedPropertyType === "all"
+                            ? "bg-[var(--color-primary-50)] text-[var(--color-primary-700)]"
+                            : ""
+                            }`}
                         >
                           <span className="text-lg">🏠</span>
                           <span className="font-medium">All Types</span>
@@ -2829,11 +2814,10 @@ export default function OwnerDashboard() {
                               setSelectedPropertyType(type.value);
                               setShowPropertyTypeModal(false);
                             }}
-                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${
-                              selectedPropertyType === type.value
-                                ? "bg-[var(--color-primary-600)] text-[var(--color-primary-800)]"
-                                : ""
-                            }`}
+                            className={`w-full text-left px-3 py-2 mb-1 rounded-lg hover:bg-gray-50 flex items-center ${selectedPropertyType === type.value
+                              ? "bg-[var(--color-primary-600)] text-[var(--color-primary-800)]"
+                              : ""
+                              }`}
                           >
                             <div className="flex items-center gap-3 w-full">
                               <span className="text-2xl flex-shrink-0">
@@ -2912,13 +2896,12 @@ export default function OwnerDashboard() {
                             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                           />
                           <span
-                            className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold shadow-md z-10 ${
-                              property.status === "ACTIVE"
-                                ? "bg-green-500 text-white"
-                                : property.status === "RENTED"
+                            className={`absolute top-4 left-4 px-3 py-1 rounded-full text-xs font-semibold shadow-md z-10 ${property.status === "ACTIVE"
+                              ? "bg-green-500 text-white"
+                              : property.status === "RENTED"
                                 ? "bg-yellow-500 text-white"
                                 : "bg-gray-400 text-white"
-                            }`}
+                              }`}
                           >
                             {property.status}
                           </span>

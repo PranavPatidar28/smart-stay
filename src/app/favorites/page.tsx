@@ -92,7 +92,7 @@ const backgroundPatternStyles = `
     animation: pulse 4s ease-in-out infinite;
   }
 `;
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import {
   Heart,
   Utensils,
@@ -230,7 +230,7 @@ interface MobilePropertyModalProps {
   onPhoneContact: (id: string) => void;
   onEmailContact: (id: string) => void;
   onShare: (id: string) => void;
-} 
+}
 
 
 
@@ -254,25 +254,25 @@ const DropdownPortal = ({ isOpen, onClose, triggerRef, children, className = "",
       const rect = triggerRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
-      
+
       // Calculate available space
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
+
       // Determine if dropdown should appear above or below
       const shouldShowAbove = spaceBelow < 320 && spaceAbove > spaceBelow;
-      
+
       // Calculate left position to prevent overflow
       let left = rect.left;
       const dropdownWidth = rect.width;
-      
+
       // Adjust if dropdown would overflow right edge
       if (left + dropdownWidth > viewportWidth) {
         left = Math.max(0, viewportWidth - dropdownWidth - 10);
       }
-      
+
       setPosition({
-        top: shouldShowAbove 
+        top: shouldShowAbove
           ? rect.top + window.scrollY - 320
           : rect.bottom + window.scrollY,
         left: left + window.scrollX,
@@ -341,7 +341,7 @@ const DropdownPortal = ({ isOpen, onClose, triggerRef, children, className = "",
 
       window.addEventListener('scroll', throttledScroll, { passive: true });
       window.addEventListener('resize', handleScroll, { passive: true });
-      
+
       return () => {
         window.removeEventListener('scroll', throttledScroll);
         window.removeEventListener('resize', handleScroll);
@@ -468,9 +468,9 @@ const SORT_OPTIONS = [
 
 
 
-const MobilePropertyModal = ({ 
-  property, 
-  toggleFavorite, 
+const MobilePropertyModal = ({
+  property,
+  toggleFavorite,
   closePropertyModal,
   onBookViewing,
   onPhoneContact,
@@ -479,20 +479,20 @@ const MobilePropertyModal = ({
 }: MobilePropertyModalProps) => {
   const [mobileModalFavorite, setMobileModalFavorite] = useState(property.isFavorite);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   useEffect(() => {
     setMobileModalFavorite(property.isFavorite);
   }, [property.isFavorite]);
-  
+
   const handleMobileFavoriteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     setMobileModalFavorite(!mobileModalFavorite);
     toggleFavorite(property.id);
   };
-  
+
   return (
     <div
-              className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto custom-scrollbar"
+      className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto custom-scrollbar"
       role="dialog"
       aria-modal="true"
     >
@@ -511,12 +511,11 @@ const MobilePropertyModal = ({
             className="p-2 rounded-full"
             aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart 
-              className={`w-6 h-6 ${
-                mobileModalFavorite 
-                  ? "text-red-500 fill-red-500" 
+            <Heart
+              className={`w-6 h-6 ${mobileModalFavorite
+                  ? "text-red-500 fill-red-500"
                   : "text-gray-700 stroke-2 hover:text-red-500"
-              }`} 
+                }`}
             />
           </button>
           {property.latitude && property.longitude && (
@@ -524,7 +523,7 @@ const MobilePropertyModal = ({
               <MapIcon className="w-5 h-5 text-gray-700" />
             </button>
           )}
-          <button 
+          <button
             onClick={() => onShare(property.id)}
             className="p-2 rounded-full hover:bg-gray-100"
           >
@@ -546,9 +545,9 @@ const MobilePropertyModal = ({
         {Array.isArray(property.images) && property.images.length > 1 && (
           <>
             <button
-              onClick={e => { 
-                e.stopPropagation(); 
-                setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length); 
+              onClick={e => {
+                e.stopPropagation();
+                setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length);
               }}
               className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow rounded-full p-2"
               aria-label="Previous image"
@@ -556,9 +555,9 @@ const MobilePropertyModal = ({
               <ChevronDown className="w-5 h-5 rotate-90 text-gray-800" />
             </button>
             <button
-              onClick={e => { 
-                e.stopPropagation(); 
-                setCurrentImageIndex((currentImageIndex + 1) % property.images.length); 
+              onClick={e => {
+                e.stopPropagation();
+                setCurrentImageIndex((currentImageIndex + 1) % property.images.length);
               }}
               className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow rounded-full p-2"
               aria-label="Next image"
@@ -671,28 +670,28 @@ const MobilePropertyModal = ({
             </div>
           </div>
         </div>
-                 {/* Action Buttons - Updated with functionality */}
-         <div className="flex gap-3 mt-4 mb-6 px-4">
-           <button 
-             onClick={() => onBookViewing(property.id)}
-             className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-           >
-              <Calendar className="w-5 h-5" />
-              Book Viewing
-            </button>
-           <button 
-             onClick={() => onPhoneContact(property.id)}
-             className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-           >
-              <Phone className="w-5 h-5" />
-            </button>
-           <button 
-             onClick={() => onEmailContact(property.id)}
-             className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-           >
-              <Mail className="w-5 h-5" />
-            </button>
-          </div>
+        {/* Action Buttons - Updated with functionality */}
+        <div className="flex gap-3 mt-4 mb-6 px-4">
+          <button
+            onClick={() => onBookViewing(property.id)}
+            className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+          >
+            <Calendar className="w-5 h-5" />
+            Book Viewing
+          </button>
+          <button
+            onClick={() => onPhoneContact(property.id)}
+            className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+          >
+            <Phone className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => onEmailContact(property.id)}
+            className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+          >
+            <Mail className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -701,7 +700,7 @@ const MobilePropertyModal = ({
 
 
 export default function FavoritesPage() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const [favorites, setFavorites] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -714,7 +713,7 @@ export default function FavoritesPage() {
   // State for custom dropdowns
   const [showPropertyTypeModal, setShowPropertyTypeModal] = useState(false);
   const [showSortByModal, setShowSortByModal] = useState(false);
-  
+
   // Reviews state
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -729,7 +728,7 @@ export default function FavoritesPage() {
     comment: ''
   });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  
+
   // State for booking modal
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingDate, setBookingDate] = useState('');
@@ -748,7 +747,7 @@ export default function FavoritesPage() {
     setSelectedProperty(mappedProperty);
     setShowModal(true);
     setCurrentImageIndex(0);
-    
+
     // Fetch reviews when opening the modal
     if (property) {
       fetchPropertyReviews(property.id);
@@ -772,7 +771,7 @@ export default function FavoritesPage() {
     });
   };
 
-  
+
   // Handle favorite toggle in modal
   const handleModalFavoriteToggle = () => {
     if (selectedProperty) {
@@ -793,15 +792,15 @@ export default function FavoritesPage() {
   }) => {
     // Mini-gallery hover for desktop
     const [hovered, setHovered] = useState(false);
-    
+
     // Create a local state that mirrors the property.isFavorite for immediate UI updates
     const [localFavorite, setLocalFavorite] = useState(property.isFavorite);
-    
+
     // Update local state when the property prop changes
     useEffect(() => {
       setLocalFavorite(property.isFavorite);
     }, [property.isFavorite]);
-    
+
     // Handle favorite button click with local state update
     const handleFavoriteClick = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -824,7 +823,7 @@ export default function FavoritesPage() {
           />
           {/* Mini-gallery thumbnails on hover (desktop only) */}
           {Array.isArray(property.images) && property.images.length > 1 && (
-            <div className={`hidden lg:flex absolute bottom-4 right-4 gap-2 z-10 ${hovered ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}> 
+            <div className={`hidden lg:flex absolute bottom-4 right-4 gap-2 z-10 ${hovered ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}>
               {property.images.slice(1, 4).map((img: any) => (
                 <div key={img.id} className="w-12 h-12 rounded-lg overflow-hidden border-2 border-white shadow-lg">
                   <img src={img.url} alt="" className="w-full h-full object-cover" />
@@ -844,12 +843,11 @@ export default function FavoritesPage() {
             className="absolute top-4 right-4 p-2 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 z-10"
             aria-label={localFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart 
-              className={`w-6 h-6 ${
-                localFavorite
-                  ? "text-red-500 fill-red-500" 
+            <Heart
+              className={`w-6 h-6 ${localFavorite
+                  ? "text-red-500 fill-red-500"
                   : "text-white stroke-2 hover:text-red-500"
-              }`} 
+                }`}
             />
           </button>
           {/* Map Location Indicator - Show when property has coordinates */}
@@ -940,14 +938,14 @@ export default function FavoritesPage() {
             >
               View Details
             </button>
-            <button 
+            <button
               onClick={() => onContact ? onContact(property) : null}
               className="px-4 py-3 border-2 border-[var(--color-primary-200)] text-[var(--color-primary-200)] rounded-xl hover:bg-[var(--color-primary-200)] hover:text-[var(--color-primary-800)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
             >
               <Phone className="w-4 h-4" />Contact
             </button>
             {isListView && (
-              <button 
+              <button
                 onClick={() => onContact ? onContact(property) : null}
                 className="px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2"
               >
@@ -964,13 +962,13 @@ export default function FavoritesPage() {
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!session?.user) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch('/api/favorites');
-        
+
         if (!response.ok) {
           if (response.status === 401) {
             throw new Error('Please sign in to view your favorites');
@@ -980,13 +978,13 @@ export default function FavoritesPage() {
             throw new Error(`Failed to fetch favorites (${response.status})`);
           }
         }
-        
+
         const data = await response.json();
-        
+
         if (!data.favorites) {
           throw new Error('Invalid response from server');
         }
-        
+
         // Map and normalize favorite properties
         let favoriteProperties = data.favorites.map((favorite: any) => {
           const property = favorite.property;
@@ -1058,9 +1056,9 @@ export default function FavoritesPage() {
     try {
       const response = await fetch(`/api/favorites/${id}`, { method: 'DELETE' });
       if (!response.ok) throw new Error('Failed to remove favorite');
-      
+
       setFavorites(favorites.filter((fav) => fav.id !== id));
-      
+
       // Track analytics
       trackAnalyticsEvent('favorite_removed', id);
       showSuccess('Removed from favorites');
@@ -1083,21 +1081,21 @@ export default function FavoritesPage() {
       console.error(`Property with ID ${id} not found`);
       return;
     }
-    
+
     // Get the current favorite state before toggling
     const wasAlreadyFavorite = property.isFavorite;
     console.log(`Toggling favorite for property ${id}. Was favorite: ${wasAlreadyFavorite}`);
-    
+
     // IMMEDIATELY update UI - don't wait for API response
     setFavorites(prev => {
       // Create a new array to ensure state updates are detected
-      const updated = prev.map(p => 
+      const updated = prev.map(p =>
         p.id === id ? { ...p, isFavorite: !p.isFavorite } : p
       );
       console.log(`Updated properties state. Property ${id} isFavorite now: ${!wasAlreadyFavorite}`);
       return updated;
     });
-    
+
     // If we also have a selected property in the modal that matches this ID, update it too
     if (selectedProperty && selectedProperty.id === id) {
       setSelectedProperty({
@@ -1109,17 +1107,17 @@ export default function FavoritesPage() {
     // Show a subtle toast notification
     const action = wasAlreadyFavorite ? "Removed from" : "Added to";
     showSuccess(`${action} favorites`);
-    
+
     // Track analytics
     const eventType = wasAlreadyFavorite ? 'favorite_removed' : 'favorite_added';
     trackAnalyticsEvent(eventType, id);
-    
+
     // Perform API operation in background
     try {
       if (wasAlreadyFavorite) {
         // Remove from favorites
         console.log(`Sending DELETE request for property ${id}`);
-        fetch(`/api/favorites/${id}`, { 
+        fetch(`/api/favorites/${id}`, {
           method: 'DELETE',
         }).then(response => {
           console.log(`DELETE response status: ${response.status}`);
@@ -1158,13 +1156,13 @@ export default function FavoritesPage() {
   const handlePropertyContact = (property: any) => {
     // Track analytics
     trackAnalyticsEvent('favorites_property_contact', property.id);
-    
+
     // Open the property modal for contact options
     const favoriteProperty = favorites.find(fav => fav.id === property.id);
     if (favoriteProperty) {
       openPropertyModal(favoriteProperty);
     }
-    
+
     showSuccess('Opening property details. You can contact the owner from there.');
   };
 
@@ -1173,7 +1171,7 @@ export default function FavoritesPage() {
     setReviewsLoading(true);
     try {
       const response = await fetch(`/api/reviews?propertyId=${propertyId}&page=${page}&limit=5`);
-      
+
       if (!response.ok) {
         // Don't show error for 404 (no reviews) or other expected errors
         if (response.status === 404) {
@@ -1188,7 +1186,7 @@ export default function FavoritesPage() {
         }
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       setReviews(data.reviews || []);
       setReviewPagination(data.pagination || {
@@ -1219,7 +1217,7 @@ export default function FavoritesPage() {
       setReviewsLoading(false);
     }
   };
-  
+
   // Handle pagination for reviews
   const handleReviewPageChange = (newPage: number) => {
     if (selectedProperty) {
@@ -1227,23 +1225,23 @@ export default function FavoritesPage() {
       fetchPropertyReviews(selectedProperty.id, newPage);
     }
   };
-  
+
   // Submit a new review
   const submitReview = async () => {
     if (!session?.user) {
       showError('Please sign in to leave a review');
       return;
     }
-    
+
     if (!selectedProperty) return;
-    
+
     if (userReview.rating === 0) {
       showError('Please select a rating');
       return;
     }
-    
+
     setIsSubmittingReview(true);
-    
+
     try {
       const response = await fetch('/api/reviews', {
         method: 'POST',
@@ -1254,9 +1252,9 @@ export default function FavoritesPage() {
           comment: userReview.comment || undefined
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         // Handle specific error cases
         if (response.status === 400) {
@@ -1270,25 +1268,25 @@ export default function FavoritesPage() {
         }
         throw new Error(data.error || 'Failed to submit review');
       }
-      
+
       // Refresh reviews
       fetchPropertyReviews(selectedProperty.id);
-      
+
       // Track analytics
       trackAnalyticsEvent('review_submitted', selectedProperty.id, {
         rating: userReview.rating,
         hasComment: !!userReview.comment
       });
-      
+
       // Reset review form
       setUserReview({
         rating: 5,
         comment: ''
       });
-      
+
       // Show success message
       showSuccess('Review submitted successfully');
-      
+
     } catch (error) {
       console.error('Error submitting review:', error);
       showError(error instanceof Error ? error.message : 'Failed to submit review');
@@ -1335,7 +1333,7 @@ export default function FavoritesPage() {
       setBookingDate('');
       setBookingTime('');
       setBookingNote('');
-      
+
       // Track analytics
       trackAnalyticsEvent('booking_request', selectedProperty.id);
     } catch (error) {
@@ -1349,7 +1347,7 @@ export default function FavoritesPage() {
   // Handle phone contact
   const handlePhoneContact = () => {
     if (!selectedProperty) return;
-    
+
     trackAnalyticsEvent('phone_contact', selectedProperty.id);
     showSuccess('Phone number requested. The owner will contact you shortly.');
   };
@@ -1357,7 +1355,7 @@ export default function FavoritesPage() {
   // Handle email contact
   const handleEmailContact = () => {
     if (!selectedProperty) return;
-    
+
     trackAnalyticsEvent('email_contact', selectedProperty.id);
     showSuccess('Email request sent. Check your inbox for follow-up information.');
   };
@@ -1365,7 +1363,7 @@ export default function FavoritesPage() {
   // Handle share property
   const handleShareProperty = () => {
     if (!selectedProperty) return;
-    
+
     const url = `${window.location.origin}/property/${selectedProperty.id}`;
     navigator.clipboard.writeText(url);
     trackAnalyticsEvent('property_shared', selectedProperty.id);
@@ -1376,25 +1374,25 @@ export default function FavoritesPage() {
   const mapFavoriteToPropertyCard = (fav: Property) => ({
     ...fav,
     images: Array.isArray(fav.images) && fav.images.length > 0
-      ? fav.images.map((img, i) => ({ 
-          id: i.toString(), 
-          url: typeof img === 'string' ? img : img.url, 
-          order: i, 
-          isCover: i === 0 
-        }))
+      ? fav.images.map((img, i) => ({
+        id: i.toString(),
+        url: typeof img === 'string' ? img : img.url,
+        order: i,
+        isCover: i === 0
+      }))
       : fav.image
-      ? [{ id: "0", url: fav.image, order: 0, isCover: true }]
-      : [],
+        ? [{ id: "0", url: fav.image, order: 0, isCover: true }]
+        : [],
     amenities: Array.isArray(fav.amenities) ? fav.amenities : [],
-    owner: fav.owner ? { 
-      id: fav.id, 
-      name: fav.owner.name, 
-      verified: fav.owner.verified, 
-      rating: fav.owner.rating 
-    } : { 
-      id: fav.id, 
-      name: '', 
-      verified: false 
+    owner: fav.owner ? {
+      id: fav.id,
+      name: fav.owner.name,
+      verified: fav.owner.verified,
+      rating: fav.owner.rating
+    } : {
+      id: fav.id,
+      name: '',
+      verified: false
     },
     isAvailable: true,
     isFavorite: true,
@@ -1415,20 +1413,20 @@ export default function FavoritesPage() {
   });
 
 
-  
+
   // Helper to map FavoriteProperty to PropertyDetailsModal expected shape
   const mapFavoriteToFullProperty = (fav: Property) => ({
     ...fav,
     images: Array.isArray(fav.images) && fav.images.length > 0
-      ? fav.images.map((img, i) => ({ 
-          id: i.toString(), 
-          url: typeof img === 'string' ? img : img.url, 
-          order: i, 
-          isCover: i === 0 
-        }))
+      ? fav.images.map((img, i) => ({
+        id: i.toString(),
+        url: typeof img === 'string' ? img : img.url,
+        order: i,
+        isCover: i === 0
+      }))
       : fav.image
-      ? [{ id: "0", url: fav.image, order: 0, isCover: true }]
-      : [],
+        ? [{ id: "0", url: fav.image, order: 0, isCover: true }]
+        : [],
     amenities: Array.isArray(fav.amenities) ? fav.amenities : [],
     status: fav.status || 'ACTIVE',
     isFavorite: true,
@@ -1494,7 +1492,7 @@ export default function FavoritesPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Favorites</h2>
               <div className="text-red-600 text-lg mb-6 max-w-md mx-auto">{error}</div>
               <div className="flex gap-4 justify-center">
-                <button 
+                <button
                   onClick={() => {
                     setError(null);
                     setLoading(true);
@@ -1554,7 +1552,7 @@ export default function FavoritesPage() {
                 >
                   Try Again
                 </button>
-                <button 
+                <button
                   onClick={() => window.location.href = '/listings'}
                   className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-colors"
                 >
@@ -1573,7 +1571,7 @@ export default function FavoritesPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Apply background pattern styles */}
       <style jsx global>{backgroundPatternStyles}</style>
-      
+
       {/* Fixed Header */}
       <Navbar />
 
@@ -1591,12 +1589,12 @@ export default function FavoritesPage() {
               `,
               backgroundSize: '40px 40px'
             }}></div>
-            
+
             {/* Floating geometric shapes */}
             <div className="absolute top-10 left-10 w-16 h-16 border border-white/15 rounded-full floating-shape"></div>
-            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{animationDelay: '1s'}}></div>
+            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{ animationDelay: '1s' }}></div>
             <div className="absolute bottom-20 left-1/4 w-8 h-8 border border-white/15 rounded-full pulsing-shape"></div>
-            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{animationDelay: '2s'}}></div>
+            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{ animationDelay: '2s' }}></div>
           </div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="text-center mb-8">
@@ -1656,7 +1654,7 @@ export default function FavoritesPage() {
                         </div>
                         <span>{showPropertyTypeModal ? "▲" : "▼"}</span>
                       </button>
-                      
+
                       {/* Dropdown Portal */}
                       <DropdownPortal
                         isOpen={showPropertyTypeModal}
@@ -1678,16 +1676,15 @@ export default function FavoritesPage() {
                             className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center ${selectedType === type.value ? "bg-[var(--color-primary-100)] text-[var(--color-primary-700)] hover:bg-[var(--color-primary-200)]" : "text-gray-700 hover:bg-gray-100"}`}
                           >
                             <div className="flex items-center gap-3 w-full">
-                              <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
-                                type.color === 'blue' ? 'bg-blue-200 text-blue-800' : 
-                                type.color === 'purple' ? 'bg-purple-200 text-purple-800' : 
-                                type.color === 'green' ? 'bg-green-200 text-green-800' :
-                                type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
-                                type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
-                                type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
-                                type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
-                                'bg-gray-200 text-black'
-                              }`}>{type.icon}</span>
+                              <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${type.color === 'blue' ? 'bg-blue-200 text-blue-800' :
+                                  type.color === 'purple' ? 'bg-purple-200 text-purple-800' :
+                                    type.color === 'green' ? 'bg-green-200 text-green-800' :
+                                      type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
+                                        type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
+                                          type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
+                                            type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
+                                              'bg-gray-200 text-black'
+                                }`}>{type.icon}</span>
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium">{type.label}</div>
                                 <div className="text-xs truncate">{type.description}</div>
@@ -1700,7 +1697,7 @@ export default function FavoritesPage() {
                         ))}
                       </DropdownPortal>
                     </div>
-                    
+
                     <div ref={sortByRef} className="md:w-56 w-full relative">
                       <button
                         type="button"
@@ -1722,7 +1719,7 @@ export default function FavoritesPage() {
                         </div>
                         <span>{showSortByModal ? "▲" : "▼"}</span>
                       </button>
-                      
+
                       {/* Sort Options Dropdown Portal */}
                       <DropdownPortal
                         isOpen={showSortByModal}
@@ -1799,8 +1796,8 @@ export default function FavoritesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
               {filteredAndSortedFavorites.map((property) => (
                 <div key={property.id} className="flex justify-center h-full">
-                  <PropertyCard 
-                    property={property} 
+                  <PropertyCard
+                    property={property}
                     onContact={handlePropertyContact}
                   />
                 </div>
@@ -1814,8 +1811,8 @@ export default function FavoritesPage() {
       {showModal && selectedProperty && (
         <>
           {isMobile ? (
-            <MobilePropertyModal 
-              property={selectedProperty!} 
+            <MobilePropertyModal
+              property={selectedProperty!}
               toggleFavorite={toggleFavorite}
               closePropertyModal={closePropertyModal}
               onBookViewing={(propertyId) => {
@@ -1889,9 +1886,9 @@ export default function FavoritesPage() {
                     {Array.isArray(selectedProperty!.images) && selectedProperty!.images.length > 1 && (
                       <>
                         <button
-                          onClick={e => { 
-                            e.stopPropagation(); 
-                            setCurrentImageIndex((currentImageIndex - 1 + selectedProperty!.images.length) % selectedProperty!.images.length); 
+                          onClick={e => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((currentImageIndex - 1 + selectedProperty!.images.length) % selectedProperty!.images.length);
                           }}
                           className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
                           aria-label="Previous image"
@@ -1899,9 +1896,9 @@ export default function FavoritesPage() {
                           <ChevronDown className="w-6 h-6 rotate-90 text-gray-800" />
                         </button>
                         <button
-                          onClick={e => { 
-                            e.stopPropagation(); 
-                            setCurrentImageIndex((currentImageIndex + 1) % selectedProperty!.images.length); 
+                          onClick={e => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((currentImageIndex + 1) % selectedProperty!.images.length);
                           }}
                           className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
                           aria-label="Next image"
@@ -1910,7 +1907,7 @@ export default function FavoritesPage() {
                         </button>
                       </>
                     )}
-                    
+
                     {/* Image Counter Badge - Enhanced */}
                     {Array.isArray(selectedProperty!.images) && selectedProperty!.images.length > 1 && (
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/20 shadow-xl flex items-center gap-2">
@@ -1918,26 +1915,26 @@ export default function FavoritesPage() {
                         <span>{currentImageIndex + 1}/{selectedProperty!.images.length}</span>
                       </div>
                     )}
-                    
+
                     {/* Status Badge - Enhanced */}
                     <div className="absolute top-4 right-4 px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10 bg-green-500 text-white border border-white/30 backdrop-blur-sm">
                       {selectedProperty!.isAvailable ? "Available Now" : "Not Available"}
                     </div>
-                    
+
                     {/* Floating Price Badge - Enhanced */}
                     <div className="absolute top-4 left-4 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] px-5 py-2.5 rounded-xl shadow-xl border border-white/60 text-white font-bold flex items-center gap-2">
                       <span className="text-xl">₹{selectedProperty!.price.toLocaleString()}</span>
                       <span className="text-sm font-normal opacity-90">/month</span>
                     </div>
-                    
+
                     {/* Property type badge */}
                     <div className="absolute top-18 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-700)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
                       <Home className="w-4 h-4 text-[var(--color-primary-600)]" />
                       {selectedProperty!.type}
                     </div>
-                    
+
                   </div>
-                  
+
                   {/* Thumbnails - Enhanced gallery strip */}
                   {Array.isArray(selectedProperty!.images) && selectedProperty!.images.length > 1 && (
                     <div className="flex gap-2 p-4 overflow-x-auto hide-scrollbar bg-gray-800 border-t border-gray-700">
@@ -1945,11 +1942,10 @@ export default function FavoritesPage() {
                         <button
                           key={img.id}
                           onClick={() => setCurrentImageIndex(idx)}
-                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                            currentImageIndex === idx
+                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${currentImageIndex === idx
                               ? 'border-[var(--color-primary-500)] shadow-lg shadow-[var(--color-primary-500)]/30'
                               : 'border-gray-600 hover:border-gray-400'
-                          }`}
+                            }`}
                         >
                           <img
                             src={img.url}
@@ -1960,7 +1956,7 @@ export default function FavoritesPage() {
                       ))}
                     </div>
                   )}
-                  
+
                   {/* Key Property Stats - Feature row at bottom */}
                   <div className="hidden lg:flex justify-between items-center px-6 py-4 bg-gray-800 text-white border-t border-gray-700">
                     <div className="flex items-center gap-2">
@@ -1972,7 +1968,7 @@ export default function FavoritesPage() {
                         <div className="text-xs text-gray-300">Bedrooms</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <div className="bg-gray-700 p-2 rounded-lg">
                         <Bath className="w-5 h-5 text-[var(--color-primary-300)]" />
@@ -1982,7 +1978,7 @@ export default function FavoritesPage() {
                         <div className="text-xs text-gray-300">Bathrooms</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <div className="bg-gray-700 p-2 rounded-lg">
                         <Calendar className="w-5 h-5 text-[var(--color-primary-300)]" />
@@ -1996,7 +1992,7 @@ export default function FavoritesPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Right: Details Section */}
                 <div className="lg:w-1/2 w-full flex flex-col min-w-0 bg-white h-[50vh] lg:h-auto lg:max-h-[90vh] overflow-y-auto custom-scrollbar pb-20 lg:pb-0">
                   {/* Header: Title, Location, Rating */}
@@ -2005,21 +2001,21 @@ export default function FavoritesPage() {
                     <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-[var(--color-primary-100)] bg-clip-text text-transparent leading-tight" title={selectedProperty!.title}>
                       {selectedProperty!.title}
                     </h2>
-                    
+
                     {/* Location and Rating Row */}
                     <div className="flex justify-between items-center mt-3">
                       <div className="flex items-center gap-2 text-[var(--color-primary-700)] text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
                         <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
                         <span>{selectedProperty!.location}</span>
                       </div>
-                      
+
                       {/* Rating - Enhanced */}
                       <div className="flex items-center gap-2 bg-gradient-to-br from-yellow-50 to-yellow-100 px-3 py-1.5 rounded-lg shadow-sm border border-yellow-200">
                         <div className="flex">
                           {[1, 2, 3, 4, 5].map((star) => (
-                            <Star 
-                              key={star} 
-                              className={`w-4 h-4 ${star <= Math.round(selectedProperty!.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                            <Star
+                              key={star}
+                              className={`w-4 h-4 ${star <= Math.round(selectedProperty!.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                             />
                           ))}
                         </div>
@@ -2027,7 +2023,7 @@ export default function FavoritesPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Main content area */}
                   <div className="px-6">
                     {/* Quick Features Row - Improved layout */}
@@ -2037,7 +2033,7 @@ export default function FavoritesPage() {
                       {selectedProperty!.parking && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 text-sm rounded-lg font-medium border border-purple-200"><Car className="w-4 h-4" /> Parking</span>}
                       {selectedProperty!.utilities && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-lg font-medium border border-orange-200"><Wifi className="w-4 h-4" /> Utilities Included</span>}
                     </div>
-                    
+
                     {/* Description - Enhanced typography */}
                     <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 my-6">
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -2048,7 +2044,7 @@ export default function FavoritesPage() {
                       </h4>
                       <p className="text-gray-700 leading-relaxed">{selectedProperty!.description}</p>
                     </div>
-                    
+
                     {/* Amenities - Enhanced grid layout */}
                     <div className="my-6">
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -2059,8 +2055,8 @@ export default function FavoritesPage() {
                       </h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {Array.isArray(selectedProperty!.amenities) && selectedProperty!.amenities.map((amenity, idx) => (
-                          <div 
-                            key={`${selectedProperty!.id}-amenity-${idx}`} 
+                          <div
+                            key={`${selectedProperty!.id}-amenity-${idx}`}
                             className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
                           >
                             <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
@@ -2069,9 +2065,9 @@ export default function FavoritesPage() {
                             <span className="text-gray-800">{amenity.amenity.name}</span>
                           </div>
                         ))}
-    50                </div>
+                        50                </div>
                     </div>
-                    
+
                     {/* Reviews Section */}
                     <div className="my-6 bg-gray-50 p-5 rounded-xl border border-gray-100">
                       <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -2080,7 +2076,7 @@ export default function FavoritesPage() {
                         </div>
                         Reviews ({selectedProperty!._count.reviews})
                       </h4>
-                      
+
                       {/* Review List */}
                       <div className="space-y-4 mb-6">
                         {reviewsLoading ? (
@@ -2095,9 +2091,9 @@ export default function FavoritesPage() {
                                   <div className="flex items-center gap-2">
                                     <div className="w-10 h-10 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
                                       {review.user.image ? (
-                                        <img 
-                                          src={review.user.image} 
-                                          alt={review.user.name} 
+                                        <img
+                                          src={review.user.image}
+                                          alt={review.user.name}
                                           className="w-full h-full object-cover rounded-full"
                                         />
                                       ) : (
@@ -2114,9 +2110,9 @@ export default function FavoritesPage() {
                                   <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
                                     <div className="flex">
                                       {[1, 2, 3, 4, 5].map(star => (
-                                        <Star 
-                                          key={star} 
-                                          className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                                        <Star
+                                          key={star}
+                                          className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                                         />
                                       ))}
                                     </div>
@@ -2127,18 +2123,17 @@ export default function FavoritesPage() {
                                 )}
                               </div>
                             ))}
-                            
+
                             {/* Pagination controls */}
                             {reviewPagination.totalPages > 1 && (
                               <div className="flex justify-center mt-4 gap-2">
                                 <button
                                   onClick={() => handleReviewPageChange(reviewPagination.page - 1)}
                                   disabled={!reviewPagination.hasPrev}
-                                  className={`p-2 rounded-lg ${
-                                    reviewPagination.hasPrev 
-                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' 
+                                  className={`p-2 rounded-lg ${reviewPagination.hasPrev
+                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                                       : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                                  }`}
+                                    }`}
                                 >
                                   Previous
                                 </button>
@@ -2148,11 +2143,10 @@ export default function FavoritesPage() {
                                 <button
                                   onClick={() => handleReviewPageChange(reviewPagination.page + 1)}
                                   disabled={!reviewPagination.hasNext}
-                                  className={`p-2 rounded-lg ${
-                                    reviewPagination.hasNext 
-                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' 
+                                  className={`p-2 rounded-lg ${reviewPagination.hasNext
+                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                                       : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                                  }`}
+                                    }`}
                                 >
                                   Next
                                 </button>
@@ -2166,7 +2160,7 @@ export default function FavoritesPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Leave a review form */}
                       {session?.user ? (
                         <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -2181,12 +2175,11 @@ export default function FavoritesPage() {
                                   onClick={() => setUserReview(prev => ({ ...prev, rating: star }))}
                                   className="focus:outline-none"
                                 >
-                                  <Star 
-                                    className={`w-6 h-6 ${
-                                      star <= userReview.rating 
-                                        ? 'text-yellow-400 fill-yellow-400' 
+                                  <Star
+                                    className={`w-6 h-6 ${star <= userReview.rating
+                                        ? 'text-yellow-400 fill-yellow-400'
                                         : 'text-gray-300 hover:text-yellow-200'
-                                    }`} 
+                                      }`}
                                   />
                                 </button>
                               ))}
@@ -2221,7 +2214,7 @@ export default function FavoritesPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Landlord Info - Enhanced card */}
                     <div className="my-6 bg-[var(--color-primary-800)] p-5 rounded-xl border border-[var(--color-primary-500)]">
                       <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -2255,11 +2248,11 @@ export default function FavoritesPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Action Bar - Sticky at bottom with enhanced buttons */}
                   <div className="sticky bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 px-6 py-4 mt-auto">
                     <div className="flex gap-3 items-center">
-                      <button 
+                      <button
                         onClick={handleBookViewing}
                         className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3.5 px-4 rounded-xl font-medium hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
                       >
@@ -2267,29 +2260,28 @@ export default function FavoritesPage() {
                         <span className="font-semibold">Book Viewing</span>
                       </button>
                       <div className="flex gap-3">
-                        <button 
+                        <button
                           onClick={handlePhoneContact}
                           className="p-3.5 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                           <Phone className="w-5 h-5" />
                         </button>
-                        <button 
+                        <button
                           onClick={handleEmailContact}
                           className="p-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                           <Mail className="w-5 h-5" />
                         </button>
-                        <button 
-                          onClick={handleModalFavoriteToggle} 
+                        <button
+                          onClick={handleModalFavoriteToggle}
                           className="p-2.5 rounded-xl flex items-center justify-center"
                           aria-label={modalFavorite ? "Remove from favorites" : "Add to favorites"}
                         >
-                          <Heart 
-                            className={`w-7 h-7 ${
-                              modalFavorite
-                                ? "text-red-500 fill-red-500" 
+                          <Heart
+                            className={`w-7 h-7 ${modalFavorite
+                                ? "text-red-500 fill-red-500"
                                 : "text-gray-400 stroke-[2px] hover:text-red-400"
-                            }`} 
+                              }`}
                           />
                         </button>
                       </div>
@@ -2301,7 +2293,7 @@ export default function FavoritesPage() {
           )}
         </>
       )}
-      
+
       {/* Booking Modal */}
       {showBookingModal && selectedProperty && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-2 sm:px-4">
@@ -2313,10 +2305,10 @@ export default function FavoritesPage() {
             >
               <X className="w-5 h-5" />
             </button>
-            
+
             <h3 className="text-xl font-bold text-gray-900 mb-4">Book a Viewing</h3>
             <p className="text-gray-600 mb-6">Schedule a viewing for {selectedProperty.title}</p>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
@@ -2328,7 +2320,7 @@ export default function FavoritesPage() {
                   className="w-full px-3 py-2 border border-gray-300 text-gray-400 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                 <select
@@ -2348,7 +2340,7 @@ export default function FavoritesPage() {
                   <option value="17:00">05:00 PM</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
                 <textarea
@@ -2359,7 +2351,7 @@ export default function FavoritesPage() {
                   rows={3}
                 ></textarea>
               </div>
-              
+
               <button
                 onClick={submitBooking}
                 disabled={isSubmittingBooking}
@@ -2375,6 +2367,6 @@ export default function FavoritesPage() {
         </div>
       )}
     </div>
-    
+
   );
 } 

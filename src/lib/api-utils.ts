@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { getSession } from '@/lib/auth-server'
 
 export interface ApiResponse<T = unknown> {
   data?: T
@@ -69,8 +68,8 @@ export function handleApiError(error: unknown): NextResponse<ApiResponse> {
 }
 
 export async function requireAuth() {
-  const session = await getServerSession(authOptions)
-  
+  const session = await getSession()
+
   if (!session?.user?.id) {
     throw new ApiError(401, 'Unauthorized')
   }
@@ -80,7 +79,7 @@ export async function requireAuth() {
 
 export async function requireRole(requiredRole: string) {
   const session = await requireAuth()
-  
+
   if (session.user.role !== requiredRole) {
     throw new ApiError(403, `Access denied. ${requiredRole} role required.`)
   }
@@ -91,7 +90,7 @@ export async function requireRole(requiredRole: string) {
 export function validatePaginationParams(searchParams: URLSearchParams) {
   const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10')))
-  
+
   return { page, limit, skip: (page - 1) * limit }
 }
 
@@ -102,7 +101,7 @@ export function createPaginationResponse(
   limit: number
 ) {
   const totalPages = Math.ceil(total / limit)
-  
+
   return {
     data,
     pagination: {
@@ -163,7 +162,7 @@ export function validatePropertyData(data: {
 }) {
   const requiredFields = ['title', 'location', 'price', 'type']
   const missingFields = requiredFields.filter(field => !data[field])
-  
+
   if (missingFields.length > 0) {
     throw new ApiError(400, `Missing required fields: ${missingFields.join(', ')}`)
   }
@@ -228,7 +227,7 @@ export function validateInquiryData(data: {
 export function getDateRange(period: string): { startDate: Date; endDate: Date } {
   const endDate = new Date()
   const startDate = new Date()
-  
+
   switch (period) {
     case '7':
       startDate.setDate(startDate.getDate() - 7)
@@ -245,6 +244,6 @@ export function getDateRange(period: string): { startDate: Date; endDate: Date }
     default:
       startDate.setDate(startDate.getDate() - 30)
   }
-  
+
   return { startDate, endDate }
 } 

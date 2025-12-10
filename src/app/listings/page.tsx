@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Navbar from "@/components/ui/Navbar";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import {
   Search,
   MapPin,
@@ -236,7 +236,7 @@ interface SearchFilters {
 function PropertiesListSkeleton({ isMobile = false }: { isMobile?: boolean } = {}) {
   if (isMobile) {
     // Mobile skeleton: simpler, more compact
-  return (
+    return (
       <div className="grid grid-cols-1 gap-6">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 flex flex-col overflow-hidden animate-pulse">
@@ -293,7 +293,7 @@ function PropertiesListSkeleton({ isMobile = false }: { isMobile?: boolean } = {
                 <div className="absolute bottom-4 left-4 bg-white/90 px-4 py-2 h-10 w-28 rounded-xl shimmer" />
                 {/* Favorite Button */}
                 <div className="absolute top-4 right-4 p-2 h-10 w-10 rounded-full shimmer" />
-          </div>
+              </div>
               {/* Info Panel */}
               <div className="flex flex-col justify-between p-6 gap-4 flex-1">
                 <div className="flex flex-col gap-4">
@@ -406,9 +406,9 @@ interface MobilePropertyModalProps {
   session: any;
 }
 
-const MobilePropertyModal = ({ 
-  property, 
-  toggleFavorite, 
+const MobilePropertyModal = ({
+  property,
+  toggleFavorite,
   closePropertyModal,
   onBookViewing,
   onPhoneContact,
@@ -424,20 +424,20 @@ const MobilePropertyModal = ({
 }: MobilePropertyModalProps) => {
   const [mobileModalFavorite, setMobileModalFavorite] = useState(property.isFavorite);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   useEffect(() => {
     setMobileModalFavorite(property.isFavorite);
   }, [property.isFavorite]);
-  
+
   const handleMobileFavoriteToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     setMobileModalFavorite(!mobileModalFavorite);
     toggleFavorite(property.id);
   };
-  
+
   return (
     <div
-              className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto custom-scrollbar"
+      className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto custom-scrollbar"
       role="dialog"
       aria-modal="true"
     >
@@ -456,12 +456,11 @@ const MobilePropertyModal = ({
             className="p-2 rounded-full"
             aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart 
-              className={`w-6 h-6 ${
-                mobileModalFavorite 
-                  ? "text-red-500 fill-red-500" 
-                  : "text-gray-700 stroke-2 hover:text-red-500"
-              }`} 
+            <Heart
+              className={`w-6 h-6 ${mobileModalFavorite
+                ? "text-red-500 fill-red-500"
+                : "text-gray-700 stroke-2 hover:text-red-500"
+                }`}
             />
           </button>
           {property.latitude && property.longitude && (
@@ -469,7 +468,7 @@ const MobilePropertyModal = ({
               <MapIcon className="w-5 h-5 text-gray-700" />
             </button>
           )}
-          <button 
+          <button
             onClick={() => onShare(property.id)}
             className="p-2 rounded-full hover:bg-gray-100"
           >
@@ -491,9 +490,9 @@ const MobilePropertyModal = ({
         {property.images.length > 1 && (
           <>
             <button
-              onClick={e => { 
-                e.stopPropagation(); 
-                setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length); 
+              onClick={e => {
+                e.stopPropagation();
+                setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length);
               }}
               className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               aria-label="Previous image"
@@ -501,9 +500,9 @@ const MobilePropertyModal = ({
               <ChevronDown className="w-5 h-5 rotate-90 text-gray-800" />
             </button>
             <button
-              onClick={e => { 
-                e.stopPropagation(); 
-                setCurrentImageIndex((currentImageIndex + 1) % property.images.length); 
+              onClick={e => {
+                e.stopPropagation();
+                setCurrentImageIndex((currentImageIndex + 1) % property.images.length);
               }}
               className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
               aria-label="Next image"
@@ -607,7 +606,7 @@ const MobilePropertyModal = ({
             <p className="text-gray-700 text-sm leading-relaxed">{property.description}</p>
           </div>
         )}
-        
+
         {/* Reviews Section - Mobile version */}
         <div className="my-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
@@ -616,7 +615,7 @@ const MobilePropertyModal = ({
             </div>
             Reviews ({property._count?.reviews || 0})
           </h4>
-          
+
           {/* Review List */}
           <div className="space-y-3 mb-4">
             {reviewsLoading ? (
@@ -631,9 +630,9 @@ const MobilePropertyModal = ({
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
                           {review.user.image ? (
-                            <img 
-                              src={review.user.image} 
-                              alt={review.user.name} 
+                            <img
+                              src={review.user.image}
+                              alt={review.user.name}
                               className="w-full h-full object-cover rounded-full"
                             />
                           ) : (
@@ -650,9 +649,9 @@ const MobilePropertyModal = ({
                       <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
                         <div className="flex">
                           {[1, 2, 3, 4, 5].map(star => (
-                            <Star 
-                              key={star} 
-                              className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                            <Star
+                              key={star}
+                              className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                             />
                           ))}
                         </div>
@@ -663,7 +662,7 @@ const MobilePropertyModal = ({
                     )}
                   </div>
                 ))}
-                
+
                 {reviews.length > 3 && (
                   <div className="text-center py-2 text-sm text-gray-500">
                     +{reviews.length - 3} more reviews
@@ -677,7 +676,7 @@ const MobilePropertyModal = ({
               </div>
             )}
           </div>
-          
+
           {/* Leave a Review Form */}
           {session?.user ? (
             <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
@@ -687,7 +686,7 @@ const MobilePropertyModal = ({
                 </div>
                 Leave a Review
               </h4>
-              
+
               {/* Rating Selection */}
               <div className="mb-3">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
@@ -699,18 +698,17 @@ const MobilePropertyModal = ({
                       onClick={() => setUserReview({ ...userReview, rating: star })}
                       className="focus:outline-none"
                     >
-                      <Star 
-                        className={`w-6 h-6 ${
-                          star <= userReview.rating 
-                            ? 'text-yellow-400 fill-yellow-400' 
-                            : 'text-gray-300 hover:text-yellow-200'
-                        }`} 
+                      <Star
+                        className={`w-6 h-6 ${star <= userReview.rating
+                          ? 'text-yellow-400 fill-yellow-400'
+                          : 'text-gray-300 hover:text-yellow-200'
+                          }`}
                       />
                     </button>
                   ))}
                 </div>
               </div>
-              
+
               {/* Comment Input */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Comment (optional)</label>
@@ -722,7 +720,7 @@ const MobilePropertyModal = ({
                   rows={3}
                 />
               </div>
-              
+
               {/* Submit Button */}
               <button
                 onClick={submitReview}
@@ -743,7 +741,7 @@ const MobilePropertyModal = ({
             </div>
           )}
         </div>
-        
+
         {/* Owner Info */}
         <div className="my-4 bg-[var(--color-primary-800)] p-3 rounded-xl border border-[var(--color-primary-500)]">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
@@ -774,39 +772,39 @@ const MobilePropertyModal = ({
             </div>
           </div>
         </div>
-                 {/* Action Buttons - Updated with functionality */}
-         <div className="flex gap-3 mt-4 mb-6 px-4">
-           <button 
-             onClick={() => onBookViewing(property.id)}
-             className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-           >
-              <Calendar className="w-5 h-5" />
-              Book Viewing
+        {/* Action Buttons - Updated with functionality */}
+        <div className="flex gap-3 mt-4 mb-6 px-4">
+          <button
+            onClick={() => onBookViewing(property.id)}
+            className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+          >
+            <Calendar className="w-5 h-5" />
+            Book Viewing
+          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => onPhoneContact(property.id)}
+              className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+            >
+              <Phone className="w-5 h-5" />
             </button>
-           <div className="flex gap-3">
-             <button 
-               onClick={() => onPhoneContact(property.id)}
-               className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-             >
-                <Phone className="w-5 h-5" />
-              </button>
-              <button 
-                onClick={() => onEmailContact(property.id)}
-                className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
-              >
-                 <Mail className="w-5 h-5" />
-               </button>
-               <button 
-                 onClick={handleMobileFavoriteToggle} 
-                 className="p-2.5 rounded-xl flex items-center justify-center"
-                 aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}
-               >
-                 <Heart 
-                   className={`w-7 h-7 ${mobileModalFavorite ? "text-red-500 fill-red-500" : "text-gray-400 stroke-[2px] hover:text-red-400"}`} 
-                 />
-               </button>
-             </div>
+            <button
+              onClick={() => onEmailContact(property.id)}
+              className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+            >
+              <Mail className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleMobileFavoriteToggle}
+              className="p-2.5 rounded-xl flex items-center justify-center"
+              aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart
+                className={`w-7 h-7 ${mobileModalFavorite ? "text-red-500 fill-red-500" : "text-gray-400 stroke-[2px] hover:text-red-400"}`}
+              />
+            </button>
           </div>
+        </div>
       </div>
     </div>
   );
@@ -868,25 +866,25 @@ const DropdownPortal = ({ isOpen, onClose, triggerRef, children, className = "" 
       const rect = triggerRef.current.getBoundingClientRect();
       const viewportHeight = window.innerHeight;
       const viewportWidth = window.innerWidth;
-      
+
       // Calculate available space
       const spaceBelow = viewportHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
+
       // Determine if dropdown should appear above or below
       const shouldShowAbove = spaceBelow < 320 && spaceAbove > spaceBelow;
-      
+
       // Calculate left position to prevent overflow
       let left = rect.left;
       const dropdownWidth = rect.width;
-      
+
       // Adjust if dropdown would overflow right edge
       if (left + dropdownWidth > viewportWidth) {
         left = Math.max(0, viewportWidth - dropdownWidth - 10);
       }
-      
+
       setPosition({
-        top: shouldShowAbove 
+        top: shouldShowAbove
           ? rect.top + window.scrollY - 320
           : rect.bottom + window.scrollY,
         left: left + window.scrollX,
@@ -955,7 +953,7 @@ const DropdownPortal = ({ isOpen, onClose, triggerRef, children, className = "" 
 
       window.addEventListener('scroll', throttledScroll, { passive: true });
       window.addEventListener('resize', handleScroll, { passive: true });
-      
+
       return () => {
         window.removeEventListener('scroll', throttledScroll);
         window.removeEventListener('resize', handleScroll);
@@ -983,7 +981,7 @@ const DropdownPortal = ({ isOpen, onClose, triggerRef, children, className = "" 
 };
 
 export default function ListingsPage() {
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -1002,7 +1000,7 @@ export default function ListingsPage() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  
+
   // Reviews state
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -1017,14 +1015,14 @@ export default function ListingsPage() {
     comment: ''
   });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  
+
   // State for custom dropdowns
   const [showPropertyTypeModal, setShowPropertyTypeModal] = useState(false);
   const [showSortByModal, setShowSortByModal] = useState(false);
-  
+
   // Add state for detecting mobile devices
   const [isMobile, setIsMobile] = useState(false);
-  
+
   // Quick filters state
   const [quickFilters, setQuickFilters] = useState({
     nearCampus: false,
@@ -1036,7 +1034,7 @@ export default function ListingsPage() {
   // Refs for clicking outside detection
   const propertyTypeRef = useRef<HTMLDivElement>(null);
   const sortByRef = useRef<HTMLDivElement>(null);
-  
+
   // Define property types with icons and descriptions
   const PROPERTY_TYPE_OPTIONS = [
     {
@@ -1096,7 +1094,7 @@ export default function ListingsPage() {
       color: "teal"
     }
   ];
-  
+
   // Sort options with icons and descriptions
   const SORT_OPTIONS = [
     {
@@ -1179,13 +1177,13 @@ export default function ListingsPage() {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768); // Typically mobile breakpoint
     };
-    
+
     // Set initial value
     checkIfMobile();
-    
+
     // Add resize listener
     window.addEventListener('resize', checkIfMobile);
-    
+
     // Clean up
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
@@ -1216,56 +1214,56 @@ export default function ListingsPage() {
       selectedAmenities.every((amenity) =>
         property.amenities.some((a) => a.amenity.name === amenity)
       );
-      
+
     // Quick filters matching
-    const matchesNearCampus = !quickFilters.nearCampus || 
-      (property.location.toLowerCase().includes('campus') || 
-       parseFloat(property.location.split(" ")[1]) < 2); // Less than 2km from campus
-    
+    const matchesNearCampus = !quickFilters.nearCampus ||
+      (property.location.toLowerCase().includes('campus') ||
+        parseFloat(property.location.split(" ")[1]) < 2); // Less than 2km from campus
+
     const matchesFurnished = !quickFilters.furnished || property.furnished;
-    
+
     const matchesPetFriendly = !quickFilters.petFriendly || property.petFriendly;
-    
-    const matchesAvailableNow = !quickFilters.availableNow || 
+
+    const matchesAvailableNow = !quickFilters.availableNow ||
       (property.isAvailable && (!property.availableFrom || new Date(property.availableFrom) <= new Date()));
 
-    return matchesSearch && matchesType && matchesPrice && matchesAmenities && 
-           matchesNearCampus && matchesFurnished && matchesPetFriendly && matchesAvailableNow;
+    return matchesSearch && matchesType && matchesPrice && matchesAmenities &&
+      matchesNearCampus && matchesFurnished && matchesPetFriendly && matchesAvailableNow;
   });
 
   // Animate the count when results change
   useEffect(() => {
     if (isSearching) return;
-    
+
     const resultCount = filteredProperties.length;
     const startCount = prevCountRef.current;
     const endCount = resultCount;
     const duration = 500; // ms
-    const frameDuration = 1000/60; // 60fps
+    const frameDuration = 1000 / 60; // 60fps
     const totalFrames = Math.round(duration / frameDuration);
     let frame = 0;
-    
+
     prevCountRef.current = resultCount;
-    
+
     // Don't animate if it's the initial load
     if (startCount === 0 && endCount > 0) {
       setDisplayCount(endCount);
       return;
     }
-    
+
     // Animate the counter
     const counter = setInterval(() => {
       frame++;
       const progress = frame / totalFrames;
       const currentCount = Math.round(startCount + (endCount - startCount) * progress);
-      
+
       setDisplayCount(currentCount);
-      
+
       if (frame === totalFrames) {
         clearInterval(counter);
       }
     }, frameDuration);
-    
+
     return () => clearInterval(counter);
   }, [filteredProperties.length, isSearching]);
 
@@ -1273,7 +1271,7 @@ export default function ListingsPage() {
   useEffect(() => {
     setLoading(true); // Start loading as soon as any filter changes
     setError(null); // Clear any previous errors
-    
+
     const fetchProperties = async () => {
       const startTime = performance.now();
       try {
@@ -1294,7 +1292,7 @@ export default function ListingsPage() {
         }
         // Add sort
         if (sortBy) params.append('sortBy', sortBy);
-        
+
         // Make API calls in parallel for better performance
         const [propertiesResponse, favoritesResponse] = await Promise.allSettled([
           fetch(`/api/properties?${params.toString()}`),
@@ -1333,13 +1331,13 @@ export default function ListingsPage() {
         }
 
         setProperties(properties);
-        
+
         // Log performance metrics
         const endTime = performance.now();
         const loadTime = endTime - startTime;
         console.log(`Properties loaded in ${loadTime.toFixed(2)}ms`);
-        
-        
+
+
       } catch (err) {
         console.error('Error fetching properties:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch properties');
@@ -1349,7 +1347,7 @@ export default function ListingsPage() {
         setIsSearching(false);
       }
     };
-    
+
     // Add a small delay to prevent excessive API calls during rapid filter changes
     const timeoutId = setTimeout(fetchProperties, 100);
     return () => clearTimeout(timeoutId);
@@ -1368,21 +1366,21 @@ export default function ListingsPage() {
       console.error(`Property with ID ${id} not found`);
       return;
     }
-    
+
     // Get the current favorite state before toggling
     const wasAlreadyFavorite = property.isFavorite;
     console.log(`Toggling favorite for property ${id}. Was favorite: ${wasAlreadyFavorite}`);
-    
+
     // IMMEDIATELY update UI - don't wait for API response
     setProperties(prev => {
       // Create a new array to ensure state updates are detected
-      const updated = prev.map(p => 
+      const updated = prev.map(p =>
         p.id === id ? { ...p, isFavorite: !p.isFavorite } : p
       );
       console.log(`Updated properties state. Property ${id} isFavorite now: ${!wasAlreadyFavorite}`);
       return updated;
     });
-    
+
     // If we also have a selected property in the modal that matches this ID, update it too
     if (selectedProperty && selectedProperty.id === id) {
       setSelectedProperty({
@@ -1394,17 +1392,17 @@ export default function ListingsPage() {
     // Show a subtle toast notification
     const action = wasAlreadyFavorite ? "Removed from" : "Added to";
     showSuccess(`${action} favorites`);
-    
+
     // Track analytics (non-blocking)
     const eventType = wasAlreadyFavorite ? 'favorite_removed' : 'favorite_added';
     trackAnalyticsEvent(eventType, id);
-    
+
     // Perform API operation in background
     try {
       if (wasAlreadyFavorite) {
         // Remove from favorites
         console.log(`Sending DELETE request for property ${id}`);
-        fetch(`/api/favorites/${id}`, { 
+        fetch(`/api/favorites/${id}`, {
           method: 'DELETE',
         }).then(response => {
           console.log(`DELETE response status: ${response.status}`);
@@ -1467,7 +1465,7 @@ export default function ListingsPage() {
     setSelectedProperty(property);
     setShowModal(true);
     setCurrentImageIndex(0);
-    
+
     // Fetch reviews when opening the modal
     if (property) {
       fetchPropertyReviews(property.id);
@@ -1491,14 +1489,14 @@ export default function ListingsPage() {
       comment: ''
     });
   };
-  
+
   // Fetch property reviews
   const fetchPropertyReviews = async (propertyId: string, page = 1) => {
     setReviewsLoading(true);
     try {
       const response = await fetch(`/api/reviews?propertyId=${propertyId}&page=${page}&limit=5`);
       if (!response.ok) throw new Error('Failed to fetch reviews');
-      
+
       const data = await response.json();
       setReviews(data.reviews);
       setReviewPagination(data.pagination);
@@ -1509,7 +1507,7 @@ export default function ListingsPage() {
       setReviewsLoading(false);
     }
   };
-  
+
   // Handle pagination for reviews
   const handleReviewPageChange = (newPage: number) => {
     if (selectedProperty) {
@@ -1517,18 +1515,18 @@ export default function ListingsPage() {
       fetchPropertyReviews(selectedProperty.id, newPage);
     }
   };
-  
+
   // Submit a new review
   const submitReview = async () => {
     if (!session?.user) {
       showError('Please sign in to leave a review');
       return;
     }
-    
+
     if (!selectedProperty) return;
-    
+
     setIsSubmittingReview(true);
-    
+
     try {
       const response = await fetch('/api/reviews', {
         method: 'POST',
@@ -1539,16 +1537,16 @@ export default function ListingsPage() {
           comment: userReview.comment || undefined
         })
       });
-      
+
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to submit review');
       }
-      
+
       // Refresh reviews
       fetchPropertyReviews(selectedProperty.id);
-      
+
       // Track analytics (non-blocking)
       trackAnalyticsEvent('review_submitted', selectedProperty.id, {
         rating: userReview.rating,
@@ -1556,16 +1554,16 @@ export default function ListingsPage() {
       }).catch(() => {
         // Silently ignore analytics errors
       });
-      
+
       // Reset review form
       setUserReview({
         rating: 0,
         comment: ''
       });
-      
+
       // Show success message
       showSuccess('Review submitted successfully');
-      
+
     } catch (error) {
       console.error('Error submitting review:', error);
       showError(error instanceof Error ? error.message : 'Failed to submit review');
@@ -1585,15 +1583,15 @@ export default function ListingsPage() {
   }) => {
     // Mini-gallery hover for desktop
     const [hovered, setHovered] = useState(false);
-    
+
     // Create a local state that mirrors the property.isFavorite for immediate UI updates
     const [localFavorite, setLocalFavorite] = useState(property.isFavorite);
-    
+
     // Update local state when the property prop changes
     useEffect(() => {
       setLocalFavorite(property.isFavorite);
     }, [property.isFavorite]);
-    
+
     // Handle favorite button click with local state update
     const handleFavoriteClick = (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -1616,7 +1614,7 @@ export default function ListingsPage() {
           />
           {/* Mini-gallery thumbnails on hover (desktop only) */}
           {property.images.length > 1 && (
-            <div className={`hidden lg:flex absolute bottom-4 right-4 gap-2 z-10 ${hovered ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}> 
+            <div className={`hidden lg:flex absolute bottom-4 right-4 gap-2 z-10 ${hovered ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}>
               {property.images.slice(1, 4).map((img: any) => (
                 <img
                   key={img.id}
@@ -1639,12 +1637,11 @@ export default function ListingsPage() {
             className="absolute top-4 right-4 p-2 rounded-full backdrop-blur-sm transition-all duration-200 hover:scale-110 z-10"
             aria-label={localFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <Heart 
-              className={`w-6 h-6 ${
-                localFavorite
-                  ? "text-red-500 fill-red-500" 
-                  : "text-white stroke-2 hover:text-red-500"
-              }`} 
+            <Heart
+              className={`w-6 h-6 ${localFavorite
+                ? "text-red-500 fill-red-500"
+                : "text-white stroke-2 hover:text-red-500"
+                }`}
             />
           </button>
           {/* Map Location Indicator - Show when property has coordinates */}
@@ -1734,14 +1731,14 @@ export default function ListingsPage() {
             >
               View Details
             </button>
-            <button 
+            <button
               onClick={() => onContact ? onContact(property) : null}
               className="px-4 py-3 border-2 border-[var(--color-primary-200)] text-[var(--color-primary-200)] rounded-xl hover:bg-[var(--color-primary-200)] hover:text-[var(--color-primary-800)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
             >
               <Phone className="w-4 h-4" />Contact
             </button>
             {isListView && (
-              <button 
+              <button
                 onClick={() => onContact ? onContact(property) : null}
                 className="px-4 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center gap-2"
               >
@@ -1768,7 +1765,7 @@ export default function ListingsPage() {
     } else {
       document.body.style.overflow = 'auto';
     }
-    
+
     // Cleanup function
     return () => {
       document.body.style.overflow = 'auto';
@@ -1785,21 +1782,21 @@ export default function ListingsPage() {
 
   // Track local favorite state for the modal
   const [modalFavorite, setModalFavorite] = useState(false);
-  
+
   // State for booking modal
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingDate, setBookingDate] = useState('');
   const [bookingTime, setBookingTime] = useState('');
   const [bookingNote, setBookingNote] = useState('');
   const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
-  
+
   // Update local state when selected property changes
   useEffect(() => {
     if (selectedProperty) {
       setModalFavorite(selectedProperty.isFavorite);
     }
   }, [selectedProperty]);
-  
+
   // Handle favorite toggle in modal
   const handleModalFavoriteToggle = () => {
     if (selectedProperty) {
@@ -1820,18 +1817,18 @@ export default function ListingsPage() {
   // Submit booking request
   const submitBooking = async () => {
     if (!selectedProperty || !session?.user) return;
-    
+
     if (!bookingDate || !bookingTime) {
       showError('Please select a date and time');
       return;
     }
-    
+
     setIsSubmittingBooking(true);
-    
+
     try {
       // Track analytics event
       trackAnalyticsEvent('booking_request', selectedProperty.id);
-      
+
       // In a real app, this would send the booking to an API endpoint
       // await fetch('/api/bookings', { 
       //   method: 'POST',
@@ -1843,18 +1840,18 @@ export default function ListingsPage() {
       //     notes: bookingNote
       //   })
       // });
-      
+
       // For now, simulate success
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       showSuccess('Booking request submitted successfully!');
       setShowBookingModal(false);
-      
+
       // Reset form
       setBookingDate('');
       setBookingTime('');
       setBookingNote('');
-      
+
     } catch (error) {
       console.error('Error submitting booking:', error);
       showError('Failed to submit booking request');
@@ -1866,7 +1863,7 @@ export default function ListingsPage() {
   // Handle phone contact
   const handlePhoneContact = () => {
     if (!selectedProperty) return;
-    
+
     // In a real app, this might reveal the owner's phone number
     // For now, track analytics and show a success message
     trackAnalyticsEvent('phone_contact', selectedProperty.id);
@@ -1876,7 +1873,7 @@ export default function ListingsPage() {
   // Handle email contact
   const handleEmailContact = () => {
     if (!selectedProperty) return;
-    
+
     // In a real app, this might open an email compose window
     // For now, track analytics and show a success message
     trackAnalyticsEvent('email_contact', selectedProperty.id);
@@ -1886,12 +1883,12 @@ export default function ListingsPage() {
   // Handle share property
   const handleShareProperty = () => {
     if (!selectedProperty) return;
-    
+
     // In a real app, this would open a share dialog
     // For now, copy the URL to clipboard
     const url = `${window.location.origin}/property/${selectedProperty.id}`;
     navigator.clipboard.writeText(url);
-    
+
     trackAnalyticsEvent('property_shared', selectedProperty.id);
     showSuccess('Property link copied to clipboard!');
   };
@@ -1900,15 +1897,15 @@ export default function ListingsPage() {
   const handlePropertyContact = (property: Property) => {
     // Track analytics
     trackAnalyticsEvent('property_card_contact', property.id);
-    
+
     // Show contact options modal or directly open the property modal
     setSelectedProperty(property);
     setShowModal(true);
     setCurrentImageIndex(0);
-    
+
     // Fetch reviews when opening the modal
     fetchPropertyReviews(property.id);
-    
+
     showSuccess('Opening property details. You can contact the owner from there.');
   };
 
@@ -1925,7 +1922,7 @@ export default function ListingsPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
     setSearchTerm(e.target.value);
-    
+
     // Track search analytics if search term is not empty
     if (e.target.value.trim()) {
       trackAnalyticsEvent('search_performed', undefined, {
@@ -1941,7 +1938,7 @@ export default function ListingsPage() {
     } else {
       setSelectedAmenities(prev => prev.filter(a => a !== amenity));
     }
-    
+
     // Track filter analytics
     trackAnalyticsEvent('filter_applied', undefined, {
       filterType: 'amenity',
@@ -1952,7 +1949,7 @@ export default function ListingsPage() {
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLoading(true);
     setSortBy(e.target.value);
-    
+
     // Track sort analytics
     trackAnalyticsEvent('sort_applied', undefined, {
       sortBy: e.target.value
@@ -1962,7 +1959,7 @@ export default function ListingsPage() {
     setLoading(true);
     const newValue = !quickFilters[filter];
     setQuickFilters(prev => ({ ...prev, [filter]: newValue }));
-    
+
     // Track quick filter analytics
     trackAnalyticsEvent('quick_filter_applied', undefined, {
       filterType: filter,
@@ -1983,7 +1980,7 @@ export default function ListingsPage() {
       petFriendly: false,
       availableNow: false
     });
-    
+
     // Track clear filters analytics
     trackAnalyticsEvent('filters_cleared', undefined, {
       action: 'clear_all'
@@ -1994,7 +1991,7 @@ export default function ListingsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Apply custom styles */}
       <style jsx global>{customScrollbarStyles}</style>
-      
+
       <Navbar />
 
       {/* Main Content */}
@@ -2011,12 +2008,12 @@ export default function ListingsPage() {
               `,
               backgroundSize: '40px 40px'
             }}></div>
-            
+
             {/* Floating geometric shapes */}
             <div className="absolute top-10 left-10 w-16 h-16 border border-white/15 rounded-full floating-shape"></div>
-            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{animationDelay: '1s'}}></div>
+            <div className="absolute top-32 right-20 w-12 h-12 border border-white/15 transform rotate-45 floating-shape" style={{ animationDelay: '1s' }}></div>
             <div className="absolute bottom-20 left-1/4 w-8 h-8 border border-white/15 rounded-full pulsing-shape"></div>
-            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{animationDelay: '2s'}}></div>
+            <div className="absolute bottom-32 right-1/3 w-16 h-16 border border-white/15 transform rotate-12 floating-shape" style={{ animationDelay: '2s' }}></div>
           </div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
             <div className="text-center mb-8">
@@ -2079,7 +2076,7 @@ export default function ListingsPage() {
                       </div>
                       <span>{showPropertyTypeModal ? "▲" : "▼"}</span>
                     </button>
-                    
+
                     {/* Dropdown Portal */}
                     <DropdownPortal
                       isOpen={showPropertyTypeModal}
@@ -2095,23 +2092,21 @@ export default function ListingsPage() {
                             setShowPropertyTypeModal(false);
                             setLoading(true);
                           }}
-                          className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center transition-colors duration-200 ${
-                            selectedType === type.value 
-                              ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]" 
-                              : "text-gray-700 hover:bg-gray-50 border border-transparent"
-                          }`}
+                          className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center transition-colors duration-200 ${selectedType === type.value
+                            ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]"
+                            : "text-gray-700 hover:bg-gray-50 border border-transparent"
+                            }`}
                         >
                           <div className="flex items-center gap-3 w-full">
-                            <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${
-                              type.color === 'blue' ? 'bg-blue-200 text-blue-800' : 
-                              type.color === 'purple' ? 'bg-purple-200 text-purple-800' : 
-                              type.color === 'green' ? 'bg-green-200 text-green-800' :
-                              type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
-                              type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
-                              type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
-                              type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
-                              'bg-gray-200 text-black'
-                            }`}>{type.icon}</span>
+                            <span className={`text-xl flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg ${type.color === 'blue' ? 'bg-blue-200 text-blue-800' :
+                              type.color === 'purple' ? 'bg-purple-200 text-purple-800' :
+                                type.color === 'green' ? 'bg-green-200 text-green-800' :
+                                  type.color === 'yellow' ? 'bg-amber-200 text-amber-800' :
+                                    type.color === 'pink' ? 'bg-pink-200 text-pink-800' :
+                                      type.color === 'orange' ? 'bg-orange-200 text-orange-800' :
+                                        type.color === 'teal' ? 'bg-teal-200 text-teal-800' :
+                                          'bg-gray-200 text-black'
+                              }`}>{type.icon}</span>
                             <div className="flex-1 min-w-0">
                               <div className="font-medium">{type.label}</div>
                               <div className="text-xs truncate">{type.description}</div>
@@ -2128,11 +2123,10 @@ export default function ListingsPage() {
                   {/* Filter Toggle */}
                   <button
                     onClick={() => setShowFilters(!showFilters)}
-                    className={`flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${
-                      showFilters
-                        ? "bg-[var(--color-primary-400)] text-white"
-                        : "bg-[var(--color-primary-500)] text-white hover:bg-[var(--color-primary-400)] active:bg-[var(--color-primary-300)]"
-                    }`}
+                    className={`flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${showFilters
+                      ? "bg-[var(--color-primary-400)] text-white"
+                      : "bg-[var(--color-primary-500)] text-white hover:bg-[var(--color-primary-400)] active:bg-[var(--color-primary-300)]"
+                      }`}
                   >
                     <Filter className="w-5 h-5" />
                     Filters
@@ -2141,13 +2135,12 @@ export default function ListingsPage() {
 
                 {/* Quick Filters */}
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <button 
+                  <button
                     onClick={() => handleQuickFilterToggle('nearCampus')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
-                      quickFilters.nearCampus 
-                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${quickFilters.nearCampus
+                      ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.nearCampus ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.nearCampus && <CheckCircle className="w-3 h-3" />}
@@ -2155,13 +2148,12 @@ export default function ListingsPage() {
                     <MapPin className={`w-3 h-3 ${quickFilters.nearCampus ? 'text-white' : 'text-gray-500'}`} />
                     Near Campus
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleQuickFilterToggle('furnished')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
-                      quickFilters.furnished 
-                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${quickFilters.furnished
+                      ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.furnished ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.furnished && <CheckCircle className="w-3 h-3" />}
@@ -2169,13 +2161,12 @@ export default function ListingsPage() {
                     <Sofa className={`w-3 h-3 ${quickFilters.furnished ? 'text-white' : 'text-gray-500'}`} />
                     Furnished
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleQuickFilterToggle('petFriendly')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
-                      quickFilters.petFriendly 
-                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${quickFilters.petFriendly
+                      ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.petFriendly ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.petFriendly && <CheckCircle className="w-3 h-3" />}
@@ -2183,13 +2174,12 @@ export default function ListingsPage() {
                     <PawPrintIcon className={`w-3 h-3 ${quickFilters.petFriendly ? 'text-white' : 'text-gray-500'}`} />
                     Pet Friendly
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleQuickFilterToggle('availableNow')}
-                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${
-                      quickFilters.availableNow 
-                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm" 
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`px-3 py-1 rounded-full text-sm transition-all duration-200 flex items-center gap-1.5 ${quickFilters.availableNow
+                      ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] shadow-sm"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <span className={`transition-all duration-300 ${quickFilters.availableNow ? 'w-3 opacity-100' : 'w-0 opacity-0'}`}>
                       {quickFilters.availableNow && <CheckCircle className="w-3 h-3" />}
@@ -2197,21 +2187,21 @@ export default function ListingsPage() {
                     <Calendar className={`w-3 h-3 ${quickFilters.availableNow ? 'text-white' : 'text-gray-500'}`} />
                     Available Now
                   </button>
-                  
+
                   {/* Clear Filters Button - Show only when filters are active */}
-                  {(quickFilters.nearCampus || quickFilters.furnished || 
-                    quickFilters.petFriendly || quickFilters.availableNow || 
-                    searchTerm || selectedType !== "All" || 
-                    priceRange[0] > 0 || priceRange[1] < 75000 || 
+                  {(quickFilters.nearCampus || quickFilters.furnished ||
+                    quickFilters.petFriendly || quickFilters.availableNow ||
+                    searchTerm || selectedType !== "All" ||
+                    priceRange[0] > 0 || priceRange[1] < 75000 ||
                     selectedAmenities.length > 0) && (
-                    <button 
-                      onClick={handleClearFilters}
-                      className="px-3 py-1 bg-red-500 text-white rounded-full text-sm hover:bg-red-600 transition-colors duration-200 flex items-center gap-1.5 font-medium"
-                    >
-                      <X className="w-3 h-3" />
-                      Clear All
-                    </button>
-                  )}
+                      <button
+                        onClick={handleClearFilters}
+                        className="px-3 py-1 bg-red-500 text-white rounded-full text-sm hover:bg-red-600 transition-colors duration-200 flex items-center gap-1.5 font-medium"
+                      >
+                        <X className="w-3 h-3" />
+                        Clear All
+                      </button>
+                    )}
                 </div>
               </div>
             </div>
@@ -2227,7 +2217,7 @@ export default function ListingsPage() {
                 <Filter className="w-5 h-5 text-[var(--color-primary-600)]" />
                 Advanced Filters
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Material UI Price Range Slider */}
                 <MaterialPriceRangeSlider
@@ -2253,11 +2243,10 @@ export default function ListingsPage() {
                     {amenities.map((amenity) => (
                       <label
                         key={amenity}
-                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors duration-200 ${
-                          selectedAmenities.includes(amenity)
-                            ? 'bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]'
-                            : 'hover:bg-gray-50 border border-gray-200'
-                        }`}
+                        className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors duration-200 ${selectedAmenities.includes(amenity)
+                          ? 'bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]'
+                          : 'hover:bg-gray-50 border border-gray-200'
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -2274,8 +2263,8 @@ export default function ListingsPage() {
                   </div>
                   {selectedAmenities.length > 0 && (
                     <div className="mt-2 flex justify-end">
-                      <button 
-                        onClick={() => setSelectedAmenities([])} 
+                      <button
+                        onClick={() => setSelectedAmenities([])}
                         className="text-xs bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition-colors duration-200 font-medium"
                       >
                         Clear Selection
@@ -2290,34 +2279,33 @@ export default function ListingsPage() {
                     <Filter className="w-4 h-4 text-[var(--color-primary-600)]" />
                     More Options
                   </label>
-                  
+
                   {/* Property feature toggles */}
                   <div className="space-y-3 mb-4">
                     {Object.entries(quickFilters).map(([key, value]) => (
                       <button
                         key={key}
                         onClick={() => handleQuickFilterToggle(key as keyof typeof quickFilters)}
-                        className={`w-full flex items-center justify-between p-2 rounded-lg text-sm transition-colors duration-200 ${
-                          value 
-                            ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] font-medium" 
-                            : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
-                        }`}
+                        className={`w-full flex items-center justify-between p-2 rounded-lg text-sm transition-colors duration-200 ${value
+                          ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)] font-medium"
+                          : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                          }`}
                       >
                         <span className="flex items-center gap-2">
                           {key === 'nearCampus' && <MapPin className="w-4 h-4" />}
                           {key === 'furnished' && <Sofa className="w-4 h-4" />}
                           {key === 'petFriendly' && <PawPrintIcon className="w-4 h-4" />}
                           {key === 'availableNow' && <Calendar className="w-4 h-4" />}
-                          {key === 'nearCampus' ? 'Near Campus' : 
-                           key === 'furnished' ? 'Furnished' :
-                           key === 'petFriendly' ? 'Pet Friendly' :
-                           key === 'availableNow' ? 'Available Now' : key}
+                          {key === 'nearCampus' ? 'Near Campus' :
+                            key === 'furnished' ? 'Furnished' :
+                              key === 'petFriendly' ? 'Pet Friendly' :
+                                key === 'availableNow' ? 'Available Now' : key}
                         </span>
                         {value ? <CheckCircle className="w-4 h-4 text-white" /> : null}
                       </button>
                     ))}
                   </div>
-                  
+
                   <div className="mt-auto">
                     <button
                       onClick={handleClearFilters}
@@ -2334,7 +2322,7 @@ export default function ListingsPage() {
               <div className="mt-6 border-t border-gray-200 pt-4 flex justify-end">
                 <div className="bg-[var(--color-primary-500)] text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2">
                   <Search className="w-4 h-4" />
-                  <span>{filteredProperties.length}</span> 
+                  <span>{filteredProperties.length}</span>
                   <span>properties found</span>
                 </div>
               </div>
@@ -2358,24 +2346,24 @@ export default function ListingsPage() {
                     </>
                   )}
                 </span>
-                
+
                 {/* Active filters indicator */}
-                {(quickFilters.nearCampus || quickFilters.furnished || 
-                  quickFilters.petFriendly || quickFilters.availableNow || 
-                  searchTerm || selectedType !== "All" || 
-                  priceRange[0] > 0 || priceRange[1] < 75000 || 
+                {(quickFilters.nearCampus || quickFilters.furnished ||
+                  quickFilters.petFriendly || quickFilters.availableNow ||
+                  searchTerm || selectedType !== "All" ||
+                  priceRange[0] > 0 || priceRange[1] < 75000 ||
                   selectedAmenities.length > 0) && (
-                  <span className="ml-3 px-3 py-1.5 bg-[var(--color-primary-500)] text-white text-xs rounded-full flex items-center gap-1 font-medium">
-                    <Filter className="w-3 h-3" />
-                    Filters Applied
-                  </span>
-                )}
+                    <span className="ml-3 px-3 py-1.5 bg-[var(--color-primary-500)] text-white text-xs rounded-full flex items-center gap-1 font-medium">
+                      <Filter className="w-3 h-3" />
+                      Filters Applied
+                    </span>
+                  )}
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              
-              
+
+
               {/* Sort dropdown - Custom */}
               <div ref={sortByRef} className="relative">
                 <button
@@ -2391,13 +2379,13 @@ export default function ListingsPage() {
                   </div>
                   <span className="ml-auto">{showSortByModal ? "▲" : "▼"}</span>
                 </button>
-                
+
                 {/* Sort Options Dropdown Portal */}
                 <DropdownPortal
                   isOpen={showSortByModal}
                   onClose={() => setShowSortByModal(false)}
                   triggerRef={sortByRef}
-                                          className="w-[220px] max-h-[320px] overflow-y-auto p-2 custom-scrollbar"
+                  className="w-[220px] max-h-[320px] overflow-y-auto p-2 custom-scrollbar"
                 >
                   {SORT_OPTIONS.map(option => (
                     <button
@@ -2407,11 +2395,10 @@ export default function ListingsPage() {
                         setShowSortByModal(false);
                         setLoading(true);
                       }}
-                      className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center transition-colors duration-200 ${
-                        sortBy === option.value 
-                          ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]" 
-                          : "text-gray-700 hover:bg-gray-50 border border-transparent"
-                      }`}
+                      className={`w-full text-left px-3 py-2 mb-1 rounded-lg flex items-center transition-colors duration-200 ${sortBy === option.value
+                        ? "bg-[var(--color-primary-500)] text-white border border-[var(--color-primary-400)]"
+                        : "text-gray-700 hover:bg-gray-50 border border-transparent"
+                        }`}
                     >
                       <div className="flex items-center gap-3 w-full">
                         <span className="text-xl flex-shrink-0">{option.icon}</span>
@@ -2432,31 +2419,29 @@ export default function ListingsPage() {
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => {
-                  setViewMode("grid");
-                  trackAnalyticsEvent('view_mode_changed', undefined, {
-                    mode: 'grid'
-                  });
-                }}
-                  className={`p-2 rounded-md transition-colors duration-200 ${
-                    viewMode === "grid"
-                      ? "bg-[var(--color-primary-500)] text-white"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
-                  }`}
+                    setViewMode("grid");
+                    trackAnalyticsEvent('view_mode_changed', undefined, {
+                      mode: 'grid'
+                    });
+                  }}
+                  className={`p-2 rounded-md transition-colors duration-200 ${viewMode === "grid"
+                    ? "bg-[var(--color-primary-500)] text-white"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
+                    }`}
                 >
                   <Grid className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => {
-                  setViewMode("list");
-                  trackAnalyticsEvent('view_mode_changed', undefined, {
-                    mode: 'list'
-                  });
-                }}
-                  className={`p-2 rounded-md transition-colors duration-200 ${
-                    viewMode === "list"
-                      ? "bg-[var(--color-primary-500)] text-white"
-                      : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
-                  }`}
+                    setViewMode("list");
+                    trackAnalyticsEvent('view_mode_changed', undefined, {
+                      mode: 'list'
+                    });
+                  }}
+                  className={`p-2 rounded-md transition-colors duration-200 ${viewMode === "list"
+                    ? "bg-[var(--color-primary-500)] text-white"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-200"
+                    }`}
                 >
                   <List className="w-5 h-5" />
                 </button>
@@ -2471,48 +2456,48 @@ export default function ListingsPage() {
                 <PropertiesListSkeleton isMobile={isMobile} />
               ) : (
                 <>
-          {viewMode === "list" ? (
-            <div className="space-y-4">
+                  {viewMode === "list" ? (
+                    <div className="space-y-4">
                       {filteredProperties.map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  isListView={true}
-                  onContact={handlePropertyContact}
-                />
-              ))}
-            </div>
-          ) : (
+                        <PropertyCard
+                          key={property.id}
+                          property={property}
+                          isListView={true}
+                          onContact={handlePropertyContact}
+                        />
+                      ))}
+                    </div>
+                  ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 items-stretch">
                       {filteredProperties.map((property) => (
                         <div key={property.id} className="flex justify-center h-full">
                           <div className="h-full flex">
-                  <PropertyCard property={property} onContact={handlePropertyContact} />
+                            <PropertyCard property={property} onContact={handlePropertyContact} />
                           </div>
-                </div>
-              ))}
-            </div>
-          )}
-          {/* No Results */}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {/* No Results */}
                   {filteredProperties.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No properties found
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Try adjusting your search criteria or filters
-              </p>
-              <button
+                    <div className="text-center py-12">
+                      <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search className="w-12 h-12 text-gray-400" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        No properties found
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        Try adjusting your search criteria or filters
+                      </p>
+                      <button
                         onClick={handleClearFilters}
-                className="bg-[var(--color-primary-500)] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors duration-200"
-              >
-                Clear All Filters
-              </button>
-            </div>
-          )}
+                        className="bg-[var(--color-primary-500)] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors duration-200"
+                      >
+                        Clear All Filters
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
             </div>
@@ -2556,8 +2541,8 @@ export default function ListingsPage() {
       {showModal && selectedProperty && (
         <>
           {isMobile ? (
-            <MobilePropertyModal 
-              property={selectedProperty!} 
+            <MobilePropertyModal
+              property={selectedProperty!}
               toggleFavorite={toggleFavorite}
               closePropertyModal={closePropertyModal}
               reviews={reviews}
@@ -2638,9 +2623,9 @@ export default function ListingsPage() {
                     {selectedProperty!.images.length > 1 && (
                       <>
                         <button
-                          onClick={e => { 
-                            e.stopPropagation(); 
-                            setCurrentImageIndex((currentImageIndex - 1 + selectedProperty!.images.length) % selectedProperty!.images.length); 
+                          onClick={e => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((currentImageIndex - 1 + selectedProperty!.images.length) % selectedProperty!.images.length);
                           }}
                           className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
                           aria-label="Previous image"
@@ -2648,9 +2633,9 @@ export default function ListingsPage() {
                           <ChevronDown className="w-6 h-6 rotate-90 text-gray-800" />
                         </button>
                         <button
-                          onClick={e => { 
-                            e.stopPropagation(); 
-                            setCurrentImageIndex((currentImageIndex + 1) % selectedProperty!.images.length); 
+                          onClick={e => {
+                            e.stopPropagation();
+                            setCurrentImageIndex((currentImageIndex + 1) % selectedProperty!.images.length);
                           }}
                           className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
                           aria-label="Next image"
@@ -2659,7 +2644,7 @@ export default function ListingsPage() {
                         </button>
                       </>
                     )}
-                    
+
                     {/* Image Counter Badge - Enhanced */}
                     {selectedProperty!.images.length > 1 && (
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/20 shadow-xl flex items-center gap-2">
@@ -2667,26 +2652,26 @@ export default function ListingsPage() {
                         <span>{currentImageIndex + 1}/{selectedProperty!.images.length}</span>
                       </div>
                     )}
-                    
+
                     {/* Status Badge - Enhanced */}
                     <div className="absolute top-4 right-4 px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10 bg-green-500 text-white border border-white/30 backdrop-blur-sm">
                       {selectedProperty!.isAvailable ? "Available Now" : "Not Available"}
                     </div>
-                    
+
                     {/* Floating Price Badge - Enhanced */}
                     <div className="absolute top-4 left-4 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] px-5 py-2.5 rounded-xl shadow-xl border border-white/60 text-white font-bold flex items-center gap-2">
                       <span className="text-xl">₹{selectedProperty!.price.toLocaleString()}</span>
                       <span className="text-sm font-normal opacity-90">/month</span>
                     </div>
-                    
+
                     {/* Property type badge */}
                     <div className="absolute top-18 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-300)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
                       <Building2 className="w-4 h-4 text-[var(--color-primary-300)]" />
                       {selectedProperty!.type}
                     </div>
-                    
+
                   </div>
-                  
+
                   {/* Thumbnails - Enhanced gallery strip */}
                   {selectedProperty!.images.length > 1 && (
                     <div className="flex gap-2 p-4 overflow-x-auto hide-scrollbar bg-gray-800 border-t border-gray-700">
@@ -2694,24 +2679,23 @@ export default function ListingsPage() {
                         <button
                           key={img.id}
                           onClick={e => { e.stopPropagation(); setCurrentImageIndex(idx); }}
-                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden transition-all duration-300 ${
-                            idx === currentImageIndex 
-                              ? 'border-2 border-[var(--color-primary-500)] shadow-lg scale-105 ring-2 ring-[var(--color-primary-300)] ring-opacity-50' 
-                              : 'border-2 border-transparent opacity-70 hover:opacity-100'
-                          }`}
+                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden transition-all duration-300 ${idx === currentImageIndex
+                            ? 'border-2 border-[var(--color-primary-500)] shadow-lg scale-105 ring-2 ring-[var(--color-primary-300)] ring-opacity-50'
+                            : 'border-2 border-transparent opacity-70 hover:opacity-100'
+                            }`}
                           aria-label={`View image ${idx + 1}`}
                         >
-                          <img 
-                            src={img.url} 
-                            alt="Thumbnail" 
-                            className="w-full h-full object-cover" 
-                            onError={e => (e.currentTarget.src = '/images/placeholder.png')} 
+                          <img
+                            src={img.url}
+                            alt="Thumbnail"
+                            className="w-full h-full object-cover"
+                            onError={e => (e.currentTarget.src = '/images/placeholder.png')}
                           />
                         </button>
                       ))}
                     </div>
                   )}
-                  
+
                   {/* Key Property Stats - Feature row at bottom */}
                   <div className="hidden lg:flex justify-between items-center px-6 py-5 bg-gray-800 text-white border-t border-gray-700">
                     <div className="flex items-center gap-2">
@@ -2723,7 +2707,7 @@ export default function ListingsPage() {
                         <div className="text-xs text-gray-300">Bedrooms</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <div className="bg-gray-900 p-2 rounded-lg">
                         <Bath className="w-5 h-5 text-[var(--color-primary-900)]" />
@@ -2733,7 +2717,7 @@ export default function ListingsPage() {
                         <div className="text-xs text-gray-300">Bathrooms</div>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <div className="bg-gray-900 p-2 rounded-lg">
                         <Calendar className="w-5 h-5 text-[var(--color-primary-900)]" />
@@ -2747,7 +2731,7 @@ export default function ListingsPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Right: Details Section */}
                 <div className="lg:w-1/2 w-full flex flex-col min-w-0 bg-white h-[50vh] lg:h-auto lg:max-h-[90vh] overflow-y-auto custom-scrollbar pb-20 lg:pb-0">
                   {/* Header: Title, Location, Rating */}
@@ -2756,21 +2740,21 @@ export default function ListingsPage() {
                     <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-[var(--color-primary-100)] bg-clip-text text-transparent leading-tight" title={selectedProperty!.title}>
                       {selectedProperty!.title}
                     </h2>
-                    
+
                     {/* Location and Rating Row */}
                     <div className="flex justify-between items-center mt-3">
                       <div className="flex items-center gap-2 text-white text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
                         <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
                         <span>{selectedProperty!.location}</span>
                       </div>
-                      
+
                       {/* Rating - Enhanced */}
                       <div className="flex items-center gap-2 bg-gradient-to-br from-yellow-50 to-yellow-100 px-3 py-1.5 rounded-lg shadow-sm border border-yellow-200">
                         <div className="flex">
                           {[1, 2, 3, 4, 5].map((star) => (
-                            <Star 
-                              key={star} 
-                              className={`w-4 h-4 ${star <= Math.round(selectedProperty!.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                            <Star
+                              key={star}
+                              className={`w-4 h-4 ${star <= Math.round(selectedProperty!.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                             />
                           ))}
                         </div>
@@ -2778,7 +2762,7 @@ export default function ListingsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Main content area */}
                   <div className="px-6">
                     {/* Quick Features Row - Improved layout */}
@@ -2788,7 +2772,7 @@ export default function ListingsPage() {
                       {selectedProperty!.parking && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 text-sm rounded-lg font-medium border border-purple-200"><Car className="w-4 h-4" /> Parking</span>}
                       {selectedProperty!.utilities && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-100 text-orange-700 text-sm rounded-lg font-medium border border-orange-200"><Zap className="w-4 h-4" /> Utilities Included</span>}
                     </div>
-                    
+
                     {/* Description - Enhanced typography */}
                     <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 my-6">
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -2799,7 +2783,7 @@ export default function ListingsPage() {
                       </h4>
                       <p className="text-gray-700 leading-relaxed">{selectedProperty!.description}</p>
                     </div>
-                    
+
                     {/* Amenities - Enhanced grid layout */}
                     <div className="my-6">
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -2810,8 +2794,8 @@ export default function ListingsPage() {
                       </h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {selectedProperty!.amenities.map((amenity, idx) => (
-                          <div 
-                            key={`${selectedProperty!.id}-amenity-${idx}`} 
+                          <div
+                            key={`${selectedProperty!.id}-amenity-${idx}`}
                             className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
                           >
                             <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
@@ -2820,9 +2804,9 @@ export default function ListingsPage() {
                             <span className="text-gray-800">{amenity.amenity.name}</span>
                           </div>
                         ))}
-    50                </div>
+                        50                </div>
                     </div>
-                    
+
                     {/* Reviews Section */}
                     <div className="my-6 bg-gray-50 p-5 rounded-xl border border-gray-100">
                       <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -2831,7 +2815,7 @@ export default function ListingsPage() {
                         </div>
                         Reviews ({selectedProperty!._count.reviews})
                       </h4>
-                      
+
                       {/* Review List */}
                       <div className="space-y-4 mb-6">
                         {reviewsLoading ? (
@@ -2846,9 +2830,9 @@ export default function ListingsPage() {
                                   <div className="flex items-center gap-2">
                                     <div className="w-10 h-10 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
                                       {review.user.image ? (
-                                        <img 
-                                          src={review.user.image} 
-                                          alt={review.user.name} 
+                                        <img
+                                          src={review.user.image}
+                                          alt={review.user.name}
                                           className="w-full h-full object-cover rounded-full"
                                         />
                                       ) : (
@@ -2865,9 +2849,9 @@ export default function ListingsPage() {
                                   <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
                                     <div className="flex">
                                       {[1, 2, 3, 4, 5].map(star => (
-                                        <Star 
-                                          key={star} 
-                                          className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                                        <Star
+                                          key={star}
+                                          className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                                         />
                                       ))}
                                     </div>
@@ -2878,18 +2862,17 @@ export default function ListingsPage() {
                                 )}
                               </div>
                             ))}
-                            
+
                             {/* Pagination controls */}
                             {reviewPagination.totalPages > 1 && (
                               <div className="flex justify-center mt-4 gap-2">
                                 <button
                                   onClick={() => handleReviewPageChange(reviewPagination.page - 1)}
                                   disabled={!reviewPagination.hasPrev}
-                                  className={`p-2 rounded-lg ${
-                                    reviewPagination.hasPrev 
-                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' 
-                                      : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                                  }`}
+                                  className={`p-2 rounded-lg ${reviewPagination.hasPrev
+                                    ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                    : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                    }`}
                                 >
                                   Previous
                                 </button>
@@ -2899,11 +2882,10 @@ export default function ListingsPage() {
                                 <button
                                   onClick={() => handleReviewPageChange(reviewPagination.page + 1)}
                                   disabled={!reviewPagination.hasNext}
-                                  className={`p-2 rounded-lg ${
-                                    reviewPagination.hasNext 
-                                      ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' 
-                                      : 'bg-gray-50 text-gray-400 cursor-not-allowed'
-                                  }`}
+                                  className={`p-2 rounded-lg ${reviewPagination.hasNext
+                                    ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                                    : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                                    }`}
                                 >
                                   Next
                                 </button>
@@ -2917,7 +2899,7 @@ export default function ListingsPage() {
                           </div>
                         )}
                       </div>
-                      
+
                       {/* Leave a review form */}
                       {session?.user ? (
                         <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -2932,12 +2914,11 @@ export default function ListingsPage() {
                                   onClick={() => setUserReview(prev => ({ ...prev, rating: star }))}
                                   className="focus:outline-none"
                                 >
-                                  <Star 
-                                    className={`w-6 h-6 ${
-                                      star <= userReview.rating 
-                                        ? 'text-yellow-400 fill-yellow-400' 
-                                        : 'text-gray-300 hover:text-yellow-200'
-                                    }`} 
+                                  <Star
+                                    className={`w-6 h-6 ${star <= userReview.rating
+                                      ? 'text-yellow-400 fill-yellow-400'
+                                      : 'text-gray-300 hover:text-yellow-200'
+                                      }`}
                                   />
                                 </button>
                               ))}
@@ -2972,7 +2953,7 @@ export default function ListingsPage() {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Landlord Info - Enhanced card */}
                     <div className="my-6 bg-[var(--color-primary-800)] p-5 rounded-xl border border-[var(--color-primary-500)]">
                       <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -3006,11 +2987,11 @@ export default function ListingsPage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Action Bar - Sticky at bottom with enhanced buttons */}
                   <div className="sticky bottom-0 left-0 right-0 bg-white shadow-lg border-t border-gray-200 px-6 py-4 mt-auto">
                     <div className="flex gap-3 items-center">
-                      <button 
+                      <button
                         onClick={handleBookViewing}
                         className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3.5 px-4 rounded-xl font-medium hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
                       >
@@ -3018,29 +2999,28 @@ export default function ListingsPage() {
                         <span className="font-semibold">Book Viewing</span>
                       </button>
                       <div className="flex gap-3">
-                        <button 
+                        <button
                           onClick={handlePhoneContact}
                           className="p-3.5 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-white rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                           <Phone className="w-5 h-5" />
                         </button>
-                        <button 
+                        <button
                           onClick={handleEmailContact}
                           className="p-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                           <Mail className="w-5 h-5" />
                         </button>
-                        <button 
-                          onClick={handleModalFavoriteToggle} 
+                        <button
+                          onClick={handleModalFavoriteToggle}
                           className="p-2.5 rounded-xl flex items-center justify-center"
                           aria-label={modalFavorite ? "Remove from favorites" : "Add to favorites"}
                         >
-                          <Heart 
-                            className={`w-7 h-7 ${
-                              modalFavorite
-                                ? "text-red-500 fill-red-500" 
-                                : "text-gray-400 stroke-[2px] hover:text-red-400"
-                            }`} 
+                          <Heart
+                            className={`w-7 h-7 ${modalFavorite
+                              ? "text-red-500 fill-red-500"
+                              : "text-gray-400 stroke-[2px] hover:text-red-400"
+                              }`}
                           />
                         </button>
                       </div>
@@ -3064,10 +3044,10 @@ export default function ListingsPage() {
             >
               <X className="w-5 h-5" />
             </button>
-            
+
             <h3 className="text-xl font-bold text-gray-900 mb-4">Book a Viewing</h3>
             <p className="text-gray-600 mb-6">Schedule a viewing for {selectedProperty.title}</p>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
@@ -3079,7 +3059,7 @@ export default function ListingsPage() {
                   className="w-full px-3 py-2 border border-gray-300 text-gray-400 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
                 <select
@@ -3099,7 +3079,7 @@ export default function ListingsPage() {
                   <option value="17:00">05:00 PM</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
                 <textarea
@@ -3110,7 +3090,7 @@ export default function ListingsPage() {
                   rows={3}
                 ></textarea>
               </div>
-              
+
               <button
                 onClick={submitBooking}
                 disabled={isSubmittingBooking}

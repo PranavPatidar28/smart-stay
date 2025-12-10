@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, Search, Heart, Building2, Home, User, Settings } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import UserMenu from "./UserMenu";
-import { useSession } from "next-auth/react";
+import { authClient } from "@/lib/auth-client";
 import RoleRequiredModal from "./RoleRequiredModal";
 
 export default function Navbar() {
@@ -15,8 +15,8 @@ export default function Navbar() {
   const [isNavigating, setIsNavigating] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { data: session } = useSession();
-  
+  const { data: session } = authClient.useSession();
+
   // Check if we're on the home page
   // const isHomePage = pathname === "/";
 
@@ -50,7 +50,7 @@ export default function Navbar() {
       // If no specific role required or user not logged in, navigate normally
       return href;
     }
-    
+
     // Check if user has the required role
     if ((session?.user as { role?: string | null })?.role === requiresRole) {
       return href;
@@ -63,7 +63,7 @@ export default function Navbar() {
   // Handle click for role-restricted links
   const handleLinkClick = (e: React.MouseEvent, requiresRole?: string | null) => {
     if (!requiresRole || !session) return;
-    
+
     if ((session?.user as { role?: string | null })?.role !== requiresRole) {
       e.preventDefault();
       setShowRoleModal(true);
@@ -78,50 +78,50 @@ export default function Navbar() {
     }
 
     setIsNavigating(true);
-    
+
     // Use router.push for instant navigation
     router.push(href);
-    
+
     // Close mobile menu if open
     if (isMenuOpen) {
       setIsMenuOpen(false);
     }
-    
+
     // Reset navigation state after a brief delay
     setTimeout(() => setIsNavigating(false), 100);
   };
 
   const navLinks = [
-    { 
-      href: "/", 
-      label: "Home", 
+    {
+      href: "/",
+      label: "Home",
       icon: <Home className="w-5 h-5" />,
       requiresRole: null
     },
-    { 
-      href: "/listings", 
-      label: "Browse Listings", 
+    {
+      href: "/listings",
+      label: "Browse Listings",
       icon: <Search className="w-5 h-5" />,
       requiresRole: null
     },
-    { 
-      href: "/owner-dashboard", 
-      label: "List Property", 
+    {
+      href: "/owner-dashboard",
+      label: "List Property",
       icon: <Building2 className="w-5 h-5" />,
       requiresRole: "LANDLORD"
     },
-    { 
-      href: "/favorites", 
-      label: "Favorites", 
+    {
+      href: "/favorites",
+      label: "Favorites",
       icon: <Heart className="w-5 h-5" />,
       requiresRole: null
     },
   ];
 
   const additionalLinks = [
-    { 
-      href: "/settings", 
-      label: "Settings", 
+    {
+      href: "/settings",
+      label: "Settings",
       icon: <Settings className="w-5 h-5" />,
       requiresRole: null
     },
@@ -132,11 +132,11 @@ export default function Navbar() {
     if (currentPage === "/") {
       // Home page: transparent with white text, solid background when scrolled
       return {
-        nav: isScrolled 
-          ? 'bg-white/90 backdrop-blur-xl  shadow-lg' 
+        nav: isScrolled
+          ? 'bg-white/90 backdrop-blur-xl  shadow-lg'
           : 'bg-transparent',
-        logo: isScrolled 
-          ? 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent' 
+        logo: isScrolled
+          ? 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent'
           : 'text-white drop-shadow-lg',
         logoHover: isScrolled
           ? 'hover:opacity-80'
@@ -179,8 +179,8 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link 
-                href="/" 
+              <Link
+                href="/"
                 className={`transition-all duration-300 ${styles.logoHover}`}
                 prefetch={true}
               >
@@ -276,19 +276,17 @@ export default function Navbar() {
                   <button
                     key={link.href}
                     onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
-                    className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
-                      pathname === link.href 
-                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]' 
+                    className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${pathname === link.href
+                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
                         : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
-                    } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
+                      } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${index * 100}ms` }}
                     disabled={isNavigating}
                   >
-                    <div className={`p-2 rounded-xl transition-all duration-200 ${
-                      pathname === link.href 
-                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]' 
+                    <div className={`p-2 rounded-xl transition-all duration-200 ${pathname === link.href
+                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]'
                         : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
-                    }`}>
+                      }`}>
                       {link.icon}
                     </div>
                     <span className="flex-1">{link.label}</span>
@@ -310,19 +308,17 @@ export default function Navbar() {
                   <button
                     key={link.href}
                     onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
-                    className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${
-                      pathname === link.href 
-                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]' 
+                    className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${pathname === link.href
+                        ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
                         : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
-                    } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
+                      } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${(index + navLinks.length) * 100}ms` }}
                     disabled={isNavigating}
                   >
-                    <div className={`p-2 rounded-xl transition-all duration-200 ${
-                      pathname === link.href 
-                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]' 
+                    <div className={`p-2 rounded-xl transition-all duration-200 ${pathname === link.href
+                        ? 'bg-[var(--color-primary-100)] text-[var(--color-primary-600)]'
                         : 'bg-gray-100 text-gray-600 group-hover:bg-[var(--color-primary-50)] group-hover:text-[var(--color-primary-600)]'
-                    }`}>
+                      }`}>
                       {link.icon}
                     </div>
                     <span className="flex-1">{link.label}</span>
