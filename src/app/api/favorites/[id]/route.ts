@@ -4,9 +4,10 @@ import { getSession } from '@/lib/auth-server'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -21,7 +22,7 @@ export async function DELETE(
       where: {
         userId_propertyId: {
           userId: session.user.id,
-          propertyId: params.id,
+          propertyId: id,
         },
       },
     })
@@ -38,7 +39,7 @@ export async function DELETE(
       where: {
         userId_propertyId: {
           userId: session.user.id,
-          propertyId: params.id,
+          propertyId: id,
         },
       },
     })

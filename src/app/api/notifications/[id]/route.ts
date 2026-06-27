@@ -4,9 +4,10 @@ import { getSession } from '@/lib/auth-server'
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -19,7 +20,7 @@ export async function PUT(
     // Check if notification exists and belongs to user
     const notification = await prisma.notification.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
     })
@@ -33,7 +34,7 @@ export async function PUT(
 
     // Mark notification as read
     const updatedNotification = await prisma.notification.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { read: true },
     })
 

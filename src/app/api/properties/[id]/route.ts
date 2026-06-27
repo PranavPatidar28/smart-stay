@@ -1,50 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
+import { getSession } from '@/lib/auth-server'
 
 // Define more flexible schemas for validation
 const updatePropertySchema = z.object({
-  id: z.string().optional(),
   title: z.string().min(3).max(100).optional(),
-  description: z.string().optional().nullable(),
-  location: z.string().min(3).optional(),
-  latitude: z.number().optional().nullable(),
-  longitude: z.number().optional().nullable(),
-  price: z.number().min(0).optional(),
-  deposit: z.number().min(0).optional().nullable(),
+  description: z.string().max(5000).optional().nullable(),
+  location: z.string().min(3).max(200).optional(),
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
+  price: z.number().min(0).max(1000000).optional(),
+  deposit: z.number().min(0).max(10000000).optional().nullable(),
   type: z.enum(['APARTMENT', 'STUDIO', 'SHARED_HOUSE', 'LUXURY', 'ROOM', 'FAMILY_HOME', 'HOSTEL', 'PG']).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'PENDING', 'RENTED']).optional(),
-  bedrooms: z.number().min(0).optional().nullable(),
-  bathrooms: z.number().min(0).optional().nullable(),
+  bedrooms: z.number().int().min(0).max(50).optional().nullable(),
+  bathrooms: z.number().min(0).max(50).optional().nullable(),
   availableFrom: z.string().optional().nullable(),
-  virtualTourUrl: z.string().url().optional().nullable(),
-  seoKeywords: z.string().optional().nullable(),
-  contactPhone: z.string().optional().nullable(),
-  contactEmail: z.string().email().optional().nullable(),
+  virtualTourUrl: z.string().url().max(2000).optional().nullable(),
+  seoKeywords: z.string().max(500).optional().nullable(),
+  contactPhone: z.string().max(20).optional().nullable(),
+  contactEmail: z.string().email().max(200).optional().nullable(),
   utilities: z.boolean().optional(),
   petFriendly: z.boolean().optional(),
   furnished: z.boolean().optional(),
   parking: z.boolean().optional(),
-  images: z.array(z.string()).optional(),
-  amenities: z.array(z.string()).optional(),
-  ownerId: z.string().optional(),
+  images: z.array(z.string().url().max(2000)).max(20).optional(),
+  amenities: z.array(z.string().min(1).max(50)).max(30).optional(),
+  // NOTE: id and ownerId are intentionally NOT accepted — the property id comes
+  // from the URL and ownership can never be reassigned via this endpoint.
 })
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const property = await prisma.property.findUnique({
-      where: { id: params.id },
+      where: { id: id },
       include: {
         owner: {
           select: {
             id: true,
             name: true,
             verified: true,
-            phone: true,
-            email: true,
+            // Contact details (phone/email) are intentionally omitted from this
+            // public endpoint. They are exchanged via the authenticated inquiry flow.
           },
         },
         images: {
@@ -83,11 +85,9 @@ export async function GET(
       )
     }
 
-    // Increment view count
-    await prisma.property.update({
-      where: { id: params.id },
-      data: { views: { increment: 1 } },
-    })
+    // View counting is handled exclusively by POST /api/analytics/track
+    // ('property_view') with per-session dedup, so we do NOT increment here
+    // (incrementing on every fetch double-counts and is trivially inflatable).
 
     return NextResponse.json(property)
   } catch (error) {
@@ -101,171 +101,113 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    // Require authentication and ownership.
+    const session = await getSession();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
-    
-    try {
-      const validatedData = updatePropertySchema.parse(body);
+    const validatedData = updatePropertySchema.parse(body);
 
-      // Check if property exists
-      const existingProperty = await prisma.property.findUnique({
-        where: { id: params.id },
-      });
+    // Check if property exists and is owned by the caller.
+    const existingProperty = await prisma.property.findUnique({
+      where: { id: id },
+      select: { id: true, ownerId: true },
+    });
 
-      if (!existingProperty) {
-        return NextResponse.json(
-          { error: 'Property not found' },
-          { status: 404 }
-        );
-      }
+    if (!existingProperty || existingProperty.ownerId !== session.user.id) {
+      // Return 404 (not 403) so we don't leak the existence of others' properties.
+      return NextResponse.json(
+        { error: 'Property not found' },
+        { status: 404 }
+      );
+    }
 
-      // Remove images and amenities from validatedData before update
-      const { images: imageUrls, amenities: amenityNames, ...updateData } = validatedData;
-      
-      // Prepare update data with proper handling of nullable fields
-      const updateFields: Record<string, unknown> = {
-        ...updateData,
-        lastUpdated: new Date(),
-      };
+    // Separate relations from scalar fields. Build the scalar update payload
+    // from an explicit allowlist so client input can never set ownerId/id/etc.
+    const { images: imageUrls, amenities: amenityNames, ...updateData } = validatedData;
 
-      // Handle nullable fields properly
-      if (updateData.availableFrom !== undefined) {
-        updateFields.availableFrom = updateData.availableFrom ? new Date(updateData.availableFrom) : null;
-      }
-      
-      if (updateData.bedrooms !== undefined) {
-        updateFields.bedrooms = updateData.bedrooms ?? 1; // Use default if null
-      }
-      
-      if (updateData.bathrooms !== undefined) {
-        updateFields.bathrooms = updateData.bathrooms ?? 1; // Use default if null
-      }
-      
-      // Update property
-      let updatedProperty = await prisma.property.update({
-        where: { id: params.id },
+    const updateFields: Record<string, unknown> = {
+      ...updateData,
+      lastUpdated: new Date(),
+    };
+
+    // Handle nullable/derived fields properly.
+    if (updateData.availableFrom !== undefined) {
+      updateFields.availableFrom = updateData.availableFrom ? new Date(updateData.availableFrom) : null;
+    }
+    if (updateData.bedrooms !== undefined) {
+      updateFields.bedrooms = updateData.bedrooms ?? 1;
+    }
+    if (updateData.bathrooms !== undefined) {
+      updateFields.bathrooms = updateData.bathrooms ?? 1;
+    }
+
+    // Apply the property update plus any image/amenity replacement atomically,
+    // so a partial failure cannot leave the property without images/amenities.
+    const updatedProperty = await prisma.$transaction(async (tx) => {
+      await tx.property.update({
+        where: { id: id },
         data: updateFields,
-        include: {
-          owner: {
-            select: {
-              id: true,
-              name: true,
-              verified: true,
-            },
-          },
-          images: {
-            orderBy: { order: 'asc' },
-          },
-          amenities: {
-            include: {
-              amenity: true,
-            },
-          },
-        },
       });
-      
-      // Update images if provided
-      if (imageUrls && imageUrls.length > 0) {
-        try {
-          // Delete existing images
-          await prisma.propertyImage.deleteMany({
-            where: { propertyId: params.id },
-          });
 
-          // Create new images
-          await prisma.propertyImage.createMany({
+      if (imageUrls) {
+        await tx.propertyImage.deleteMany({ where: { propertyId: id } });
+        if (imageUrls.length > 0) {
+          await tx.propertyImage.createMany({
             data: imageUrls.map((url, index) => ({
-              propertyId: params.id,
+              propertyId: id,
               url,
               order: index,
               isCover: index === 0,
             })),
           });
-        } catch (imageError) {
-          throw new Error(`Image update failed: ${(imageError as Error).message}`);
         }
       }
 
-      // Update amenities if provided
-      if (amenityNames && amenityNames.length > 0) {
-        try {
-          // Delete existing amenities
-          await prisma.propertyAmenity.deleteMany({
-            where: { propertyId: params.id },
-          });
-
-          // Create new amenities
-          for (const amenityName of amenityNames) {
-            await prisma.propertyAmenity.create({
-              data: {
-                property: {
-                  connect: { id: params.id }
-                },
-                amenity: {
-                  connectOrCreate: {
-                    where: { name: amenityName },
-                    create: {
-                      name: amenityName,
-                      category: 'Custom',
-                    },
-                  },
-                },
-              },
-            });
-          }
-        } catch (amenityError) {
-          throw new Error(`Amenity update failed: ${(amenityError as Error).message}`);
-        }
-      }
-
-      // Fetch the updated property with fresh data
-      if (validatedData.images || validatedData.amenities) {
-        try {
-          const refreshedProperty = await prisma.property.findUnique({
-            where: { id: params.id },
-            include: {
-              owner: {
-                select: {
-                  id: true,
-                  name: true,
-                  verified: true,
-                },
-              },
-              images: {
-                orderBy: { order: 'asc' },
-              },
-              amenities: {
-                include: {
-                  amenity: true,
+      if (amenityNames) {
+        await tx.propertyAmenity.deleteMany({ where: { propertyId: id } });
+        for (const amenityName of amenityNames) {
+          await tx.propertyAmenity.create({
+            data: {
+              property: { connect: { id: id } },
+              amenity: {
+                connectOrCreate: {
+                  where: { name: amenityName },
+                  create: { name: amenityName, category: 'Custom' },
                 },
               },
             },
           });
-          
-          if (refreshedProperty) {
-            updatedProperty = refreshedProperty;
-          }
-        } catch (fetchError) {
-          throw new Error(`Fetch updated property failed: ${(fetchError as Error).message}`);
         }
       }
 
-      return NextResponse.json(updatedProperty);
-    } catch (validationError) {
-      if (validationError instanceof z.ZodError) {
-        return NextResponse.json(
-          { error: 'Validation error', details: validationError.errors },
-          { status: 400 }
-        );
-      }
-      throw validationError;
-    }
+      return tx.property.findUnique({
+        where: { id: id },
+        include: {
+          owner: { select: { id: true, name: true, verified: true } },
+          images: { orderBy: { order: 'asc' } },
+          amenities: { include: { amenity: true } },
+        },
+      });
+    });
+
+    return NextResponse.json(updatedProperty);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation error', details: error.errors },
+        { status: 400 }
+      );
+    }
     console.error('Error updating property:', error);
     return NextResponse.json(
-      { error: 'Failed to update property', message: (error as Error).message },
+      { error: 'Failed to update property' },
       { status: 500 }
     );
   }
@@ -273,15 +215,23 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Check if property exists
+    const { id } = await params
+    // Require authentication and ownership.
+    const session = await getSession()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const existingProperty = await prisma.property.findUnique({
-      where: { id: params.id },
+      where: { id: id },
+      select: { id: true, ownerId: true },
     })
 
-    if (!existingProperty) {
+    if (!existingProperty || existingProperty.ownerId !== session.user.id) {
+      // Return 404 (not 403) to avoid leaking existence of others' properties.
       return NextResponse.json(
         { error: 'Property not found' },
         { status: 404 }
@@ -290,7 +240,7 @@ export async function DELETE(
 
     // Delete property (cascade will handle related records)
     await prisma.property.delete({
-      where: { id: params.id },
+      where: { id: id },
     })
 
     return NextResponse.json({ message: 'Property deleted successfully' })
@@ -301,4 +251,4 @@ export async function DELETE(
       { status: 500 }
     )
   }
-} 
+}

@@ -986,7 +986,7 @@ export default function FavoritesPage() {
         }
 
         // Map and normalize favorite properties
-        let favoriteProperties = data.favorites.map((favorite: any) => {
+        const favoriteProperties = data.favorites.map((favorite: any) => {
           const property = favorite.property;
           return {
             ...property,
@@ -1514,7 +1514,7 @@ export default function FavoritesPage() {
                         if (!data.favorites) {
                           throw new Error('Invalid response from server');
                         }
-                        let favoriteProperties = data.favorites.map((favorite: any) => {
+                        const favoriteProperties = data.favorites.map((favorite: any) => {
                           const property = favorite.property;
                           return {
                             ...property,

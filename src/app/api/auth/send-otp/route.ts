@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomInt } from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { sendEmail, generateOTPEmail } from '@/lib/email';
 import { otpRateLimit, createRateLimit } from '@/lib/rate-limit';
@@ -66,8 +67,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate a cryptographically secure 6-digit OTP
+    const otp = randomInt(100000, 1000000).toString();
     
     // Store OTP in database with expiration (15 minutes)
     const otpRecord = await prisma.otpVerification.upsert({
@@ -92,10 +93,9 @@ export async function POST(request: NextRequest) {
       await sendEmail(emailData);
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
-      // Still log OTP for development purposes
-      console.log(`OTP for ${email}: ${otp}`);
-      
-      // Return error if email fails
+
+      // Return error if email fails. Do NOT log the OTP — it is an active
+      // authentication secret and must not appear in logs.
       return NextResponse.json(
         { error: 'OTP generated but failed to send email. Please try again.' },
         { status: 500 }

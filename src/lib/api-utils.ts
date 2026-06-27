@@ -47,8 +47,10 @@ export function createErrorResponse(
 }
 
 export function handleApiError(error: unknown): NextResponse<ApiResponse> {
+  // Log the full error server-side for debugging.
   console.error('API Error:', error)
 
+  // Intentional, safe-to-expose application errors.
   if (error instanceof ApiError) {
     return createErrorResponse(error.message, error.statusCode, error.details)
   }
@@ -61,10 +63,8 @@ export function handleApiError(error: unknown): NextResponse<ApiResponse> {
     )
   }
 
-  if (error instanceof Error) {
-    return createErrorResponse(error.message, 500)
-  }
-
+  // Never leak internal error details (Prisma constraint/table names, stack
+  // traces, etc.) to the client. Return a generic message instead.
   return createErrorResponse('Internal server error', 500)
 }
 

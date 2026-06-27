@@ -1,11 +1,4 @@
-import { PrismaClient } from '@prisma/client'
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
-
-export default prisma 
+// Single source of truth for the Prisma client lives in ./prisma.
+// This module re-exports it so existing `@/lib/db` importers keep working
+// without spinning up a second PrismaClient (and a second connection pool).
+export { prisma, default } from "./prisma";

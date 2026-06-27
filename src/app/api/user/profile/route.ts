@@ -6,7 +6,9 @@ import { getSession } from '@/lib/auth-server'
 const updateProfileSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   phone: z.string().min(10).max(15).optional(),
-  role: z.enum(['STUDENT', 'LANDLORD']).optional(),
+  // NOTE: `role` is intentionally NOT accepted here. Allowing self-service role
+  // changes is a privilege-escalation vector. Role changes go through the
+  // dedicated onboarding/role-selection flow.
 })
 
 export async function GET() {

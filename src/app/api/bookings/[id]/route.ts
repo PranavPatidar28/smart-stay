@@ -3,20 +3,21 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
 
+// Renters may only edit notes and (while PENDING) their dates. Status
+// transitions and money fields are landlord-only and handled separately below.
 const updateBookingSchema = z.object({
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
-  amount: z.number().min(0).optional(),
-  deposit: z.number().min(0).optional(),
-  notes: z.string().optional(),
+  notes: z.string().max(1000).optional(),
   status: z.enum(['PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED']).optional(),
 })
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -28,7 +29,7 @@ export async function GET(
 
     const booking = await prisma.booking.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
       include: {
@@ -75,9 +76,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -90,25 +92,28 @@ export async function PUT(
     const body = await request.json()
     const validatedData = updateBookingSchema.parse(body)
 
-    // Check if booking exists and belongs to user
-    const existingBooking = await prisma.booking.findFirst({
-      where: {
-        id: params.id,
-        userId: session.user.id,
-      },
-      include: {
-        property: true,
-      },
+    // Load the booking and its property owner. The caller must be EITHER the
+    // renter who made the booking OR the owner of the booked property.
+    const existingBooking = await prisma.booking.findUnique({
+      where: { id: id },
+      include: { property: { select: { ownerId: true, title: true } } },
     })
 
-    if (!existingBooking) {
+    if (
+      !existingBooking ||
+      (existingBooking.userId !== session.user.id &&
+        existingBooking.property.ownerId !== session.user.id)
+    ) {
+      // 404 to avoid leaking existence of other users' bookings.
       return NextResponse.json(
         { error: 'Booking not found' },
         { status: 404 }
       )
     }
 
-    // Check if booking can be modified
+    const isOwner = existingBooking.property.ownerId === session.user.id
+    const isRenter = existingBooking.userId === session.user.id
+
     if (existingBooking.status === 'COMPLETED') {
       return NextResponse.json(
         { error: 'Cannot modify completed booking' },
@@ -116,14 +121,60 @@ export async function PUT(
       )
     }
 
-    // Update booking
+    // Build the update payload based on role. This is the core authorization
+    // fix: a renter must NOT be able to confirm/complete or re-price their own
+    // booking; only the property owner can change status.
+    const updateData: Record<string, unknown> = {}
+
+    if (validatedData.notes !== undefined) {
+      // Both parties may update notes.
+      updateData.notes = validatedData.notes
+    }
+
+    // Date changes: renter may reschedule only while still PENDING.
+    if (validatedData.startDate !== undefined || validatedData.endDate !== undefined) {
+      if (!isRenter || existingBooking.status !== 'PENDING') {
+        return NextResponse.json(
+          { error: 'Dates can only be changed by the renter while the booking is pending' },
+          { status: 403 }
+        )
+      }
+      const newStart = validatedData.startDate ? new Date(validatedData.startDate) : existingBooking.startDate
+      const newEnd = validatedData.endDate
+        ? new Date(validatedData.endDate)
+        : existingBooking.endDate
+      if (newEnd && newEnd <= newStart) {
+        return NextResponse.json(
+          { error: 'endDate must be after startDate' },
+          { status: 400 }
+        )
+      }
+      if (validatedData.startDate !== undefined) updateData.startDate = newStart
+      if (validatedData.endDate !== undefined) updateData.endDate = newEnd
+    }
+
+    // Status transitions are owner-only. Renters can only CANCEL their own
+    // pending/confirmed booking (handled via DELETE), not self-confirm/complete.
+    if (validatedData.status !== undefined && validatedData.status !== existingBooking.status) {
+      if (!isOwner) {
+        return NextResponse.json(
+          { error: 'Only the property owner can change the booking status' },
+          { status: 403 }
+        )
+      }
+      updateData.status = validatedData.status
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'No permitted fields to update' },
+        { status: 400 }
+      )
+    }
+
     const updatedBooking = await prisma.booking.update({
-      where: { id: params.id },
-      data: {
-        ...validatedData,
-        startDate: validatedData.startDate ? new Date(validatedData.startDate) : undefined,
-        endDate: validatedData.endDate ? new Date(validatedData.endDate) : undefined,
-      },
+      where: { id: id },
+      data: updateData,
       include: {
         property: {
           include: {
@@ -145,14 +196,15 @@ export async function PUT(
       },
     })
 
-    // Create notification if status changed
-    if (validatedData.status && validatedData.status !== existingBooking.status) {
+    // Notify the relevant counterparty when status changed.
+    if (updateData.status) {
       await prisma.notification.create({
         data: {
-          userId: existingBooking.property.ownerId,
+          // Owner changed status -> notify the renter.
+          userId: existingBooking.userId,
           type: 'BOOKING',
           title: 'Booking Status Updated',
-          message: `Booking for ${existingBooking.property.title} is now ${validatedData.status.toLowerCase()}`,
+          message: `Your booking for ${existingBooking.property.title} is now ${String(updateData.status).toLowerCase()}`,
         },
       })
     }
@@ -176,9 +228,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -191,7 +244,7 @@ export async function DELETE(
     // Check if booking exists and belongs to user
     const booking = await prisma.booking.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
       include: {
@@ -216,7 +269,7 @@ export async function DELETE(
 
     // Cancel booking
     await prisma.booking.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: 'CANCELLED' },
     })
 
