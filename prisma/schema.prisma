@@ -108,6 +108,7 @@ model OtpVerification {
   expiresAt DateTime
   used      Boolean   @default(false)
   usedAt    DateTime?
+  attempts  Int       @default(0)
   createdAt DateTime  @default(now())
 
   @@map("otp_verification")

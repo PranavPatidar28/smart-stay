@@ -9,9 +9,10 @@ const updateInquirySchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -27,7 +28,7 @@ export async function PUT(
     // Check if inquiry exists and user owns the property
     const inquiry = await prisma.inquiry.findFirst({
       where: {
-        id: params.id,
+        id: id,
         property: {
           ownerId: session.user.id,
         },
@@ -53,7 +54,7 @@ export async function PUT(
 
     // Update inquiry status
     const updatedInquiry = await prisma.inquiry.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { status: validatedData.status },
       include: {
         user: {

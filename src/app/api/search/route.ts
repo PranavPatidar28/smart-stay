@@ -52,9 +52,12 @@ export async function GET(request: NextRequest) {
 
     // Filter by price range
     if (minPrice || maxPrice) {
-      where.price = {}
-      if (minPrice) where.price.gte = parseFloat(minPrice)
-      if (maxPrice) where.price.lte = parseFloat(maxPrice)
+      const priceFilter: Record<string, number> = {}
+      const min = minPrice ? parseFloat(minPrice) : NaN
+      const max = maxPrice ? parseFloat(maxPrice) : NaN
+      if (!Number.isNaN(min)) priceFilter.gte = min
+      if (!Number.isNaN(max)) priceFilter.lte = max
+      if (Object.keys(priceFilter).length > 0) where.price = priceFilter
     }
 
     // Filter by location

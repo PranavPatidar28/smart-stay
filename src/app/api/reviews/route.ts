@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const propertyId = searchParams.get('propertyId')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1') || 1)
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10') || 10))
     const skip = (page - 1) * limit
 
     if (!propertyId) {
@@ -136,46 +136,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create review
-    const review = await prisma.review.create({
-      data: {
-        userId: session.user.id,
-        propertyId: validatedData.propertyId,
-        rating: validatedData.rating,
-        comment: validatedData.comment,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
+    // Create the review, recompute the property's average rating, and notify
+    // the owner atomically so concurrent reviews can't persist a stale average.
+    const review = await prisma.$transaction(async (tx) => {
+      const created = await tx.review.create({
+        data: {
+          userId: session.user.id,
+          propertyId: validatedData.propertyId,
+          rating: validatedData.rating,
+          comment: validatedData.comment,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
           },
         },
-      },
-    })
+      })
 
-    // Update property rating
-    const allReviews = await prisma.review.findMany({
-      where: { propertyId: validatedData.propertyId },
-      select: { rating: true },
-    })
+      const agg = await tx.review.aggregate({
+        where: { propertyId: validatedData.propertyId },
+        _avg: { rating: true },
+      })
 
-    const averageRating = allReviews.reduce((sum, review) => sum + review.rating, 0) / allReviews.length
+      await tx.property.update({
+        where: { id: validatedData.propertyId },
+        data: { rating: agg._avg.rating ?? 0 },
+      })
 
-    await prisma.property.update({
-      where: { id: validatedData.propertyId },
-      data: { rating: averageRating },
-    })
+      await tx.notification.create({
+        data: {
+          userId: property.ownerId,
+          type: 'REVIEW',
+          title: 'New Review Received',
+          message: `New ${validatedData.rating}-star review for ${property.title}`,
+        },
+      })
 
-    // Create notification for property owner
-    await prisma.notification.create({
-      data: {
-        userId: property.ownerId,
-        type: 'REVIEW',
-        title: 'New Review Received',
-        message: `New ${validatedData.rating}-star review for ${property.title}`,
-      },
+      return created
     })
 
     return NextResponse.json(review, { status: 201 })

@@ -1,26 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getSession } from '@/lib/auth-server';
+import { Prisma } from '@prisma/client';
+import { z } from 'zod';
+
+const trackSchema = z.object({
+  eventType: z.string().min(1).max(64),
+  propertyId: z.string().min(1).max(64).optional(),
+  bookingId: z.string().min(1).max(64).optional(),
+  inquiryId: z.string().min(1).max(64).optional(),
+  metadata: z.record(z.unknown()).optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { eventType, propertyId, metadata, bookingId, inquiryId, userId } = body;
-    const sessionUserId: string | null = typeof userId === 'string' && userId.trim().length > 0 ? userId.trim() : null;
-    const hasMetadata = metadata !== undefined && metadata !== null && typeof metadata === 'object';
-
-    // Validate required fields
-    if (!eventType || typeof eventType !== 'string') {
-      return NextResponse.json({ error: 'Missing or invalid eventType' }, { status: 400 });
+    const parsed = trackSchema.safeParse(await request.json());
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid event payload' }, { status: 400 });
     }
+    const { eventType, propertyId, metadata, bookingId, inquiryId } = parsed.data;
+
+    // The acting user is derived from the session, never from the request body,
+    // so analytics trails cannot be spoofed onto other users. Anonymous events
+    // are allowed (userId stays null).
+    const session = await getSession();
+    const sessionUserId: string | null = session?.user?.id ?? null;
+    const hasMetadata = metadata !== undefined && metadata !== null && typeof metadata === 'object';
 
     // For events that don't require a propertyId (search/filter/sort/view-mode etc.), accept and return OK
     if (!propertyId) {
       return NextResponse.json({ success: true });
-    }
-
-    // Validate propertyId format
-    if (typeof propertyId !== 'string' || propertyId.trim().length === 0) {
-      return NextResponse.json({ error: 'Invalid propertyId format' }, { status: 400 });
     }
 
     const sanitizedPropertyId = propertyId.trim();
@@ -35,79 +44,96 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 });
     }
 
+    const userIdField = sessionUserId ? { userId: sessionUserId } : {};
+    const metaValue = hasMetadata ? (metadata as Prisma.InputJsonValue) : undefined;
+
     // Handle different event types
     if (eventType === 'property_view') {
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      if (hasMetadata) data.metadata = metadata;
-      await prisma.propertyViewEvent.create({ data });
+      await prisma.propertyViewEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          ...(metaValue !== undefined ? { metadata: metaValue } : {}),
+        },
+      });
       await prisma.property.update({
         where: { id: sanitizedPropertyId },
         data: { views: { increment: 1 } },
       });
     } else if (eventType === 'booking' || eventType === 'booking_request') {
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      if (typeof bookingId === 'string' && bookingId.trim().length > 0) data.bookingId = bookingId.trim();
-      if (hasMetadata) data.metadata = metadata;
-      await prisma.bookingEvent.create({ data });
+      await prisma.bookingEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          ...(bookingId && bookingId.trim().length > 0 ? { bookingId: bookingId.trim() } : {}),
+          ...(metaValue !== undefined ? { metadata: metaValue } : {}),
+        },
+      });
     } else if (eventType === 'inquiry') {
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      if (typeof inquiryId === 'string' && inquiryId.trim().length > 0) data.inquiryId = inquiryId.trim();
-      if (hasMetadata) data.metadata = metadata;
-      await prisma.inquiryEvent.create({ data });
-    } else if (eventType === 'phone_contact' || eventType === 'email_contact' || 
+      await prisma.inquiryEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          ...(inquiryId && inquiryId.trim().length > 0 ? { inquiryId: inquiryId.trim() } : {}),
+          ...(metaValue !== undefined ? { metadata: metaValue } : {}),
+        },
+      });
+    } else if (eventType === 'phone_contact' || eventType === 'email_contact' ||
                eventType === 'property_card_contact' || eventType === 'favorites_property_contact') {
-      // Track contact events as inquiry events for now
-      const meta = {
-        ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
-        contactType: eventType,
-        timestamp: new Date().toISOString(),
-      };
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId, metadata: meta };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      await prisma.inquiryEvent.create({ data });
+      await prisma.inquiryEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          metadata: {
+            ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
+            contactType: eventType,
+          } as Prisma.InputJsonValue,
+        },
+      });
     } else if (eventType === 'property_shared') {
-      // Track share events as view events with metadata
-      const meta = {
-        ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
-        action: 'shared',
-        timestamp: new Date().toISOString(),
-      };
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId, metadata: meta };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      await prisma.propertyViewEvent.create({ data });
+      await prisma.propertyViewEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          metadata: {
+            ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
+            action: 'shared',
+          } as Prisma.InputJsonValue,
+        },
+      });
     } else if (eventType === 'favorite_added' || eventType === 'favorite_removed') {
-      // Track favorite events as view events with metadata
-      const meta = {
-        ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
-        action: eventType,
-        timestamp: new Date().toISOString(),
-      };
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId, metadata: meta };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      await prisma.propertyViewEvent.create({ data });
+      await prisma.propertyViewEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          metadata: {
+            ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
+            action: eventType,
+          } as Prisma.InputJsonValue,
+        },
+      });
     } else if (eventType === 'review_submitted') {
-      // Track review events as inquiry events with metadata
-      const meta = {
-        ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
-        action: 'review_submitted',
-        timestamp: new Date().toISOString(),
-      };
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId, metadata: meta };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      await prisma.inquiryEvent.create({ data });
+      await prisma.inquiryEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          metadata: {
+            ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
+            action: 'review_submitted',
+          } as Prisma.InputJsonValue,
+        },
+      });
     } else {
-      // For any other event type, track as a view event with metadata
-      const meta = {
-        ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
-        action: eventType,
-        timestamp: new Date().toISOString(),
-      };
-      const data: Record<string, unknown> = { propertyId: sanitizedPropertyId, metadata: meta };
-      if (typeof sessionUserId === 'string') data.userId = sessionUserId;
-      await prisma.propertyViewEvent.create({ data });
+      await prisma.propertyViewEvent.create({
+        data: {
+          propertyId: sanitizedPropertyId,
+          ...userIdField,
+          metadata: {
+            ...(hasMetadata ? (metadata as Record<string, unknown>) : {}),
+            action: eventType,
+          } as Prisma.InputJsonValue,
+        },
+      });
     }
 
     return NextResponse.json({ success: true });

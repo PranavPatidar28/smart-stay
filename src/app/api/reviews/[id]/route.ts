@@ -10,9 +10,10 @@ const updateReviewSchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -28,7 +29,7 @@ export async function PUT(
     // Check if review exists and belongs to user
     const existingReview = await prisma.review.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
       include: {
@@ -43,35 +44,35 @@ export async function PUT(
       )
     }
 
-    // Update review
-    const updatedReview = await prisma.review.update({
-      where: { id: params.id },
-      data: validatedData,
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
+    // Update review and recompute the property's average rating atomically.
+    const updatedReview = await prisma.$transaction(async (tx) => {
+      const updated = await tx.review.update({
+        where: { id: id },
+        data: validatedData,
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
           },
         },
-      },
+      })
+
+      if (validatedData.rating) {
+        const agg = await tx.review.aggregate({
+          where: { propertyId: existingReview.propertyId },
+          _avg: { rating: true },
+        })
+        await tx.property.update({
+          where: { id: existingReview.propertyId },
+          data: { rating: agg._avg.rating ?? 0 },
+        })
+      }
+
+      return updated
     })
-
-    // Update property rating if rating changed
-    if (validatedData.rating) {
-      const allReviews = await prisma.review.findMany({
-        where: { propertyId: existingReview.propertyId },
-        select: { rating: true },
-      })
-
-      const averageRating = allReviews.reduce((sum, review) => sum + review.rating, 0) / allReviews.length
-
-      await prisma.property.update({
-        where: { id: existingReview.propertyId },
-        data: { rating: averageRating },
-      })
-    }
 
     return NextResponse.json(updatedReview)
   } catch (error) {
@@ -92,9 +93,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getSession()
 
     if (!session?.user?.id) {
@@ -107,7 +109,7 @@ export async function DELETE(
     // Check if review exists and belongs to user
     const review = await prisma.review.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id,
       },
       include: {
@@ -122,24 +124,22 @@ export async function DELETE(
       )
     }
 
-    // Delete review
-    await prisma.review.delete({
-      where: { id: params.id },
-    })
+    // Delete review and recompute the property's average rating atomically.
+    await prisma.$transaction(async (tx) => {
+      await tx.review.delete({
+        where: { id: id },
+      })
 
-    // Update property rating
-    const remainingReviews = await prisma.review.findMany({
-      where: { propertyId: review.propertyId },
-      select: { rating: true },
-    })
+      const agg = await tx.review.aggregate({
+        where: { propertyId: review.propertyId },
+        _avg: { rating: true },
+        _count: { _all: true },
+      })
 
-    const averageRating = remainingReviews.length > 0
-      ? remainingReviews.reduce((sum, review) => sum + review.rating, 0) / remainingReviews.length
-      : 0
-
-    await prisma.property.update({
-      where: { id: review.propertyId },
-      data: { rating: averageRating },
+      await tx.property.update({
+        where: { id: review.propertyId },
+        data: { rating: agg._count._all > 0 ? agg._avg.rating ?? 0 : 0 },
+      })
     })
 
     return NextResponse.json({ message: 'Review deleted successfully' })

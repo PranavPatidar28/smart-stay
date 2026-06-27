@@ -38,6 +38,11 @@ type Property = {
   isFavorite: boolean;
   latitude?: number;
   longitude?: number;
+  _count?: {
+    favorites?: number;
+    reviews?: number;
+    inquiries?: number;
+  };
 };
 
 type Review = {
