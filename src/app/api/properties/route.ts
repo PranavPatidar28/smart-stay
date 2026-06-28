@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
+import { decimalToNumber } from '@/lib/serialize'
 
 const createPropertySchema = z.object({
   title: z.string().min(10).max(100),
@@ -162,7 +163,7 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit)
 
     const response = NextResponse.json({
-      properties,
+      properties: decimalToNumber(properties),
       pagination: {
         page,
         limit,
@@ -267,7 +268,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json(property, { status: 201 })
+    return NextResponse.json(decimalToNumber(property), { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

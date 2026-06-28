@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
+import { decimalToNumber } from '@/lib/serialize'
 
 const addFavoriteSchema = z.object({
   propertyId: z.string().cuid(),
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit)
 
     return NextResponse.json({
-      favorites,
+      favorites: decimalToNumber(favorites),
       pagination: {
         page,
         limit,
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(favorite, { status: 201 })
+    return NextResponse.json(decimalToNumber(favorite), { status: 201 })
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

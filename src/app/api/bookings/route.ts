@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
 import { ApiError } from '@/lib/api-utils'
+import { decimalToNumber } from '@/lib/serialize'
 
 const createBookingSchema = z
   .object({
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
     const totalPages = Math.ceil(total / limit)
 
     return NextResponse.json({
-      bookings,
+      bookings: decimalToNumber(bookings),
       pagination: {
         page,
         limit,
@@ -137,13 +138,13 @@ export async function POST(request: NextRequest) {
     // Compute the amount server-side from the property's price. The monthly
     // price is prorated by the number of months in the requested range
     // (minimum one month). deposit comes from the property, not the client.
-    const monthlyPrice = property.price
+    // price/deposit are Prisma.Decimal; use Decimal arithmetic to stay exact.
     let months = 1
     if (endDate) {
       const msPerMonth = 1000 * 60 * 60 * 24 * 30
       months = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / msPerMonth))
     }
-    const amount = monthlyPrice * months
+    const amount = property.price.mul(months)
     const deposit = property.deposit ?? null
 
     // Atomically re-check for conflicts and create the booking so two
@@ -205,7 +206,7 @@ export async function POST(request: NextRequest) {
           propertyId: created.propertyId,
           userId: created.userId,
           bookingId: created.id,
-          metadata: { amount: created.amount, deposit: created.deposit },
+          metadata: { amount: created.amount.toNumber(), deposit: created.deposit ? created.deposit.toNumber() : null },
         },
       })
 
@@ -222,7 +223,7 @@ export async function POST(request: NextRequest) {
       return created
     })
 
-    return NextResponse.json(booking, { status: 201 })
+    return NextResponse.json(decimalToNumber(booking), { status: 201 })
   } catch (error) {
     if (error instanceof ApiError) {
       return NextResponse.json({ error: error.message }, { status: error.statusCode })

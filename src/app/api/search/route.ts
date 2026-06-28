@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { validatePaginationParams, createPaginationResponse, sanitizeSearchQuery, handleApiError } from '@/lib/api-utils'
+import { decimalToNumber } from '@/lib/serialize'
 
 export async function GET(request: NextRequest) {
   try {
@@ -211,7 +212,7 @@ export async function GET(request: NextRequest) {
 
     const response = createPaginationResponse(properties, total, page, limit)
     
-    return NextResponse.json({
+    return NextResponse.json(decimalToNumber({
       ...response,
       suggestions: suggestions.map(s => ({ text: s.title, type: 'title' }))
         .concat(suggestions.map(s => ({ text: s.location, type: 'location' }))),
@@ -223,7 +224,7 @@ export async function GET(request: NextRequest) {
         },
         locations: filterOptions[2].map(l => ({ value: l.location, count: l._count.id })),
       },
-    })
+    }))
   } catch (error) {
     return handleApiError(error)
   }
