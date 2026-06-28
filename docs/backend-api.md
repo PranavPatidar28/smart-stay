@@ -8,7 +8,7 @@ The SmartStay backend is a comprehensive REST API built with Next.js 15, Prisma 
 
 - **Framework**: Next.js 15 with App Router
 - **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js with Google OAuth
+- **Authentication**: better-auth (email/password + Google OAuth)
 - **Validation**: Zod schema validation
 - **Error Handling**: Custom error handling with proper HTTP status codes
 - **TypeScript**: Full type safety throughout the application
@@ -30,9 +30,9 @@ The application uses a comprehensive database schema with the following main ent
 
 ### Authentication
 
-#### `GET /api/auth/[...nextauth]`
-- **Description**: NextAuth.js authentication endpoints
-- **Features**: Google OAuth, JWT sessions, role-based access
+#### `GET | POST /api/auth/[...all]`
+- **Description**: better-auth authentication handler (catch-all route handling sign-in, sign-up, session, OAuth callbacks, etc.)
+- **Features**: Google OAuth, email/password, database-backed sessions, role-based access
 
 #### `PUT /api/auth/update-role`
 - **Description**: Update user role (STUDENT/LANDLORD/ADMIN)
@@ -187,7 +187,8 @@ The application uses a comprehensive database schema with the following main ent
 #### `PUT /api/user/profile`
 - **Description**: Update user profile
 - **Authentication**: Required
-- **Body**: `{ name?, phone?, role? }`
+- **Body**: `{ name?, phone? }`
+- **Note**: `role` cannot be changed via this endpoint (it is intentionally rejected as a privilege-escalation safeguard). Use `PUT /api/auth/update-role` instead.
 
 ### Amenities
 
@@ -227,9 +228,9 @@ The backend implements comprehensive error handling:
 ## Security Features
 
 ### Authentication & Authorization
-- JWT-based sessions with NextAuth.js
+- Database-backed (session-based) auth with better-auth
 - Role-based access control (STUDENT, LANDLORD, ADMIN)
-- Secure password hashing with bcrypt
+- Secure password hashing with bcryptjs
 - OAuth integration with Google
 
 ### Data Validation
@@ -294,18 +295,28 @@ const booking = await apiClient.createBooking({
 
 ### Setup Steps
 1. Install dependencies: `npm install`
-2. Set up environment variables (see `.env.example`)
+2. Set up environment variables (see `env.example`)
 3. Generate Prisma client: `npm run db:generate`
 4. Run database migrations: `npm run db:migrate`
 5. Seed the database: `npm run db:seed`
 
 ### Environment Variables
 ```env
+# Required
 DATABASE_URL="postgresql://user:password@localhost:5432/smartstay"
-NEXTAUTH_SECRET="your-secret-key"
+BETTER_AUTH_URL="http://localhost:3000"
+BETTER_AUTH_SECRET="generate-a-strong-random-32-byte-value"   # app throws in production if missing
+NEXT_PUBLIC_APP_URL="http://localhost:3000"                   # set to same value as BETTER_AUTH_URL
+CRON_SECRET="generate-a-strong-random-value"                  # protects /api/auth/cleanup-otp
+EMAIL_USER="your-email@gmail.com"                             # for signup OTP emails
+EMAIL_PASS="your-gmail-app-password"
+
+# Optional (only if Google sign-in is enabled)
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
+
+> See `env.example` for the authoritative, commented list of variables.
 
 ## Testing
 
