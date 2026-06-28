@@ -399,6 +399,8 @@ interface MobilePropertyModalProps {
   onShare: (propertyId: string) => void;
   reviews: Review[];
   reviewsLoading: boolean;
+  reviewPagination: { page: number; totalPages: number; hasNext: boolean; hasPrev: boolean };
+  handleReviewPageChange: (newPage: number) => void;
   userReview: { rating: number; comment: string };
   setUserReview: (review: { rating: number; comment: string }) => void;
   isSubmittingReview: boolean;
@@ -416,6 +418,8 @@ const MobilePropertyModal = ({
   onShare,
   reviews,
   reviewsLoading,
+  reviewPagination,
+  handleReviewPageChange,
   userReview,
   setUserReview,
   isSubmittingReview,
@@ -440,6 +444,7 @@ const MobilePropertyModal = ({
       className="fixed inset-0 z-50 flex flex-col bg-white overflow-y-auto custom-scrollbar"
       role="dialog"
       aria-modal="true"
+      aria-labelledby="mobile-property-modal-title"
     >
       {/* Top Navigation Bar */}
       <div className="flex justify-between items-center px-4 py-3 bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -464,24 +469,29 @@ const MobilePropertyModal = ({
             />
           </button>
           {property.latitude && property.longitude && (
-            <button className="p-2 rounded-full hover:bg-gray-100">
+            <button
+              onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${property.latitude},${property.longitude}`, '_blank', 'noopener,noreferrer')}
+              className="p-2 rounded-full hover:bg-gray-100"
+              aria-label="View location on map"
+            >
               <MapIcon className="w-5 h-5 text-gray-700" />
             </button>
           )}
           <button
             onClick={() => onShare(property.id)}
             className="p-2 rounded-full hover:bg-gray-100"
+            aria-label="Share property"
           >
             <Share2 className="w-5 h-5 text-gray-700" />
           </button>
         </div>
       </div>
       {/* Image Gallery */}
-      <div className="relative w-full h-64 bg-gray-900 flex items-center justify-center">
+      <div className="relative w-full h-64 bg-gray-100 flex items-center justify-center">
         <Image
           src={property.images[currentImageIndex]?.url || '/images/placeholder.png'}
           alt={property.title}
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           width={600}
           height={400}
           onError={e => (e.currentTarget.src = '/images/placeholder.png')}
@@ -494,7 +504,7 @@ const MobilePropertyModal = ({
                 e.stopPropagation();
                 setCurrentImageIndex((currentImageIndex - 1 + property.images.length) % property.images.length);
               }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-colors duration-200 focus:ring-2 focus:ring-[var(--color-primary-300)] focus:outline-none"
               aria-label="Previous image"
             >
               <ChevronDown className="w-5 h-5 rotate-90 text-gray-800" />
@@ -504,44 +514,51 @@ const MobilePropertyModal = ({
                 e.stopPropagation();
                 setCurrentImageIndex((currentImageIndex + 1) % property.images.length);
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-2 transition-colors duration-200 focus:ring-2 focus:ring-[var(--color-primary-300)] focus:outline-none"
               aria-label="Next image"
             >
               <ChevronDown className="w-5 h-5 -rotate-90 text-gray-800" />
             </button>
           </>
         )}
-        {/* Image Counter */}
+        {/* Bottom gradient scrim for badge legibility on any photo */}
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
+
+        {/* Status - top left */}
+        <div className={`absolute top-2 left-2 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shadow-md text-white backdrop-blur-sm ${property.isAvailable ? 'bg-green-500/90' : 'bg-red-500/90'}`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+          {property.isAvailable ? "Available" : "Unavailable"}
+        </div>
+
+        {/* Price + type - bottom left, grouped over the scrim */}
+        <div className="absolute bottom-2 left-3 z-10 flex flex-col gap-1.5">
+          <div className="flex items-baseline gap-1 text-white drop-shadow-md">
+            <span className="text-2xl font-bold">₹{property.price.toLocaleString()}</span>
+            <span className="text-xs font-medium text-white/80">/month</span>
+          </div>
+          <span className="inline-flex items-center gap-1.5 self-start px-2 py-0.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-medium">
+            <Building2 className="w-3 h-3" />
+            {property.type}
+          </span>
+        </div>
+
+        {/* Image counter - bottom right */}
         {property.images.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-3 py-1 rounded-full text-white text-xs font-medium border border-white/20 shadow-xl flex items-center gap-1">
-            <Eye className="w-4 h-4" />
-            <span>{currentImageIndex + 1}/{property.images.length}</span>
+          <div className="absolute bottom-2 right-3 z-10 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full text-white text-xs font-medium flex items-center gap-1.5">
+            <Grid3X3 className="w-3 h-3" />
+            <span>{currentImageIndex + 1} / {property.images.length}</span>
           </div>
         )}
-        {/* Status Badge */}
-        <div className="absolute top-2 right-2 px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg z-10 bg-green-500 text-white border border-white/30 backdrop-blur-sm">
-          {property.isAvailable ? "Available Now" : "Not Available"}
-        </div>
-        {/* Price Badge */}
-        <div className="absolute top-2 left-2 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] px-3 py-1.5 rounded-xl shadow-xl border border-white/60 text-white font-bold flex items-center gap-1">
-          <span>₹{property.price.toLocaleString()}</span>
-          <span className="text-xs font-normal opacity-90">/month</span>
-        </div>
-        {/* Property type badge */}
-        <div className="absolute top-12 left-2 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-300)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
-          <Building2 className="w-4 h-4 text-[var(--color-primary-300)]" />
-          {property.type}
-        </div>
       </div>
       {/* Property Info */}
       <div className="p-4 flex flex-col gap-3">
-        <h2 className="font-bold text-xl text-gray-900 mb-1">{property.title}</h2>
-        <div className="flex justify-between items-center mb-2">
-          <div className="flex items-center gap-2 text-[var(--color-primary-700)] text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
-            <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
-            <span>{property.location}</span>
+        <h2 id="mobile-property-modal-title" className="font-bold text-xl text-gray-900 mb-1 line-clamp-2">{property.title}</h2>
+        <div className="flex justify-between items-center gap-3 mb-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 text-gray-700 text-sm bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+            <MapPin className="w-4 h-4 flex-shrink-0 text-[var(--color-primary-300)]" />
+            <span className="truncate">{property.location}</span>
           </div>
-          <div className="flex items-center gap-2 bg-gradient-to-br from-yellow-50 to-yellow-100 px-3 py-1.5 rounded-lg shadow-sm border border-yellow-200">
+          <div className="flex items-center gap-2 flex-shrink-0 bg-yellow-50 px-3 py-1.5 rounded-lg border border-yellow-200">
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star key={star} className={`w-4 h-4 ${star <= Math.round(property.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} />
@@ -553,17 +570,17 @@ const MobilePropertyModal = ({
         {/* Property Stats */}
         <div className="flex gap-6 mt-2">
           <div className="flex flex-col items-center">
-            <Bed className="w-5 h-5 text-[var(--color-primary-500)] mb-1" />
+            <Bed className="w-5 h-5 text-[var(--color-primary-300)] mb-1" />
             <span className="text-xs text-gray-500">Beds</span>
             <span className="font-semibold text-gray-900">{property.bedrooms}</span>
           </div>
           <div className="flex flex-col items-center">
-            <Bath className="w-5 h-5 text-[var(--color-primary-500)] mb-1" />
+            <Bath className="w-5 h-5 text-[var(--color-primary-300)] mb-1" />
             <span className="text-xs text-gray-500">Baths</span>
             <span className="font-semibold text-gray-900">{property.bathrooms}</span>
           </div>
           <div className="flex flex-col items-center">
-            <Calendar className="w-5 h-5 text-[var(--color-primary-500)] mb-1" />
+            <Calendar className="w-5 h-5 text-[var(--color-primary-300)] mb-1" />
             <span className="text-xs text-gray-500">Available</span>
             <span className="font-semibold text-gray-900">{property.availableFrom ? new Date(property.availableFrom).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : 'Now'}</span>
           </div>
@@ -585,11 +602,11 @@ const MobilePropertyModal = ({
           </h4>
           <div className="grid grid-cols-2 gap-2">
             {property.amenities.map((amenity, idx) => (
-              <div key={`${property.id}-amenity-${idx}`} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
-                <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+              <div key={amenity.amenity.id || `${property.id}-amenity-${idx}`} className="flex items-center gap-2 min-w-0 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                <span className="flex-shrink-0 text-[var(--color-primary-300)]">
                   {getAmenityIcon(amenity.amenity.name)}
-                </div>
-                <span className="text-gray-800 text-sm">{amenity.amenity.name}</span>
+                </span>
+                <span className="text-gray-800 text-sm truncate" title={amenity.amenity.name}>{amenity.amenity.name}</span>
               </div>
             ))}
           </div>
@@ -620,15 +637,15 @@ const MobilePropertyModal = ({
           <div className="space-y-3 mb-4">
             {reviewsLoading ? (
               <div className="flex justify-center items-center py-4">
-                <Loader2 className="w-6 h-6 text-[var(--color-primary-500)] animate-spin" />
+                <Loader2 className="w-6 h-6 text-[var(--color-primary-300)] animate-spin" />
               </div>
             ) : reviews.length > 0 ? (
               <>
-                {reviews.slice(0, 3).map(review => (
+                {reviews.map(review => (
                   <div key={review.id} className="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-[var(--color-primary-300)] rounded-full flex items-center justify-center">
                           {review.user.image ? (
                             <img
                               src={review.user.image}
@@ -647,10 +664,11 @@ const MobilePropertyModal = ({
                         </div>
                       </div>
                       <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
-                        <div className="flex">
+                        <div className="flex" role="img" aria-label={`${review.rating} out of 5 stars`}>
                           {[1, 2, 3, 4, 5].map(star => (
                             <Star
                               key={star}
+                              aria-hidden="true"
                               className={`w-3 h-3 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                             />
                           ))}
@@ -663,16 +681,39 @@ const MobilePropertyModal = ({
                   </div>
                 ))}
 
-                {reviews.length > 3 && (
-                  <div className="text-center py-2 text-sm text-gray-500">
-                    +{reviews.length - 3} more reviews
+                {/* Pagination controls */}
+                {reviewPagination.totalPages > 1 && (
+                  <div className="flex justify-center mt-3 gap-2">
+                    <button
+                      onClick={() => handleReviewPageChange(reviewPagination.page - 1)}
+                      disabled={!reviewPagination.hasPrev}
+                      className={`p-2 rounded-lg text-sm ${reviewPagination.hasPrev
+                        ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                        }`}
+                    >
+                      Previous
+                    </button>
+                    <div className="flex items-center px-3 text-sm bg-gray-100 text-gray-700 rounded-lg">
+                      {reviewPagination.page} / {reviewPagination.totalPages}
+                    </div>
+                    <button
+                      onClick={() => handleReviewPageChange(reviewPagination.page + 1)}
+                      disabled={!reviewPagination.hasNext}
+                      className={`p-2 rounded-lg text-sm ${reviewPagination.hasNext
+                        ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                        }`}
+                    >
+                      Next
+                    </button>
                   </div>
                 )}
               </>
             ) : (
               <div className="text-center py-4 bg-white rounded-lg border border-gray-200">
                 <div className="text-gray-500 mb-2">No reviews yet</div>
-                <div className="text-sm text-gray-400">Be the first to leave a review!</div>
+                <div className="text-sm text-gray-500">Be the first to leave a review!</div>
               </div>
             )}
           </div>
@@ -696,7 +737,9 @@ const MobilePropertyModal = ({
                       key={star}
                       type="button"
                       onClick={() => setUserReview({ ...userReview, rating: star })}
-                      className="focus:outline-none"
+                      aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                      aria-pressed={star <= userReview.rating}
+                      className="rounded p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-300)] focus-visible:ring-offset-1"
                     >
                       <Star
                         className={`w-6 h-6 ${star <= userReview.rating
@@ -715,7 +758,7 @@ const MobilePropertyModal = ({
                 <textarea
                   value={userReview.comment}
                   onChange={(e) => setUserReview({ ...userReview, comment: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent resize-none"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-300)] focus:border-transparent resize-none"
                   placeholder="Share your experience..."
                   rows={3}
                 />
@@ -725,7 +768,7 @@ const MobilePropertyModal = ({
               <button
                 onClick={submitReview}
                 disabled={isSubmittingReview}
-                className="w-full py-3 px-4 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-[var(--color-primary-300)] text-white rounded-lg hover:bg-[var(--color-primary-200)] transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmittingReview ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -736,14 +779,14 @@ const MobilePropertyModal = ({
               </button>
             </div>
           ) : (
-            <div className="text-center py-4 bg-[var(--color-primary-50)] rounded-lg border border-[var(--color-primary-200)]">
-              <p className="text-[var(--color-primary-700)]">Please sign in to leave a review</p>
+            <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p className="text-gray-600">Please sign in to leave a review</p>
             </div>
           )}
         </div>
 
         {/* Owner Info */}
-        <div className="my-4 bg-[var(--color-primary-800)] p-3 rounded-xl border border-[var(--color-primary-500)]">
+        <div className="my-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
             <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
               <User className="w-4 h-4 text-[var(--color-primary-600)]" />
@@ -751,32 +794,34 @@ const MobilePropertyModal = ({
             Property Owner
           </h4>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-secondary-500)] rounded-full flex items-center justify-center text-lg font-bold text-white">
+            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-[var(--color-primary-300)] to-[var(--color-secondary-300)] rounded-full flex items-center justify-center text-lg font-bold text-white">
               {property.owner.name.charAt(0)}
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-base font-semibold text-gray-900">{property.owner.name}</span>
+                <span className="text-base font-semibold text-gray-900 truncate">{property.owner.name}</span>
                 {property.owner.verified && (
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium flex items-center gap-1">
+                  <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium flex items-center gap-1 flex-shrink-0">
                     <CheckCircle className="w-3 h-3" /> Verified
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1">
-                <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span className="text-sm text-gray-700">{property.owner.rating || '4.8'}</span>
-                <span className="text-xs text-gray-500">•</span>
-                <span className="text-xs text-gray-500">Response time: ~2 hours</span>
-              </div>
+              {property.owner.rating ? (
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span className="text-sm text-gray-700">{property.owner.rating}</span>
+                </div>
+              ) : (
+                <span className="text-sm text-gray-500">New host</span>
+              )}
             </div>
           </div>
         </div>
-        {/* Action Buttons - Updated with functionality */}
-        <div className="flex gap-3 mt-4 mb-6 px-4">
+        {/* Action Buttons */}
+        <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg px-4 py-3 mt-auto -mx-4 flex gap-3">
           <button
             onClick={() => onBookViewing(property.id)}
-            className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            className="flex-1 bg-gradient-to-r from-[var(--color-primary-300)] to-[var(--color-secondary-300)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-200)] hover:to-[var(--color-secondary-200)] transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
           >
             <Calendar className="w-5 h-5" />
             Book Viewing
@@ -784,24 +829,17 @@ const MobilePropertyModal = ({
           <div className="flex gap-3">
             <button
               onClick={() => onPhoneContact(property.id)}
-              className="p-3 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-[var(--color-primary-700)] rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+              aria-label="Call property owner"
+              className="p-3 bg-[var(--color-primary-800)] border border-[var(--color-primary-700)] text-[var(--color-primary-300)] rounded-xl hover:bg-[var(--color-primary-700)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
             >
               <Phone className="w-5 h-5" />
             </button>
             <button
               onClick={() => onEmailContact(property.id)}
+              aria-label="Email property owner"
               className="p-3 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
             >
               <Mail className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handleMobileFavoriteToggle}
-              className="p-2.5 rounded-xl flex items-center justify-center"
-              aria-label={mobileModalFavorite ? "Remove from favorites" : "Add to favorites"}
-            >
-              <Heart
-                className={`w-7 h-7 ${mobileModalFavorite ? "text-red-500 fill-red-500" : "text-gray-400 stroke-[2px] hover:text-red-400"}`}
-              />
             </button>
           </div>
         </div>
@@ -1727,7 +1765,7 @@ export default function ListingsPage() {
           <div className="flex gap-3 mt-auto">
             <button
               onClick={() => openPropertyModal(property)}
-              className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="flex-1 bg-gradient-to-r from-[var(--color-primary-300)] to-[var(--color-secondary-300)] text-white py-3 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-200)] hover:to-[var(--color-secondary-200)] transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               View Details
             </button>
@@ -1757,19 +1795,21 @@ export default function ListingsPage() {
     setDebouncedSearchTerm("");
   };
 
-  // Property Details Modal
+  // Property Details Modal: lock background scroll and handle Escape (covers desktop + mobile)
   useEffect(() => {
-    if (showModal) {
-      // Prevent background scrolling when modal is open
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
+    if (!showModal) return;
 
-    // Cleanup function
-    return () => {
-      document.body.style.overflow = 'auto';
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePropertyModal();
     };
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', onKeyDown);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showModal]);
 
   useEffect(() => {
@@ -1997,7 +2037,7 @@ export default function ListingsPage() {
       {/* Main Content */}
       <div className="pt-16">
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[var(--color-primary-300)] to-[var(--color-secondary-300)] text-white relative overflow-hidden">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-50">
             {/* Grid Pattern */}
@@ -2547,12 +2587,18 @@ export default function ListingsPage() {
               closePropertyModal={closePropertyModal}
               reviews={reviews}
               reviewsLoading={reviewsLoading}
+              reviewPagination={reviewPagination}
+              handleReviewPageChange={handleReviewPageChange}
               userReview={userReview}
               setUserReview={setUserReview}
               isSubmittingReview={isSubmittingReview}
               submitReview={submitReview}
               session={session}
               onBookViewing={(propertyId) => {
+                if (!session?.user) {
+                  showError('Please sign in to book a viewing');
+                  return;
+                }
                 closePropertyModal();
                 setTimeout(() => {
                   const foundProperty = properties.find(p => p.id === propertyId);
@@ -2582,19 +2628,19 @@ export default function ListingsPage() {
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-2 sm:px-4 overflow-y-auto custom-scrollbar"
               aria-modal="true"
               role="dialog"
+              aria-labelledby="desktop-property-modal-title"
               tabIndex={-1}
               data-testid="property-details-modal"
-              onKeyDown={e => { if (e.key === 'Escape') closePropertyModal(); }}
             >
               {/* Overlay click to close */}
               <div
                 className="absolute inset-0 z-0 cursor-pointer backdrop-blur-sm"
-                aria-label="Close modal"
+                aria-hidden="true"
                 onClick={closePropertyModal}
               />
               {/* Modal Container */}
               <div
-                className="relative w-full max-w-5xl xl:max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl flex flex-col lg:flex-row overflow-hidden animate-fade-in-up my-4 sm:my-8 max-h-[90vh] focus:outline-none border border-white"
+                className="relative w-full max-w-5xl xl:max-w-6xl mx-auto bg-white rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden animate-fade-in-up my-4 sm:my-8 max-h-[90vh] focus:outline-none ring-1 ring-black/5"
                 tabIndex={0}
                 onClick={e => e.stopPropagation()}
                 data-testid="property-modal-root"
@@ -2602,20 +2648,20 @@ export default function ListingsPage() {
                 {/* Close Button */}
                 <button
                   onClick={closePropertyModal}
-                  className="absolute top-4 right-4 z-50 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white border border-gray-200 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none transition-all hover:scale-110"
+                  className="absolute top-4 right-4 z-50 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white border border-gray-200 focus:ring-2 focus:ring-[var(--color-primary-300)] focus:outline-none transition-all"
                   aria-label="Close modal"
                 >
                   <X className="w-6 h-6 text-gray-700" />
                 </button>
 
                 {/* Left: Image Gallery */}
-                <div className="lg:w-1/2 w-full flex flex-col min-w-0 bg-gray-900 max-h-[40vh] lg:max-h-[90vh] overflow-hidden relative">
+                <div className="md:w-1/2 w-full flex flex-col min-w-0 bg-gray-100 max-h-[40vh] md:max-h-[90vh] overflow-hidden relative">
                   {/* Main Image with zoom effect */}
-                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  <div className="relative w-full h-full min-h-0 flex-1 flex items-center justify-center overflow-hidden">
                     <img
                       src={selectedProperty!.images[currentImageIndex]?.url || '/images/placeholder.png'}
                       alt={selectedProperty!.title}
-                      className="w-full h-full object-contain transition-all duration-700 hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       onError={e => (e.currentTarget.src = '/images/placeholder.png')}
                     />
 
@@ -2627,7 +2673,7 @@ export default function ListingsPage() {
                             e.stopPropagation();
                             setCurrentImageIndex((currentImageIndex - 1 + selectedProperty!.images.length) % selectedProperty!.images.length);
                           }}
-                          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+                          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-colors duration-200 focus:ring-2 focus:ring-[var(--color-primary-300)] focus:outline-none"
                           aria-label="Previous image"
                         >
                           <ChevronDown className="w-6 h-6 rotate-90 text-gray-800" />
@@ -2637,7 +2683,7 @@ export default function ListingsPage() {
                             e.stopPropagation();
                             setCurrentImageIndex((currentImageIndex + 1) % selectedProperty!.images.length);
                           }}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-all duration-300 hover:scale-110 focus:ring-2 focus:ring-[var(--color-primary-500)] focus:outline-none"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-xl rounded-full p-3 transition-colors duration-200 focus:ring-2 focus:ring-[var(--color-primary-300)] focus:outline-none"
                           aria-label="Next image"
                         >
                           <ChevronDown className="w-6 h-6 -rotate-90 text-gray-800" />
@@ -2645,49 +2691,53 @@ export default function ListingsPage() {
                       </>
                     )}
 
-                    {/* Image Counter Badge - Enhanced */}
-                    {selectedProperty!.images.length > 1 && (
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/20 shadow-xl flex items-center gap-2">
-                        <Eye className="w-4 h-4" />
-                        <span>{currentImageIndex + 1}/{selectedProperty!.images.length}</span>
-                      </div>
-                    )}
+                    {/* Bottom gradient scrim for badge legibility on any photo */}
+                    <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 via-black/25 to-transparent pointer-events-none" />
 
-                    {/* Status Badge - Enhanced */}
-                    <div className="absolute top-4 right-4 px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10 bg-green-500 text-white border border-white/30 backdrop-blur-sm">
+                    {/* Status - top left (quick-glance indicator) */}
+                    <div className={`absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold shadow-md text-white backdrop-blur-sm ${selectedProperty!.isAvailable ? 'bg-green-500/90' : 'bg-red-500/90'}`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-white" />
                       {selectedProperty!.isAvailable ? "Available Now" : "Not Available"}
                     </div>
 
-                    {/* Floating Price Badge - Enhanced */}
-                    <div className="absolute top-4 left-4 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] px-5 py-2.5 rounded-xl shadow-xl border border-white/60 text-white font-bold flex items-center gap-2">
-                      <span className="text-xl">₹{selectedProperty!.price.toLocaleString()}</span>
-                      <span className="text-sm font-normal opacity-90">/month</span>
+                    {/* Price + type - bottom left, grouped over the scrim */}
+                    <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2">
+                      <div className="flex items-baseline gap-1 text-white drop-shadow-md">
+                        <span className="text-3xl font-bold">₹{selectedProperty!.price.toLocaleString()}</span>
+                        <span className="text-sm font-medium text-white/80">/month</span>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 self-start px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-white text-xs font-medium">
+                        <Building2 className="w-3.5 h-3.5" />
+                        {selectedProperty!.type}
+                      </span>
                     </div>
 
-                    {/* Property type badge */}
-                    <div className="absolute top-18 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-300)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
-                      <Building2 className="w-4 h-4 text-[var(--color-primary-300)]" />
-                      {selectedProperty!.type}
-                    </div>
+                    {/* Image counter - bottom right */}
+                    {selectedProperty!.images.length > 1 && (
+                      <div className="absolute bottom-4 right-4 z-10 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full text-white text-xs font-medium flex items-center gap-1.5">
+                        <Grid3X3 className="w-3.5 h-3.5" />
+                        <span>{currentImageIndex + 1} / {selectedProperty!.images.length}</span>
+                      </div>
+                    )}
 
                   </div>
 
-                  {/* Thumbnails - Enhanced gallery strip */}
+                  {/* Thumbnails - gallery strip */}
                   {selectedProperty!.images.length > 1 && (
-                    <div className="flex gap-2 p-4 overflow-x-auto hide-scrollbar bg-gray-800 border-t border-gray-700">
+                    <div className="flex flex-shrink-0 gap-2 p-4 overflow-x-auto hide-scrollbar bg-gray-50 border-t border-gray-200">
                       {selectedProperty!.images.map((img, idx) => (
                         <button
                           key={img.id}
                           onClick={e => { e.stopPropagation(); setCurrentImageIndex(idx); }}
-                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden transition-all duration-300 ${idx === currentImageIndex
-                            ? 'border-2 border-[var(--color-primary-500)] shadow-lg scale-105 ring-2 ring-[var(--color-primary-300)] ring-opacity-50'
+                          className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden transition-all duration-200 ${idx === currentImageIndex
+                            ? 'ring-2 ring-[var(--color-primary-300)]'
                             : 'border-2 border-transparent opacity-70 hover:opacity-100'
                             }`}
                           aria-label={`View image ${idx + 1}`}
                         >
                           <img
                             src={img.url}
-                            alt="Thumbnail"
+                            alt=""
                             className="w-full h-full object-cover"
                             onError={e => (e.currentTarget.src = '/images/placeholder.png')}
                           />
@@ -2697,59 +2747,59 @@ export default function ListingsPage() {
                   )}
 
                   {/* Key Property Stats - Feature row at bottom */}
-                  <div className="hidden lg:flex justify-between items-center px-6 py-5 bg-gray-800 text-white border-t border-gray-700">
+                  <div className="flex flex-shrink-0 justify-between items-center px-6 py-5 bg-gray-50 text-gray-900 border-t border-gray-200">
                     <div className="flex items-center gap-2">
-                      <div className="bg-gray-900 p-2 rounded-lg">
-                        <Bed className="w-5 h-5 text-[var(--color-primary-900)]" />
+                      <div className="bg-[var(--color-primary-100)] p-2 rounded-lg">
+                        <Bed className="w-5 h-5 text-[var(--color-primary-600)]" />
                       </div>
                       <div>
                         <div className="font-semibold text-lg">{selectedProperty!.bedrooms}</div>
-                        <div className="text-xs text-gray-300">Bedrooms</div>
+                        <div className="text-xs text-gray-500">Bedrooms</div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="bg-gray-900 p-2 rounded-lg">
-                        <Bath className="w-5 h-5 text-[var(--color-primary-900)]" />
+                      <div className="bg-[var(--color-primary-100)] p-2 rounded-lg">
+                        <Bath className="w-5 h-5 text-[var(--color-primary-600)]" />
                       </div>
                       <div>
                         <div className="font-semibold text-lg">{selectedProperty!.bathrooms}</div>
-                        <div className="text-xs text-gray-300">Bathrooms</div>
+                        <div className="text-xs text-gray-500">Bathrooms</div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <div className="bg-gray-900 p-2 rounded-lg">
-                        <Calendar className="w-5 h-5 text-[var(--color-primary-900)]" />
+                      <div className="bg-[var(--color-primary-100)] p-2 rounded-lg">
+                        <Calendar className="w-5 h-5 text-[var(--color-primary-600)]" />
                       </div>
                       <div>
                         <div className="font-semibold text-sm">
                           {selectedProperty!.availableFrom ? new Date(selectedProperty!.availableFrom).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : 'Now'}
                         </div>
-                        <div className="text-xs text-gray-300">Available From</div>
+                        <div className="text-xs text-gray-500">Available From</div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Details Section */}
-                <div className="lg:w-1/2 w-full flex flex-col min-w-0 bg-white h-[50vh] lg:h-auto lg:max-h-[90vh] overflow-y-auto custom-scrollbar pb-20 lg:pb-0">
+                <div className="md:w-1/2 w-full flex flex-col min-w-0 bg-white h-[50vh] md:h-auto md:max-h-[90vh] overflow-y-auto custom-scrollbar pb-20 md:pb-0">
                   {/* Header: Title, Location, Rating */}
                   <div className="sticky top-0 px-6 pt-6 pb-4 bg-white z-20 border-b border-gray-100 shadow-sm">
-                    {/* Title with enhanced typography */}
-                    <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-[var(--color-primary-100)] bg-clip-text text-transparent leading-tight" title={selectedProperty!.title}>
+                    {/* Title */}
+                    <h2 id="desktop-property-modal-title" className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight line-clamp-2" title={selectedProperty!.title}>
                       {selectedProperty!.title}
                     </h2>
 
                     {/* Location and Rating Row */}
-                    <div className="flex justify-between items-center mt-3">
-                      <div className="flex items-center gap-2 text-white text-sm bg-[var(--color-primary-50)] px-3 py-1.5 rounded-lg">
-                        <MapPin className="w-4 h-4 text-[var(--color-primary-500)]" />
-                        <span>{selectedProperty!.location}</span>
+                    <div className="flex justify-between items-center gap-3 mt-3 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 text-gray-700 text-sm bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-lg">
+                        <MapPin className="w-4 h-4 flex-shrink-0 text-[var(--color-primary-300)]" />
+                        <span className="truncate">{selectedProperty!.location}</span>
                       </div>
 
-                      {/* Rating - Enhanced */}
-                      <div className="flex items-center gap-2 bg-gradient-to-br from-yellow-50 to-yellow-100 px-3 py-1.5 rounded-lg shadow-sm border border-yellow-200">
+                      {/* Rating */}
+                      <div className="flex items-center gap-2 flex-shrink-0 bg-yellow-50 px-3 py-1.5 rounded-lg border border-yellow-200">
                         <div className="flex">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <Star
@@ -2765,8 +2815,8 @@ export default function ListingsPage() {
 
                   {/* Main content area */}
                   <div className="px-6">
-                    {/* Quick Features Row - Improved layout */}
-                    <div className="flex flex-wrap gap-2 my-4">
+                    {/* Quick Features Row */}
+                    <div className="flex flex-wrap gap-2 my-6">
                       {selectedProperty!.furnished && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-lg font-medium border border-green-200"><Sofa className="w-4 h-4" /> Furnished</span>}
                       {selectedProperty!.petFriendly && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 text-sm rounded-lg font-medium border border-blue-200"><PawPrintIcon className="w-4 h-4" /> Pet Friendly</span>}
                       {selectedProperty!.parking && <span className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 text-sm rounded-lg font-medium border border-purple-200"><Car className="w-4 h-4" /> Parking</span>}
@@ -2784,27 +2834,27 @@ export default function ListingsPage() {
                       <p className="text-gray-700 leading-relaxed">{selectedProperty!.description}</p>
                     </div>
 
-                    {/* Amenities - Enhanced grid layout */}
-                    <div className="my-6">
+                    {/* Amenities */}
+                    <div className="my-6 @container">
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                         <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
                           <Dumbbell className="w-4 h-4 text-[var(--color-primary-600)]" />
                         </div>
                         Amenities
                       </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 @lg:grid-cols-3 gap-3">
                         {selectedProperty!.amenities.map((amenity, idx) => (
                           <div
-                            key={`${selectedProperty!.id}-amenity-${idx}`}
-                            className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
+                            key={amenity.amenity.id || `${selectedProperty!.id}-amenity-${idx}`}
+                            className="flex items-center gap-2 min-w-0 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
                           >
-                            <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
+                            <span className="flex-shrink-0 text-[var(--color-primary-300)]">
                               {getAmenityIcon(amenity.amenity.name)}
-                            </div>
-                            <span className="text-gray-800">{amenity.amenity.name}</span>
+                            </span>
+                            <span className="text-gray-800 text-sm truncate" title={amenity.amenity.name}>{amenity.amenity.name}</span>
                           </div>
                         ))}
-                        50                </div>
+                      </div>
                     </div>
 
                     {/* Reviews Section */}
@@ -2813,14 +2863,14 @@ export default function ListingsPage() {
                         <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
                           <MessageSquare className="w-4 h-4 text-[var(--color-primary-600)]" />
                         </div>
-                        Reviews ({selectedProperty!._count.reviews})
+                        Reviews ({selectedProperty!._count?.reviews ?? 0})
                       </h4>
 
                       {/* Review List */}
                       <div className="space-y-4 mb-6">
                         {reviewsLoading ? (
                           <div className="flex justify-center items-center py-6">
-                            <Loader2 className="w-8 h-8 text-[var(--color-primary-500)] animate-spin" />
+                            <Loader2 className="w-8 h-8 text-[var(--color-primary-300)] animate-spin" />
                           </div>
                         ) : reviews.length > 0 ? (
                           <>
@@ -2828,7 +2878,7 @@ export default function ListingsPage() {
                               <div key={review.id} className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
                                 <div className="flex justify-between items-start mb-2">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-10 h-10 bg-[var(--color-primary-500)] rounded-full flex items-center justify-center">
+                                    <div className="w-10 h-10 bg-[var(--color-primary-300)] rounded-full flex items-center justify-center">
                                       {review.user.image ? (
                                         <img
                                           src={review.user.image}
@@ -2847,10 +2897,11 @@ export default function ListingsPage() {
                                     </div>
                                   </div>
                                   <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-lg">
-                                    <div className="flex">
+                                    <div className="flex" role="img" aria-label={`${review.rating} out of 5 stars`}>
                                       {[1, 2, 3, 4, 5].map(star => (
                                         <Star
                                           key={star}
+                                          aria-hidden="true"
                                           className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                                         />
                                       ))}
@@ -2876,7 +2927,7 @@ export default function ListingsPage() {
                                 >
                                   Previous
                                 </button>
-                                <div className="flex items-center px-3 bg-[var(--color-primary-100)] text-[var(--color-primary-700)] rounded-lg">
+                                <div className="flex items-center px-3 text-sm bg-gray-100 text-gray-700 rounded-lg">
                                   {reviewPagination.page} / {reviewPagination.totalPages}
                                 </div>
                                 <button
@@ -2895,7 +2946,7 @@ export default function ListingsPage() {
                         ) : (
                           <div className="text-center py-6 bg-white rounded-lg border border-gray-200">
                             <div className="text-gray-500 mb-2">No reviews yet</div>
-                            <div className="text-sm text-gray-400">Be the first to leave a review!</div>
+                            <div className="text-sm text-gray-500">Be the first to leave a review!</div>
                           </div>
                         )}
                       </div>
@@ -2912,7 +2963,9 @@ export default function ListingsPage() {
                                   key={star}
                                   type="button"
                                   onClick={() => setUserReview(prev => ({ ...prev, rating: star }))}
-                                  className="focus:outline-none"
+                                  aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                                  aria-pressed={star <= userReview.rating}
+                                  className="rounded p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-300)] focus-visible:ring-offset-1"
                                 >
                                   <Star
                                     className={`w-6 h-6 ${star <= userReview.rating
@@ -2929,7 +2982,7 @@ export default function ListingsPage() {
                             <textarea
                               value={userReview.comment}
                               onChange={(e) => setUserReview(prev => ({ ...prev, comment: e.target.value }))}
-                              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
+                              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--color-primary-300)] focus:border-transparent"
                               placeholder="Share your experience..."
                               rows={3}
                             />
@@ -2937,7 +2990,7 @@ export default function ListingsPage() {
                           <button
                             onClick={submitReview}
                             disabled={isSubmittingReview}
-                            className="w-full py-2 px-4 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 flex items-center justify-center gap-2"
+                            className="w-full py-2 px-4 bg-[var(--color-primary-300)] text-white rounded-lg hover:bg-[var(--color-primary-200)] transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             {isSubmittingReview ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -2948,14 +3001,14 @@ export default function ListingsPage() {
                           </button>
                         </div>
                       ) : (
-                        <div className="text-center py-4 bg-[var(--color-primary-50)] rounded-lg border border-[var(--color-primary-200)]">
-                          <p className="text-[var(--color-primary-700)]">Please sign in to leave a review</p>
+                        <div className="text-center py-4 bg-gray-50 rounded-lg border border-gray-200">
+                          <p className="text-gray-600">Please sign in to leave a review</p>
                         </div>
                       )}
                     </div>
 
-                    {/* Landlord Info - Enhanced card */}
-                    <div className="my-6 bg-[var(--color-primary-800)] p-5 rounded-xl border border-[var(--color-primary-500)]">
+                    {/* Landlord Info */}
+                    <div className="my-6 bg-gray-50 p-5 rounded-xl border border-gray-200">
                       <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
                           <User className="w-4 h-4 text-[var(--color-primary-600)]" />
@@ -2963,26 +3016,26 @@ export default function ListingsPage() {
                         Property Owner
                       </h4>
                       <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-[var(--color-primary-500)] to-[var(--color-secondary-500)] rounded-full flex items-center justify-center text-xl font-bold text-white">
+                        <div className="w-16 h-16 flex-shrink-0 bg-gradient-to-br from-[var(--color-primary-300)] to-[var(--color-secondary-300)] rounded-full flex items-center justify-center text-xl font-bold text-white">
                           {selectedProperty!.owner.name.charAt(0)}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="text-lg font-semibold text-gray-900">{selectedProperty!.owner.name}</p>
+                            <p className="text-lg font-semibold text-gray-900 truncate">{selectedProperty!.owner.name}</p>
                             {selectedProperty!.owner.verified && (
-                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium flex items-center gap-1">
+                              <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-medium flex items-center gap-1 flex-shrink-0">
                                 <CheckCircle className="w-3 h-3" /> Verified
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-3">
+                          {selectedProperty!.owner.rating ? (
                             <div className="flex items-center gap-1">
                               <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                              <span className="text-sm text-gray-700">{selectedProperty!.owner.rating || '4.8'}</span>
+                              <span className="text-sm text-gray-700">{selectedProperty!.owner.rating}</span>
                             </div>
-                            <span className="text-sm text-gray-500">•</span>
-                            <span className="text-sm text-gray-500">Response time: ~2 hours</span>
-                          </div>
+                          ) : (
+                            <span className="text-sm text-gray-500">New host</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2993,20 +3046,22 @@ export default function ListingsPage() {
                     <div className="flex gap-3 items-center">
                       <button
                         onClick={handleBookViewing}
-                        className="flex-1 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white py-3.5 px-4 rounded-xl font-medium hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+                        className="flex-1 bg-gradient-to-r from-[var(--color-primary-300)] to-[var(--color-secondary-300)] text-white py-3.5 px-4 rounded-xl font-semibold hover:from-[var(--color-primary-200)] hover:to-[var(--color-secondary-200)] transition-colors duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                       >
-                        <Calendar className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        <span className="font-semibold">Book Viewing</span>
+                        <Calendar className="w-5 h-5" />
+                        <span>Book Viewing</span>
                       </button>
                       <div className="flex gap-3">
                         <button
                           onClick={handlePhoneContact}
-                          className="p-3.5 bg-[var(--color-primary-50)] border border-[var(--color-primary-200)] text-white rounded-xl hover:bg-[var(--color-primary-100)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
+                          aria-label="Call property owner"
+                          className="p-3.5 bg-[var(--color-primary-800)] border border-[var(--color-primary-700)] text-[var(--color-primary-300)] rounded-xl hover:bg-[var(--color-primary-700)] transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                           <Phone className="w-5 h-5" />
                         </button>
                         <button
                           onClick={handleEmailContact}
+                          aria-label="Email property owner"
                           className="p-3.5 bg-gray-50 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors duration-200 flex items-center justify-center shadow-md hover:shadow-lg"
                         >
                           <Mail className="w-5 h-5" />
@@ -3041,6 +3096,7 @@ export default function ListingsPage() {
             <button
               onClick={() => setShowBookingModal(false)}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-gray-100 text-gray-500"
+              aria-label="Close booking dialog"
             >
               <X className="w-5 h-5" />
             </button>
@@ -3094,7 +3150,7 @@ export default function ListingsPage() {
               <button
                 onClick={submitBooking}
                 disabled={isSubmittingBooking}
-                className="w-full py-3 bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] text-white rounded-lg font-medium hover:from-[var(--color-primary-600)] hover:to-[var(--color-secondary-600)] transition-colors flex items-center justify-center"
+                className="w-full py-3 bg-gradient-to-r from-[var(--color-primary-300)] to-[var(--color-secondary-300)] text-white rounded-lg font-medium hover:from-[var(--color-primary-200)] hover:to-[var(--color-secondary-200)] transition-colors flex items-center justify-center"
               >
                 {isSubmittingBooking ? (
                   <Loader2 className="w-5 h-5 animate-spin mr-2" />
