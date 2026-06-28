@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
 export async function middleware(request: NextRequest) {
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  // Use Better Auth's helper instead of a hardcoded cookie name. Over HTTPS
+  // (production) Better Auth prefixes the cookie with "__Secure-", so a literal
+  // "better-auth.session_token" lookup is always undefined in prod — which made
+  // every protected route bounce to sign-in (and then back home). getSessionCookie
+  // checks both "__Secure-<name>" and "<name>".
+  const sessionCookie = getSessionCookie(request);
   const isAuth = !!sessionCookie;
   const pathname = request.nextUrl.pathname;
 
