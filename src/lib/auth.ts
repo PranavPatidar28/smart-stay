@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
+import { hashPassword, verifyPassword } from "./password";
 
 // Fail fast in production if the auth secret is missing — a missing/derived
 // secret would let sessions be forged. Skipped during `next build` (which
@@ -31,6 +32,15 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
+    // Use bcrypt for hashing/verification so Better Auth matches the hashes
+    // written by the custom register route and prisma/seed.ts (both bcryptjs).
+    // Better Auth defaults to scrypt; without this override, every existing
+    // bcrypt credential account fails sign-in with "Invalid password hash".
+    password: {
+      hash: (password: string) => hashPassword(password),
+      verify: ({ hash, password }: { hash: string; password: string }) =>
+        verifyPassword(password, hash),
+    },
   },
 
   socialProviders: {
