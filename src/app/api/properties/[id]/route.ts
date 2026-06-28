@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
+import { decimalToNumber } from '@/lib/serialize'
 
 // Define more flexible schemas for validation
 const updatePropertySchema = z.object({
@@ -89,7 +90,7 @@ export async function GET(
     // ('property_view') with per-session dedup, so we do NOT increment here
     // (incrementing on every fetch double-counts and is trivially inflatable).
 
-    return NextResponse.json(property)
+    return NextResponse.json(decimalToNumber(property))
   } catch (error) {
     console.error('Error fetching property:', error)
     return NextResponse.json(
@@ -197,7 +198,7 @@ export async function PUT(
       });
     });
 
-    return NextResponse.json(updatedProperty);
+    return NextResponse.json(decimalToNumber(updatedProperty));
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

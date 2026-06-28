@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
+import { decimalToNumber } from '@/lib/serialize'
 
 // Renters may only edit notes and (while PENDING) their dates. Status
 // transitions and money fields are landlord-only and handled separately below.
@@ -64,7 +65,7 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(booking)
+    return NextResponse.json(decimalToNumber(booking))
   } catch (error) {
     console.error('Error fetching booking:', error)
     return NextResponse.json(
@@ -209,7 +210,7 @@ export async function PUT(
       })
     }
 
-    return NextResponse.json(updatedBooking)
+    return NextResponse.json(decimalToNumber(updatedBooking))
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

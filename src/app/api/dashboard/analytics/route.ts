@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { getSession } from '@/lib/auth-server'
+import { decimalToNumber } from '@/lib/serialize'
 
 export async function GET(request: NextRequest) {
   try {
@@ -123,8 +124,8 @@ export async function GET(request: NextRequest) {
       take: 5,
     })
 
-    // Calculate total earnings
-    const totalEarnings = earningsStats._sum.amount || 0
+    // Calculate total earnings (Decimal -> number for the JSON response)
+    const totalEarnings = earningsStats._sum.amount ? earningsStats._sum.amount.toNumber() : 0
     const totalBookings = earningsStats._count || 0
 
     // Format property stats
@@ -137,7 +138,7 @@ export async function GET(request: NextRequest) {
     const bookingStatusStats = bookingStats.reduce((acc, stat) => {
       acc[stat.status.toLowerCase()] = {
         count: stat._count.id,
-        amount: stat._sum.amount || 0,
+        amount: stat._sum.amount ? stat._sum.amount.toNumber() : 0,
       }
       return acc
     }, {} as Record<string, { count: number; amount: number }>)
@@ -207,7 +208,7 @@ export async function GET(request: NextRequest) {
       bookingStats: bookingStatusStats,
       inquiryStats: inquiryStatusStats,
       recentActivity,
-      topProperties,
+      topProperties: decimalToNumber(topProperties),
       period: parseInt(period),
       timeSeries: {
         viewsByDay,
