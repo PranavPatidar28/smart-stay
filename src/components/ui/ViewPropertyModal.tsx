@@ -136,7 +136,7 @@ const DesktopPropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOp
           <X className="w-6 h-6 text-gray-700" />
         </button>
         {/* Left: Image Gallery */}
-        <div className="lg:w-1/2 w-full flex flex-col min-w-0 bg-gray-900 max-h-[40vh] lg:max-h-[90vh] overflow-hidden relative">
+        <div className="lg:w-1/2 w-full flex flex-col min-w-0 bg-gray-100 max-h-[40vh] lg:max-h-[90vh] overflow-hidden relative">
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
             <img
               src={property.images[currentImageIndex]?.url || '/images/placeholder.png'}
@@ -175,13 +175,13 @@ const DesktopPropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOp
               <span className="text-xl">₹{property.price.toLocaleString()}</span>
               <span className="text-sm font-normal opacity-90">/month</span>
             </div>
-            <div className="absolute top-18 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-700)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
-              <Building2 className="w-4 h-4 text-[var(--color-primary-600)]" />
+            <div className="absolute top-18 left-4 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-lg text-[var(--color-primary-300)] text-sm font-medium border border-[var(--color-primary-100)] flex items-center gap-1.5">
+              <Building2 className="w-4 h-4 text-[var(--color-primary-300)]" />
               {property.type}
             </div>
           </div>
           {property.images.length > 1 && (
-            <div className="flex gap-2 p-4 overflow-x-auto hide-scrollbar bg-gray-800 border-t border-gray-700">
+            <div className="flex gap-2 p-4 overflow-x-auto hide-scrollbar bg-gray-50 border-t border-gray-200">
               {property.images.map((img, idx) => (
                 <button
                   key={img.id}
@@ -194,34 +194,34 @@ const DesktopPropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOp
               ))}
             </div>
           )}
-          <div className="hidden lg:flex justify-between items-center px-6 py-4 bg-gray-800 text-white border-t border-gray-700">
+          <div className="hidden lg:flex justify-between items-center px-6 py-4 bg-gray-50 text-gray-900 border-t border-gray-200">
             <div className="flex items-center gap-2">
-              <div className="bg-gray-700 p-2 rounded-lg">
-                <Bed className="w-5 h-5 text-[var(--color-primary-300)]" />
+              <div className="bg-[var(--color-primary-100)] p-2 rounded-lg">
+                <Bed className="w-5 h-5 text-[var(--color-primary-600)]" />
               </div>
               <div>
                 <div className="font-semibold text-lg">{property.bedrooms}</div>
-                <div className="text-xs text-gray-300">Bedrooms</div>
+                <div className="text-xs text-gray-500">Bedrooms</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="bg-gray-700 p-2 rounded-lg">
-                <Bath className="w-5 h-5 text-[var(--color-primary-300)]" />
+              <div className="bg-[var(--color-primary-100)] p-2 rounded-lg">
+                <Bath className="w-5 h-5 text-[var(--color-primary-600)]" />
               </div>
               <div>
                 <div className="font-semibold text-lg">{property.bathrooms}</div>
-                <div className="text-xs text-gray-300">Bathrooms</div>
+                <div className="text-xs text-gray-500">Bathrooms</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="bg-gray-700 p-2 rounded-lg">
-                <Calendar className="w-5 h-5 text-[var(--color-primary-300)]" />
+              <div className="bg-[var(--color-primary-100)] p-2 rounded-lg">
+                <Calendar className="w-5 h-5 text-[var(--color-primary-600)]" />
               </div>
               <div>
                 <div className="font-semibold text-sm">
                   {property.availableFrom ? new Date(property.availableFrom).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : 'Now'}
                 </div>
-                <div className="text-xs text-gray-300">Available From</div>
+                <div className="text-xs text-gray-500">Available From</div>
               </div>
             </div>
           </div>
@@ -229,7 +229,7 @@ const DesktopPropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOp
         {/* Right: Details Section */}
         <div className="lg:w-1/2 w-full flex flex-col min-w-0 bg-white h-[50vh] lg:h-auto lg:max-h-[90vh] overflow-y-auto custom-scrollbar pb-20 lg:pb-0">
           <div className="sticky top-0 px-6 pt-6 pb-4 bg-white z-20 border-b border-gray-100 shadow-sm">
-            <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-[var(--color-primary-900)] bg-clip-text text-transparent leading-tight" title={property.title}>
+            <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-[var(--color-primary-300)] bg-clip-text text-transparent leading-tight" title={property.title}>
               {property.title}
             </h2>
             <div className="flex justify-between items-center mt-3">
@@ -281,7 +281,7 @@ const DesktopPropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOp
                 ))}
               </div>
             </div>
-            <div className="my-6 bg-[var(--color-primary-50)] p-5 rounded-xl border border-[var(--color-primary-100)]">
+            <div className="my-6 bg-gray-50 p-5 rounded-xl border border-gray-200">
               <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
                   <User className="w-4 h-4 text-[var(--color-primary-600)]" />
@@ -382,7 +382,7 @@ const MobilePropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOpe
         </div>
       </div>
       {/* Image Gallery */}
-      <div className="relative w-full h-64 bg-gray-900 flex items-center justify-center">
+      <div className="relative w-full h-64 bg-gray-100 flex items-center justify-center">
         <img
           src={property.images[currentImageIndex]?.url || '/images/placeholder.png'}
           alt={property.title}
@@ -552,7 +552,7 @@ const MobilePropertyModal: React.FC<ViewPropertyModalProps> = ({ property, isOpe
             ))}
           </div>
         </div>
-        <div className="my-4 bg-[var(--color-primary-50)] p-3 rounded-xl border border-[var(--color-primary-100)]">
+        <div className="my-4 bg-gray-50 p-3 rounded-xl border border-gray-200">
           <h4 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
             <div className="p-1.5 rounded-full bg-[var(--color-primary-100)]">
               <User className="w-4 h-4 text-[var(--color-primary-600)]" />
