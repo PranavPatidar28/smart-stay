@@ -27,7 +27,7 @@ This document outlines the comprehensive metadata configuration for the SmartSta
 ## Production Checklist
 
 ### Required Actions:
-1. **Replace placeholder URLs**: Update `https://smartstay.com` with your actual domain
+1. **Replace placeholder URLs**: the code currently uses two different domains that must both be unified to your production domain — `https://smartstay.com` (in `metadataBase`, Open Graph, and the WebSite JSON-LD) and `https://smart-stay-navy.vercel.app` (in the Organization JSON-LD `url`/`logo`), all in `layout.tsx`.
 2. **Add verification codes**: Uncomment and add actual verification codes in layout.tsx
 3. **Create favicon files**: Generate proper favicon.ico and icon files
 4. **Update contact info**: Add actual phone numbers and social media links

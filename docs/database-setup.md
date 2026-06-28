@@ -21,13 +21,29 @@ npm install
 Create a `.env` file in your project root:
 
 ```env
-# Database
+# Database (REQUIRED)
 DATABASE_URL="postgresql://username:password@localhost:5432/smartstay"
 
-# Next.js
-NEXTAUTH_SECRET="your-secret-key-here"
-NEXTAUTH_URL="http://localhost:3000"
+# Better Auth (REQUIRED)
+BETTER_AUTH_URL="http://localhost:3000"
+BETTER_AUTH_SECRET="generate-a-strong-random-32-byte-value"  # openssl rand -base64 32
+
+# Public base URL for trustedOrigins / CSRF check — set to same value as BETTER_AUTH_URL
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# Scheduled OTP cleanup (REQUIRED for the cron) — protects /api/auth/cleanup-otp
+CRON_SECRET="generate-a-strong-random-value"
+
+# Email / OTP delivery (REQUIRED for signup OTP emails) — Gmail App Password
+EMAIL_USER="your-email@gmail.com"
+EMAIL_PASS="your-gmail-app-password"
+
+# Google OAuth (OPTIONAL)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
 ```
+
+> See `env.example` for the authoritative, commented list of variables.
 
 ### 3. Set Up PostgreSQL Database
 
@@ -133,7 +149,8 @@ prisma/
 ### Database Utilities Location
 ```
 src/lib/
-├── db.ts           # Prisma client configuration
+├── prisma.ts       # Prisma client instantiation & configuration (singleton)
+├── db.ts           # Backward-compat re-export of prisma.ts
 └── auth.ts         # Authentication utilities
 ```
 
@@ -141,18 +158,20 @@ src/lib/
 ```
 src/app/api/
 ├── properties/     # Property CRUD operations
-├── users/          # User management
+├── user/           # User management (profile, change-password, etc.)
 ├── bookings/       # Booking operations
 ├── favorites/      # Favorite management
 └── auth/           # Authentication endpoints
 ```
 
+(Tree is illustrative, not exhaustive — other route groups include `amenities/`, `analytics/`, `inquiries/`, `notifications/`, `reviews/`, `search/`, and `dashboard/analytics/`.)
+
 ## 🌱 Sample Data
 
 The seed script creates:
 
-- **4 Users:** 2 students, 1 landlord, 1 admin
-- **5 Properties:** Various types and price ranges
+- **8 Users:** 3 students, 5 landlords (no admin is seeded)
+- **12 Properties:** Various types and price ranges
 - **24 Amenities:** Categorized facilities
 - **Sample Data:** Favorites, reviews, inquiries, notifications
 
@@ -160,14 +179,18 @@ The seed script creates:
 
 All users have the password: `password123`
 
-- **Student:** john@example.com
-- **Student:** jane@example.com
-- **Landlord:** landlord@example.com
-- **Admin:** admin@smartstay.com
+- **Landlord:** sarah.johnson@example.com
+- **Landlord:** mike.chen@example.com
+- **Landlord:** emma.davis@example.com
+- **Student:** alex.kumar@example.com
+- **Student:** priya.sharma@example.com
+- **Student:** rahul.singh@example.com
+- **Landlord:** rajesh.patel@example.com
+- **Landlord:** meera.reddy@example.com
 
 ## 🔒 Security Features
 
-- **Password Hashing:** bcrypt with 12 salt rounds
+- **Password Hashing:** bcryptjs with 10 salt rounds (`src/lib/password.ts`), used by Better Auth and the register/change-password routes. (`prisma/seed.ts` hashes seed fixtures at 12 rounds.)
 - **Input Validation:** Zod schema validation
 - **SQL Injection Protection:** Prisma ORM
 - **Type Safety:** Full TypeScript support
@@ -187,13 +210,17 @@ All users have the password: `password123`
 # Production Database
 DATABASE_URL="postgresql://username:password@your-db-host:5432/smartstay"
 
-# Security
-NEXTAUTH_SECRET="your-production-secret-key"
-NEXTAUTH_URL="https://your-domain.com"
+# Better Auth (BETTER_AUTH_SECRET is REQUIRED — app throws on startup in production if missing)
+BETTER_AUTH_SECRET="your-production-secret-key"   # openssl rand -base64 32
+BETTER_AUTH_URL="https://your-domain.com"
+NEXT_PUBLIC_APP_URL="https://your-domain.com"
 
-# Optional: Connection Pool
-DATABASE_POOL_SIZE=20
+# Optional: tune the Prisma connection pool via the connection_limit query
+# parameter on DATABASE_URL (default = num_physical_cpus * 2 + 1), e.g.:
+#   DATABASE_URL="postgresql://username:password@your-db-host:5432/smartstay?connection_limit=20"
 ```
+
+> See `env.example` for the full, authoritative list of variables (including `CRON_SECRET`, `EMAIL_USER`/`EMAIL_PASS`, and Google OAuth keys).
 
 ### Database Migration
 

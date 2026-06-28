@@ -1,6 +1,6 @@
 # Plan: Migrate money fields from `Float` to `Decimal` (M15)
 
-Status: **PROPOSED — not applied.** Needs a live DB + running app to execute and verify.
+Status: **APPLIED — merged in commit `efc9f32`** (feat(money): store price/deposit/amount/earnings as Decimal(12,2)). The schema `Decimal(12,2)` fields, the `src/lib/serialize.ts` `decimalToNumber` helper, and the route-level boundary coercion across the money routes are all in place. Retained as an implementation record.
 Scope: monetary precision only. Does not change auth, business logic, or API shapes.
 
 ---
@@ -86,10 +86,9 @@ Routes returning money (from grep):
 - `properties/route.ts` (GET list, POST create)
 - `properties/[id]/route.ts` (GET, PUT)
 - `bookings/route.ts` (GET list, POST), `bookings/[id]/route.ts` (GET, PUT)
-- `favorites/route.ts`, `favorites/[id]` (embed property)
+- `favorites/route.ts` (GET, POST embed property)
 - `search/route.ts` (incl. `_min/_max.price` in `filterOptions`, and `priceRange`)
 - `dashboard/analytics/route.ts` (`_sum.amount`, `topProperties.price`, `totalEarnings`)
-- `reviews`/`inquiries` list routes (embed property)
 
 Server-side arithmetic to update (now operating on Decimal, not number):
 - `bookings/route.ts:140-146` — `monthlyPrice * months`. Use

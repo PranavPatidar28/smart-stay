@@ -30,10 +30,9 @@ const [propertiesResponse, favoritesResponse] = await Promise.allSettled([
 ```
 
 ### 3. Data Transfer Optimization
-- Limited images to 4 per property (instead of all)
-- Limited amenities to 8 per property (instead of all)
+- Capped images at 4 per property in the API query (amenities are still fetched in full; only the listing card display-trims them to 4)
 - Added selective field fetching in Prisma queries
-- Added response compression and caching headers
+- Added caching headers (response compression, if any, is provided by the hosting platform/Next.js defaults, not added in the API route or `next.config.ts`)
 
 ### 4. API Response Caching
 Added cache headers to the properties API:
