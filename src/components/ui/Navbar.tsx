@@ -146,17 +146,17 @@ export default function Navbar() {
           ? 'hover:opacity-80'
           : 'hover:text-[var(--color-primary-300)]',
         links: isScrolled
-          ? 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
+          ? 'text-gray-700 hover:text-[var(--color-primary-300)] hover:bg-gray-50'
           : 'text-white/90 hover:text-white hover:bg-white/10',
         linksActive: isScrolled
-          ? 'text-[var(--color-primary-600)] bg-gray-100'
+          ? 'text-[var(--color-primary-300)] bg-gray-100'
           : 'text-white bg-white/10',
         mobileMenu: isScrolled ? 'bg-white/95 backdrop-blur-xl' : 'bg-black/20 backdrop-blur-xl',
         mobileLinks: isScrolled
-          ? 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
+          ? 'text-gray-700 hover:text-[var(--color-primary-300)] hover:bg-gray-50'
           : 'text-white hover:bg-white/10',
         menuButton: isScrolled
-          ? 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
+          ? 'text-gray-700 hover:text-[var(--color-primary-300)] hover:bg-gray-50'
           : 'text-white hover:bg-white/10'
       };
     } else {
@@ -165,11 +165,11 @@ export default function Navbar() {
         nav: 'bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-lg',
         logo: 'bg-gradient-to-r from-[var(--color-primary-500)] to-[var(--color-secondary-500)] bg-clip-text text-transparent',
         logoHover: 'hover:opacity-80',
-        links: 'text-gray-700 hover:text-[var(--color-primary-400)]',
-        linksActive: 'text-[var(--color-primary-400)]',
+        links: 'text-gray-700 hover:text-[var(--color-primary-300)]',
+        linksActive: 'text-[var(--color-primary-300)]',
         mobileMenu: 'bg-white/95 backdrop-blur-xl',
-        mobileLinks: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50',
-        menuButton: 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50'
+        mobileLinks: 'text-gray-700 hover:text-[var(--color-primary-300)] hover:bg-gray-50',
+        menuButton: 'text-gray-700 hover:text-[var(--color-primary-300)] hover:bg-gray-50'
       };
     }
   };
@@ -282,7 +282,7 @@ export default function Navbar() {
                     onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
                     className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${pathname === link.href
                       ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
-                      : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
+                      : 'text-gray-700 hover:text-[var(--color-primary-300)] hover:bg-gray-50/80'
                       } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${index * 100}ms` }}
                     disabled={isNavigating}
@@ -314,7 +314,7 @@ export default function Navbar() {
                     onClick={() => handleInstantNavigation(link.href, link.requiresRole)}
                     className={`w-full text-left flex items-center gap-4 px-4 py-4 rounded-2xl text-base font-medium transition-all duration-200 group hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-400)] focus:ring-offset-2 ${pathname === link.href
                       ? 'bg-[var(--color-primary-50)] text-[var(--color-primary-700)] border border-[var(--color-primary-200)]'
-                      : 'text-gray-700 hover:text-[var(--color-primary-600)] hover:bg-gray-50/80'
+                      : 'text-gray-700 hover:text-[var(--color-primary-300)] hover:bg-gray-50/80'
                       } ${isNavigating ? 'pointer-events-none opacity-75' : ''}`}
                     style={{ animationDelay: `${(index + navLinks.length) * 100}ms` }}
                     disabled={isNavigating}

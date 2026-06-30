@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
+
+const markReadSchema = z.object({
+  notificationIds: z.array(z.string().cuid()).min(1).max(100),
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -69,19 +74,20 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { notificationIds } = body
+    const parsed = markReadSchema.safeParse(body)
 
-    if (!Array.isArray(notificationIds) || notificationIds.length === 0) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Notification IDs array is required' },
+        { error: 'A non-empty array of up to 100 notification IDs is required' },
         { status: 400 }
       )
     }
 
-    // Mark notifications as read
+    // Mark notifications as read (scoped to the caller so one user can't flip
+    // another user's notifications).
     await prisma.notification.updateMany({
       where: {
-        id: { in: notificationIds },
+        id: { in: parsed.data.notificationIds },
         userId: session.user.id,
       },
       data: { read: true },

@@ -57,19 +57,25 @@ export async function GET(request: NextRequest) {
     // each other (a single `where.OR =` assignment would overwrite a prior one).
     const andClauses: Record<string, unknown>[] = []
 
-    // Only show ACTIVE properties by default if not filtering by ownerId
-    // When filtering by owner, show all their properties regardless of status
-    if (!ownerId) {
-      where.status = 'ACTIVE'
-    }
-
-    // If ownerId is provided, filter by owner
+    // Only show ACTIVE properties by default. A caller may see all statuses
+    // (INACTIVE/PENDING/RENTED) ONLY for their own listings — viewing another
+    // owner's non-ACTIVE properties via ?ownerId= would leak unpublished data.
+    let forceActiveOnly = true
     if (ownerId) {
       where.ownerId = ownerId
+      const session = await getSession()
+      forceActiveOnly = session?.user?.id !== ownerId
     }
 
     if (type) where.type = type
-    if (status) where.status = status
+    // A client-supplied status filter is honored only when the caller is
+    // allowed to see non-ACTIVE listings (their own portfolio). Otherwise the
+    // status is pinned to ACTIVE so the filter can't be used to escape the lock.
+    if (forceActiveOnly) {
+      where.status = 'ACTIVE'
+    } else if (status) {
+      where.status = status
+    }
     if (minPrice || maxPrice) {
       const priceFilter: Record<string, number> = {}
       const min = minPrice ? parseFloat(minPrice) : NaN

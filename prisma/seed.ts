@@ -4,6 +4,13 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
+  // Hard stop: this script wipes every table before seeding. Running it against
+  // a production database would destroy all real data and create accounts with
+  // a known fixed password. Never allow that.
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Refusing to run the destructive seed script with NODE_ENV=production')
+  }
+
   console.log('🌱 Starting database seeding...')
 
   // Clear existing data (including Better Auth tables)

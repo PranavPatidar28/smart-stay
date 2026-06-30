@@ -87,8 +87,8 @@ export async function GET(
     }
 
     // View counting is handled exclusively by POST /api/analytics/track
-    // ('property_view') with per-session dedup, so we do NOT increment here
-    // (incrementing on every fetch double-counts and is trivially inflatable).
+    // ('property_view'), so we do NOT increment here — incrementing on every
+    // fetch would double-count and is trivially inflatable.
 
     return NextResponse.json(decimalToNumber(property))
   } catch (error) {

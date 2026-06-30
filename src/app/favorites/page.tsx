@@ -128,7 +128,6 @@ import {
   Grid3X3
 } from "lucide-react";
 import FavoritesListSkeleton from "@/components/ui/FavoritesListSkeleton";
-import ViewPropertyModal from '@/components/ui/ViewPropertyModal';
 import { FaRupeeSign as Rupee } from "react-icons/fa";
 import { trackAnalyticsEvent } from '@/lib/api-client';
 import { showSuccess, showError } from '@/lib/toast';
@@ -1084,24 +1083,24 @@ export default function FavoritesPage() {
 
     // Get the current favorite state before toggling
     const wasAlreadyFavorite = property.isFavorite;
-    console.log(`Toggling favorite for property ${id}. Was favorite: ${wasAlreadyFavorite}`);
 
-    // IMMEDIATELY update UI - don't wait for API response
-    setFavorites(prev => {
-      // Create a new array to ensure state updates are detected
-      const updated = prev.map(p =>
-        p.id === id ? { ...p, isFavorite: !p.isFavorite } : p
-      );
-      console.log(`Updated properties state. Property ${id} isFavorite now: ${!wasAlreadyFavorite}`);
-      return updated;
-    });
-
-    // If we also have a selected property in the modal that matches this ID, update it too
-    if (selectedProperty && selectedProperty.id === id) {
-      setSelectedProperty({
-        ...selectedProperty,
-        isFavorite: !wasAlreadyFavorite
-      });
+    // IMMEDIATELY update UI - don't wait for API response. On the favorites
+    // page a card only exists because it's favorited, so un-hearting must
+    // REMOVE it from the list rather than leave a stale empty-heart card.
+    if (wasAlreadyFavorite) {
+      setFavorites(prev => prev.filter(p => p.id !== id));
+      // Close the modal if it was showing the property we just removed.
+      if (selectedProperty && selectedProperty.id === id) {
+        setShowModal(false);
+        setSelectedProperty(null);
+      }
+    } else {
+      setFavorites(prev => prev.map(p =>
+        p.id === id ? { ...p, isFavorite: true } : p
+      ));
+      if (selectedProperty && selectedProperty.id === id) {
+        setSelectedProperty({ ...selectedProperty, isFavorite: true });
+      }
     }
 
     // Show a subtle toast notification
@@ -1116,30 +1115,18 @@ export default function FavoritesPage() {
     try {
       if (wasAlreadyFavorite) {
         // Remove from favorites
-        console.log(`Sending DELETE request for property ${id}`);
         fetch(`/api/favorites/${id}`, {
           method: 'DELETE',
-        }).then(response => {
-          console.log(`DELETE response status: ${response.status}`);
-          return response.json();
-        }).then(data => {
-          console.log('DELETE response data:', data);
         }).catch(err => {
           console.error('Error removing favorite:', err);
           // Silent failure - UI was already updated
         });
       } else {
         // Add to favorites
-        console.log(`Sending POST request for property ${id}`);
         fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ propertyId: id })
-        }).then(response => {
-          console.log(`POST response status: ${response.status}`);
-          return response.json();
-        }).then(data => {
-          console.log('POST response data:', data);
         }).catch(err => {
           console.error('Error adding favorite:', err);
           // Silent failure - UI was already updated
@@ -1369,49 +1356,6 @@ export default function FavoritesPage() {
     trackAnalyticsEvent('property_shared', selectedProperty.id);
     showSuccess('Property link copied to clipboard!');
   };
-
-  // Helper to map FavoriteProperty to PropertyCard expected shape
-  const mapFavoriteToPropertyCard = (fav: Property) => ({
-    ...fav,
-    images: Array.isArray(fav.images) && fav.images.length > 0
-      ? fav.images.map((img, i) => ({
-        id: i.toString(),
-        url: typeof img === 'string' ? img : img.url,
-        order: i,
-        isCover: i === 0
-      }))
-      : fav.image
-        ? [{ id: "0", url: fav.image, order: 0, isCover: true }]
-        : [],
-    amenities: Array.isArray(fav.amenities) ? fav.amenities : [],
-    owner: fav.owner ? {
-      id: fav.id,
-      name: fav.owner.name,
-      verified: fav.owner.verified,
-      rating: fav.owner.rating
-    } : {
-      id: fav.id,
-      name: '',
-      verified: false
-    },
-    isAvailable: true,
-    isFavorite: true,
-    // Add missing required properties
-    status: 'ACTIVE',
-    utilities: false,
-    petFriendly: false,
-    furnished: false,
-    parking: false,
-    views: 0,
-    earnings: 0,
-    occupancy: 0,
-    lastUpdated: fav.addedDate,
-    createdAt: fav.addedDate,
-    updatedAt: fav.addedDate,
-    ownerId: fav.id,
-    _count: { favorites: 0, reviews: 0, inquiries: 0 },
-  });
-
 
 
   // Helper to map FavoriteProperty to PropertyDetailsModal expected shape
@@ -1917,7 +1861,7 @@ export default function FavoritesPage() {
                     )}
 
                     {/* Status Badge - Enhanced */}
-                    <div className="absolute top-4 right-4 px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10 bg-green-500 text-white border border-white/30 backdrop-blur-sm">
+                    <div className={`absolute top-4 right-4 px-4 py-1.5 rounded-full text-sm font-semibold shadow-lg z-10 text-white border border-white/30 backdrop-blur-sm ${selectedProperty!.isAvailable ? "bg-green-500" : "bg-gray-500"}`}>
                       {selectedProperty!.isAvailable ? "Available Now" : "Not Available"}
                     </div>
 
@@ -2065,7 +2009,7 @@ export default function FavoritesPage() {
                             <span className="text-gray-800">{amenity.amenity.name}</span>
                           </div>
                         ))}
-                        50                </div>
+                      </div>
                     </div>
 
                     {/* Reviews Section */}

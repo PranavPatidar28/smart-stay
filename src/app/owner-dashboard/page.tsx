@@ -1153,14 +1153,14 @@ function PropertyModal({
                         }
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
                       >
-                        <option value="active">
+                        <option value="ACTIVE">
                           Active - Available for rent
                         </option>
-                        <option value="inactive">
+                        <option value="INACTIVE">
                           Inactive - Temporarily unavailable
                         </option>
-                        <option value="pending">Pending - Under review</option>
-                        <option value="rented">
+                        <option value="PENDING">Pending - Under review</option>
+                        <option value="RENTED">
                           Rented - Currently occupied
                         </option>
                       </select>

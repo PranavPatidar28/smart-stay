@@ -19,7 +19,9 @@ export async function GET(request: NextRequest) {
     const bathrooms = searchParams.get('bathrooms')
     const amenities = searchParams.getAll('amenities')
     const sortBy = searchParams.get('sortBy') || 'createdAt'
-    const sortOrder = searchParams.get('sortOrder') || 'desc'
+    // Whitelist sort direction — Prisma throws (→ 500) on any value other than
+    // 'asc'/'desc', so an attacker could trigger errors with ?sortOrder=foo.
+    const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc'
     const verifiedOnly = searchParams.get('verified') === 'true'
     const furnished = searchParams.get('furnished')
     const petFriendly = searchParams.get('petFriendly')

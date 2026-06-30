@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { getSession } from '@/lib/auth-server';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { generalRateLimit } from '@/lib/rate-limit';
 
 const trackSchema = z.object({
   eventType: z.string().min(1).max(64),
@@ -13,6 +14,13 @@ const trackSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+  // This endpoint is intentionally open to anonymous callers (view/contact
+  // analytics), so rate-limit by IP to bound row-spam and view-count inflation.
+  const rateLimitResult = generalRateLimit(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   try {
     const parsed = trackSchema.safeParse(await request.json());
     if (!parsed.success) {
