@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Slider, 
-  Box, 
-  Typography, 
+import {
+  Slider,
+  Box,
+  Typography,
   Paper,
-  Chip,
-  Stack
+  Chip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { FaRupeeSign as Rupee } from "react-icons/fa";
@@ -181,33 +180,6 @@ const MaterialPriceRangeSlider: React.FC<PriceRangeSliderProps> = ({
             }}
           />
         </Box>
-
-        {/* Price markers */}
-        <Stack 
-          direction="row" 
-          justifyContent="space-between" 
-          sx={{ 
-            px: 1, 
-            mt: 1,
-            '& .marker': {
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 0.5,
-            },
-            '& .marker-line': {
-              width: 1,
-              height: 8,
-              backgroundColor: '#d1d5db',
-            },
-            '& .marker-label': {
-              fontSize: '0.75rem',
-              color: '#6b7280',
-              fontWeight: 500,
-            }
-          }}
-        >
-        </Stack>
       </Box>
     </Paper>
   );

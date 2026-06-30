@@ -1,15 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
+import { prisma } from '@/lib/prisma'
 
-// This would normally be in its own model, but for simplicity we're creating it here
-// In a real app, you'd extend the User model or create a separate UserPreferences model
 const notificationSchema = z.object({
   emailNotifications: z.boolean().default(true),
   messageNotifications: z.boolean().default(true),
   bookingNotifications: z.boolean().default(true),
   marketingNotifications: z.boolean().default(false),
 });
+
+// Defaults returned when a user has no preferences row yet.
+const DEFAULTS = {
+  emailNotifications: true,
+  messageNotifications: true,
+  bookingNotifications: true,
+  marketingNotifications: false,
+};
 
 export async function GET() {
   try {
@@ -22,14 +29,17 @@ export async function GET() {
       )
     }
 
-    // In a real app, we would fetch this from the database
-    // For demo purposes, we're returning default values
-    return NextResponse.json({
-      emailNotifications: true,
-      messageNotifications: true,
-      bookingNotifications: true,
-      marketingNotifications: false,
+    const prefs = await prisma.userPreferences.findUnique({
+      where: { userId: session.user.id },
+      select: {
+        emailNotifications: true,
+        messageNotifications: true,
+        bookingNotifications: true,
+        marketingNotifications: true,
+      },
     })
+
+    return NextResponse.json(prefs ?? DEFAULTS)
   } catch (error) {
     console.error('Error fetching notification preferences:', error)
     return NextResponse.json(
@@ -53,22 +63,24 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const validatedData = notificationSchema.parse(body)
 
-    // In a real app, we would update this in the database
-    // For demo purposes, we're just returning the validated data
-
-    // Example of how this would be saved in a real app:
-    // await prisma.userPreferences.upsert({
-    //   where: { userId: session.user.id },
-    //   update: validatedData,
-    //   create: {
-    //     userId: session.user.id,
-    //     ...validatedData
-    //   }
-    // })
+    const saved = await prisma.userPreferences.upsert({
+      where: { userId: session.user.id },
+      update: validatedData,
+      create: {
+        userId: session.user.id,
+        ...validatedData,
+      },
+      select: {
+        emailNotifications: true,
+        messageNotifications: true,
+        bookingNotifications: true,
+        marketingNotifications: true,
+      },
+    })
 
     return NextResponse.json({
-      ...validatedData,
-      message: 'Notification preferences updated successfully'
+      ...saved,
+      message: 'Notification preferences updated successfully',
     })
   } catch (error) {
     if (error instanceof z.ZodError) {

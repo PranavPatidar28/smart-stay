@@ -36,11 +36,15 @@ export async function GET(request: NextRequest) {
     // Search in title, description, and location
     if (search) {
       const sanitizedSearch = sanitizeSearchQuery(search)
-      where.OR = [
-        { title: { contains: sanitizedSearch, mode: 'insensitive' } },
-        { description: { contains: sanitizedSearch, mode: 'insensitive' } },
-        { location: { contains: sanitizedSearch, mode: 'insensitive' } },
-      ]
+      // Only add the OR clause when something survives sanitization, otherwise
+      // `contains: ''` matches every row and returns the whole catalog.
+      if (sanitizedSearch) {
+        where.OR = [
+          { title: { contains: sanitizedSearch, mode: 'insensitive' } },
+          { description: { contains: sanitizedSearch, mode: 'insensitive' } },
+          { location: { contains: sanitizedSearch, mode: 'insensitive' } },
+        ]
+      }
     }
 
     // Filter by property type

@@ -76,9 +76,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Delete user and all related data (will cascade delete because of schema relations)
-    await prisma.user.delete({
-      where: { id: user.id }
+    // Collect the (third-party) properties this user has reviewed. Their Review
+    // rows cascade-delete with the user, so the denormalized Property.rating on
+    // those properties must be recomputed or it would keep a stale average.
+    // Properties the user OWNS are themselves cascade-deleted, so they need no
+    // recompute — this query naturally only returns surviving properties.
+    const reviewedPropertyIds = (
+      await prisma.review.findMany({
+        where: { userId: user.id },
+        select: { propertyId: true },
+        distinct: ['propertyId'],
+      })
+    ).map((r) => r.propertyId)
+
+    // Delete the user (cascades to their reviews/bookings/etc.) and recompute
+    // each affected property's average rating, atomically.
+    await prisma.$transaction(async (tx) => {
+      await tx.user.delete({ where: { id: user.id } })
+
+      for (const propertyId of reviewedPropertyIds) {
+        const agg = await tx.review.aggregate({
+          where: { propertyId },
+          _avg: { rating: true },
+          _count: { _all: true },
+        })
+        // Skip properties that were themselves cascade-deleted (owned by this
+        // user); updating a missing row would throw.
+        const stillExists = await tx.property.findUnique({
+          where: { id: propertyId },
+          select: { id: true },
+        })
+        if (stillExists) {
+          await tx.property.update({
+            where: { id: propertyId },
+            data: { rating: agg._count._all > 0 ? agg._avg.rating ?? 0 : 0 },
+          })
+        }
+      }
     })
 
     return NextResponse.json({

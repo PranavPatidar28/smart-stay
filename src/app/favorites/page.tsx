@@ -456,12 +456,6 @@ const SORT_OPTIONS = [
     label: "Highest Rated",
     icon: "⭐",
     description: "Best-rated properties first"
-  },
-  {
-    value: "distance",
-    label: "Nearest First",
-    icon: "📍",
-    description: "Closest to your location"
   }
 ];
 
@@ -518,7 +512,17 @@ const MobilePropertyModal = ({
             />
           </button>
           {property.latitude && property.longitude && (
-            <button className="p-2 rounded-full hover:bg-gray-100">
+            <button
+              onClick={() =>
+                window.open(
+                  `https://www.google.com/maps?q=${property.latitude},${property.longitude}`,
+                  "_blank",
+                  "noopener,noreferrer"
+                )
+              }
+              aria-label="View on map"
+              className="p-2 rounded-full hover:bg-gray-100"
+            >
               <MapIcon className="w-5 h-5 text-gray-700" />
             </button>
           )}
@@ -723,7 +727,7 @@ export default function FavoritesPage() {
     hasPrev: false
   });
   const [userReview, setUserReview] = useState({
-    rating: 5,
+    rating: 0,
     comment: ''
   });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -744,6 +748,9 @@ export default function FavoritesPage() {
     // Map the property to ensure all required fields are present
     const mappedProperty = mapFavoriteToFullProperty(property);
     setSelectedProperty(mappedProperty);
+    // Seed the desktop modal's heart from the property's favorite state so it
+    // renders filled with the correct aria-label (mirrors MobilePropertyModal).
+    setModalFavorite(mappedProperty.isFavorite);
     setShowModal(true);
     setCurrentImageIndex(0);
 
@@ -1038,10 +1045,6 @@ export default function FavoritesPage() {
           return b.price - a.price;
         case "rating":
           return b.rating - a.rating;
-        case "distance":
-          const aDistance = a.location && a.location.split(" ").length > 1 ? parseFloat(a.location.split(" ")[1]) : 1.0;
-          const bDistance = b.location && b.location.split(" ").length > 1 ? parseFloat(b.location.split(" ")[1]) : 1.0;
-          return aDistance - bDistance;
         case "date":
         default:
           return new Date(b.addedDate || '').getTime() - new Date(a.addedDate || '').getTime();
@@ -1267,7 +1270,7 @@ export default function FavoritesPage() {
 
       // Reset review form
       setUserReview({
-        rating: 5,
+        rating: 0,
         comment: ''
       });
 
@@ -1300,19 +1303,27 @@ export default function FavoritesPage() {
 
     setIsSubmittingBooking(true);
     try {
+      // /api/bookings expects { propertyId, startDate (ISO), notes? } and
+      // computes amount server-side — combine the date + time into one ISO value.
+      const startDate = new Date(`${bookingDate}T${bookingTime}`);
+      if (Number.isNaN(startDate.getTime())) {
+        showError('Please select a valid date and time');
+        return;
+      }
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           propertyId: selectedProperty.id,
-          date: bookingDate,
-          time: bookingTime,
-          note: bookingNote
+          startDate: startDate.toISOString(),
+          notes: bookingNote || undefined,
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to book viewing');
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to book viewing');
       }
 
       showSuccess('Viewing booked successfully! The owner will contact you soon.');
@@ -1325,7 +1336,7 @@ export default function FavoritesPage() {
       trackAnalyticsEvent('booking_request', selectedProperty.id);
     } catch (error) {
       console.error('Error booking viewing:', error);
-      showError('Failed to book viewing. Please try again.');
+      showError(error instanceof Error ? error.message : 'Failed to book viewing. Please try again.');
     } finally {
       setIsSubmittingBooking(false);
     }
@@ -1399,10 +1410,20 @@ export default function FavoritesPage() {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
-  // Prevent background scroll when modal is open
+  // Prevent background scroll when modal is open, and allow closing it with
+  // Escape from anywhere (the div-level onKeyDown only fires when focus is
+  // already inside the modal, which never happens on open).
   useEffect(() => {
     if (showModal) {
       document.body.style.overflow = 'hidden';
+      const onKey = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') closePropertyModal();
+      };
+      document.addEventListener('keydown', onKey);
+      return () => {
+        document.removeEventListener('keydown', onKey);
+        document.body.style.overflow = 'auto';
+      };
     } else {
       document.body.style.overflow = 'auto';
     }

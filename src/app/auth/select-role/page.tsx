@@ -8,6 +8,7 @@ import { Role, ROLES } from "@/types/role";
 export default function SelectRole() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
 
@@ -31,6 +32,7 @@ export default function SelectRole() {
     }
 
     setIsLoading(true);
+    setError(null);
 
     try {
       const response = await fetch("/api/auth/update-role", {
@@ -45,8 +47,12 @@ export default function SelectRole() {
         // Full page navigation to ensure session is completely refreshed
         // This is needed because router.push doesn't reload useSession() subscribers
         window.location.href = "/";
+      } else {
+        setError("Couldn't set your role. Please try again.");
+        setIsLoading(false);
       }
-    } finally {
+    } catch {
+      setError("Network error. Please check your connection and try again.");
       setIsLoading(false);
     }
   };
@@ -112,6 +118,11 @@ export default function SelectRole() {
           </div>
 
           {/* Continue Button */}
+          {error && (
+            <p role="alert" className="text-sm text-red-600 mb-4 text-center">
+              {error}
+            </p>
+          )}
           <button
             onClick={handleRoleSelection}
             disabled={!selectedRole || isLoading}

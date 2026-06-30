@@ -44,8 +44,24 @@ model User {
   propertyViewEvents PropertyViewEvent[]
   bookingEvents      BookingEvent[]
   inquiryEvents      InquiryEvent[]
+  preferences        UserPreferences?
 
   @@map("user")
+}
+
+model UserPreferences {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  emailNotifications    Boolean  @default(true)
+  messageNotifications  Boolean  @default(true)
+  bookingNotifications  Boolean  @default(true)
+  marketingNotifications Boolean @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }
 
 model Account {

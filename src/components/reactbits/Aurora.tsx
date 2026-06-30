@@ -168,16 +168,21 @@ const Aurora: React.FC<AuroraProps> = ({
       },
     });
 
+    const mesh = new Mesh(gl, { geometry, program });
+
     const resize = () => {
       if (!container) return;
       const w = container.offsetWidth;
       const h = container.offsetHeight;
       renderer.setSize(w, h);
       program.uniforms.uResolution.value = [w, h];
+      // setSize reallocates and clears the GL buffer. Animated users repaint on
+      // the next rAF, but reduced-motion users have no loop, so repaint here or
+      // the aurora blanks out on resize.
+      if (prefersReduced) renderer.render({ scene: mesh });
     };
     window.addEventListener("resize", resize);
 
-    const mesh = new Mesh(gl, { geometry, program });
     container.appendChild(gl.canvas);
     resize();
 
