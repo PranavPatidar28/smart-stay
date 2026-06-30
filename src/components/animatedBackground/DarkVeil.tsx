@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Renderer, Program, Mesh, Triangle, Vec2 } from "ogl";
 
 const vertex = `
@@ -94,9 +94,33 @@ export default function DarkVeil({
   resolutionScale = 1,
 }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Pause the (expensive per-pixel) shader when the hero is scrolled off-screen,
+  // mirroring Aurora/LightRays, to save GPU/battery.
   useEffect(() => {
+    const canvas = ref.current;
+    const parent = canvas?.parentElement;
+    if (!parent) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    obs.observe(parent);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
     const canvas = ref.current as HTMLCanvasElement;
     const parent = canvas.parentElement as HTMLElement;
+
+    // Respect the user's reduced-motion preference: render a single static
+    // frame instead of an animated loop (CSS reduced-motion can't stop a JS rAF
+    // GL loop). Matches Aurora's behavior.
+    const prefersReduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
 
     const renderer = new Renderer({
       dpr: Math.min(window.devicePixelRatio, 2),
@@ -144,7 +168,8 @@ export default function DarkVeil({
       program.uniforms.uScanFreq.value = scanlineFrequency;
       program.uniforms.uWarp.value = warpAmount;
       renderer.render({ scene: mesh });
-      frame = requestAnimationFrame(loop);
+      // Reduced-motion users get a single static frame, not a running loop.
+      if (!prefersReduced) frame = requestAnimationFrame(loop);
     };
 
     loop();
@@ -152,6 +177,10 @@ export default function DarkVeil({
     return () => {
       cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
+      // Release the WebGL context so repeated mounts don't exhaust the
+      // browser's context limit (matches Aurora/LightRays).
+      const lose = gl.getExtension("WEBGL_lose_context");
+      if (lose) lose.loseContext();
     };
   }, [
     hueShift,
@@ -161,6 +190,7 @@ export default function DarkVeil({
     scanlineFrequency,
     warpAmount,
     resolutionScale,
+    isVisible,
   ]);
   return (
     <canvas

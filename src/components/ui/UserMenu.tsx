@@ -171,7 +171,7 @@ export default function UserMenu({ isInMobileMenu = false }: UserMenuProps) {
               <div>
                 <p className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-300)] to-[var(--color-secondary-300)] username-gradient">{session?.user?.name}</p>
                 <p className="text-sm text-gray-600">{session?.user?.email}</p>
-                <span className="inline-block mt-1 px-2 py-1 border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-800)] text-[var(--color-primary-400)] text-xs rounded-full font-medium">
+                <span className="inline-block mt-1 px-2 py-1 border-1 border-[var(--color-primary-500)] bg-[var(--color-primary-800)] text-[var(--color-primary-300)] text-xs rounded-full font-medium">
                   {getRoleLabel(userRole)}
                 </span>
               </div>

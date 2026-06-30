@@ -86,6 +86,7 @@ export default function SettingsPage() {
     const handleCancelRoleChange = () => {
       setShowRoleModal(false);
       setRoleToChange(null);
+      setErrorMessage("");
     };
 
     const getRoleIcon = (role: Role) => {
@@ -197,6 +198,7 @@ export default function SettingsPage() {
 
     const handleCancelDelete = () => {
       setDeleteModalOpen(false);
+      setErrorMessage("");
     };
 
     return (
@@ -368,6 +370,7 @@ export default function SettingsPage() {
   // Update profile info
   const onProfileSubmit = async (data: { name: string; email: string; phone?: string }) => {
     setLoading(true);
+    setErrorMessage("");
     try {
       const response = await fetch('/api/user/profile', {
         method: 'PUT',
@@ -378,17 +381,21 @@ export default function SettingsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || 'Failed to update profile');
       }
 
-      const updatedUser = await response.json();
+      await response.json();
 
-      // Profile updated - session will be refreshed on next page load
+      // Refresh the better-auth session cache so the Navbar/UserMenu (which read
+      // useSession) reflect the new name immediately instead of after a reload.
+      await authClient.getSession({ query: { disableCookieCache: true } });
 
       setSuccessMessage("Profile updated successfully!");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -397,6 +404,7 @@ export default function SettingsPage() {
   // Update password
   const onPasswordSubmit = async (data: { currentPassword: string; newPassword: string; confirmPassword: string }) => {
     setLoading(true);
+    setErrorMessage("");
     try {
       const response = await fetch('/api/user/change-password', {
         method: 'POST',
@@ -420,6 +428,7 @@ export default function SettingsPage() {
       resetPassword();
     } catch (error) {
       console.error('Error updating password:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to update password');
     } finally {
       setLoading(false);
     }
@@ -428,6 +437,7 @@ export default function SettingsPage() {
   // Update notification preferences
   const onNotificationSubmit = async (data: { emailNotifications: boolean; messageNotifications: boolean; bookingNotifications: boolean; marketingNotifications: boolean }) => {
     setLoading(true);
+    setErrorMessage("");
     try {
       const response = await fetch('/api/user/notifications', {
         method: 'PUT',
@@ -447,6 +457,7 @@ export default function SettingsPage() {
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error('Error updating notification settings:', error);
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to update notification settings');
     } finally {
       setLoading(false);
     }
@@ -457,6 +468,9 @@ export default function SettingsPage() {
     if (!e.target.files || !e.target.files[0]) return;
 
     const file = e.target.files[0];
+    // Reset the input value so selecting the SAME file again still fires
+    // onChange (e.g. to retry after a transient upload failure).
+    e.target.value = '';
     if (file.size > 1024 * 1024) {
       alert("File is too large. Maximum size is 1MB.");
       return;
@@ -497,6 +511,9 @@ export default function SettingsPage() {
         }
 
         if (result.image) {
+          // Refresh the cached session so the on-page avatar and the Navbar
+          // pick up the new image immediately instead of after a reload.
+          await authClient.getSession({ query: { disableCookieCache: true } });
           setSuccessMessage("Profile picture updated successfully!");
           setTimeout(() => setSuccessMessage(""), 3000);
         }
@@ -546,6 +563,13 @@ export default function SettingsPage() {
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3 text-green-700 animate-fade-in-up">
             <CheckCircle2 className="w-5 h-5" />
             <span>{successMessage}</span>
+          </div>
+        )}
+
+        {errorMessage && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 animate-fade-in-up">
+            <span className="w-2 h-2 bg-red-500 rounded-full" />
+            <span>{errorMessage}</span>
           </div>
         )}
 

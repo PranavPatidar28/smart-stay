@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, AlertTriangle, ArrowRight, X } from "lucide-react";
 import { Role, ROLES, getRoleLabel } from "@/types/role";
@@ -21,6 +21,8 @@ export default function RoleRequiredModal({
 }: RoleRequiredModalProps) {
   const router = useRouter();
   const [isAnimating, setIsAnimating] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -36,11 +38,16 @@ export default function RoleRequiredModal({
       document.body.style.overflow = 'hidden';
       // Start animation
       setIsAnimating(true);
+      // Move focus into the dialog and remember where to restore it afterwards.
+      previouslyFocused.current = document.activeElement as HTMLElement | null;
+      requestAnimationFrame(() => dialogRef.current?.focus());
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscKey);
       document.body.style.overflow = '';
+      // Restore focus to the element that opened the modal.
+      previouslyFocused.current?.focus?.();
     };
   }, [isOpen]);
 
@@ -70,15 +77,21 @@ export default function RoleRequiredModal({
 
       {/* Modal */}
       <div
-        className={`relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 transition-all duration-300 ${isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="role-required-title"
+        tabIndex={-1}
+        className={`relative bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 transition-all duration-300 focus:outline-none ${isAnimating ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4'
           }`}
       >
         {/* Close button */}
         <button
           onClick={handleClose}
+          aria-label="Close"
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5" aria-hidden />
         </button>
 
         {/* Content */}
@@ -89,7 +102,7 @@ export default function RoleRequiredModal({
           </div>
 
           {/* Title */}
-          <h3 className="text-xl font-semibold text-gray-900 text-center mb-2">
+          <h3 id="role-required-title" className="text-xl font-semibold text-gray-900 text-center mb-2">
             Account Role Required
           </h3>
 

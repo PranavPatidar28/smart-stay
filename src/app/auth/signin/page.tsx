@@ -234,12 +234,6 @@ export default function SignIn() {
                 />
                 <span className="ml-2 text-sm text-gray-600">Remember me</span>
               </div>
-              <Link
-                href="/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-700 underline"
-              >
-                Forgot password?
-              </Link>
             </div>
 
             <button

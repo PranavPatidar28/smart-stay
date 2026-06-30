@@ -279,7 +279,7 @@ const SEO_TEMPLATES = {
 
 // Update the FormProperty type to include latitude and longitude
 type FormProperty = {
-  id: number;
+  id: string;
   title: string;
   location: string;
   latitude?: number;
@@ -385,11 +385,7 @@ function PropertyModal({
   const [step, setStep] = useState(0);
   // Form state
   const [form, setForm] = useState<FormProperty>({
-    id: initialValues?.id
-      ? typeof initialValues.id === "string"
-        ? parseInt(initialValues.id)
-        : (initialValues.id as number)
-      : Date.now(),
+    id: initialValues?.id ? String(initialValues.id) : String(Date.now()),
     title: initialValues?.title || "",
     location: initialValues?.location || "",
     latitude: initialValues?.latitude,
@@ -428,7 +424,6 @@ function PropertyModal({
   const [amenityInput, setAmenityInput] = useState("");
   const [selectedAmenityCategory, setSelectedAmenityCategory] =
     useState("Essentials");
-  const [isDragging, setIsDragging] = useState(false);
   const [pricingSuggestion, setPricingSuggestion] = useState<number | null>(
     null
   );
@@ -440,7 +435,6 @@ function PropertyModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [completionScore, setCompletionScore] = useState(0);
   const amenityInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const locationInputRef = useRef<HTMLInputElement>(null);
 
   const requiredFields: (keyof FormProperty)[] = [
@@ -451,10 +445,12 @@ function PropertyModal({
     "status",
     "images",
   ];
-  const isValid = requiredFields.every((field) => {
-    if (field === "images") return form.images.length > 0;
-    return form[field] && form[field] !== "";
-  });
+  const isValid =
+    Object.keys(validationErrors).length === 0 &&
+    requiredFields.every((field) => {
+      if (field === "images") return form.images.length > 0;
+      return form[field] && form[field] !== "";
+    });
 
   // Calculate pricing suggestion based on type and location
   useEffect(() => {
@@ -573,58 +569,6 @@ function PropertyModal({
     setForm((f) => ({ ...f, [key]: value }));
     setTouched((t) => ({ ...t, [key]: true }));
     validateField(key, value);
-  }
-
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (files) {
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          if (result && !form.images.includes(result)) {
-            setForm((f) => {
-              const imgs = [...f.images, result];
-              return { ...f, images: imgs, image: imgs[0] };
-            });
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  }
-
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragging(true);
-  }
-
-  function handleDragLeave(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragging(false);
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = e.dataTransfer.files;
-    if (files) {
-      Array.from(files).forEach((file) => {
-        if (file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const result = e.target?.result as string;
-            if (result && !form.images.includes(result)) {
-              setForm((f) => {
-                const imgs = [...f.images, result];
-                return { ...f, images: imgs, image: imgs[0] };
-              });
-            }
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    }
   }
 
   function handleAddImage() {
@@ -1227,44 +1171,10 @@ function PropertyModal({
                     </div>
                   )}
 
-                  {/* Drag & Drop Area */}
-                  <div
-                    className={`border-2 border-dashed rounded-xl p-8 mt-4 text-center transition-all duration-200 ${isDragging
-                      ? "border-[var(--color-primary-500)] bg-[var(--color-primary-50)]"
-                      : "border-gray-300 hover:border-gray-400"
-                      }`}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    <div className="space-y-4">
-                      <div className="text-4xl">📸</div>
-                      <div>
-                        <p className="text-lg font-medium text-gray-900">
-                          Drop images here or click to upload
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          <span className="block">Supports JPG, PNG, GIF up to 10MB each</span>
-                          <span className="text-lg text-red-500 block">Currently Image upload is not supported. But you can add image URL.</span>
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="bg-[var(--color-primary-500)] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[var(--color-primary-600)] transition-colors"
-                      >
-                        Choose Files
-                      </button>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </div>
-                  </div>
+                  {/* Image URLs only: direct file upload isn't wired to a
+                      storage backend yet, and the API rejects non-http(s)
+                      values, so we expose the URL input above rather than a
+                      file picker that could never save. */}
 
                   {/* Image Grid */}
                   {form.images.length > 0 && (
@@ -1956,9 +1866,6 @@ export default function OwnerDashboard() {
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(
     null
   );
-  const [analyticsData, setAnalyticsData] = useState<unknown>(null);
-  const [analyticsLoading, setAnalyticsLoading] = useState(false);
-  const [analyticsError, setAnalyticsError] = useState<string | null>(null);
 
   // Extract user ID safely with type assertion
   const userId = session?.user ? (session.user as any).id : undefined;
@@ -2158,8 +2065,8 @@ export default function OwnerDashboard() {
   };
 
   const handleDeleteProperty = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this property?")) return;
-
+    // Confirmation is already handled by the custom Delete Property modal that
+    // gates this call; a native confirm() here would double-prompt.
     const loadingToastId = showLoading("Deleting property...");
 
     try {
@@ -2376,27 +2283,6 @@ export default function OwnerDashboard() {
   };
 
   // Do not track property views when owners open the edit modal to avoid inflating view counts
-
-  // Fetch analytics data when analytics tab is selected
-  useEffect(() => {
-    if (!userId || properties.length === 0) {
-      // Don't try to fetch analytics if we don't have a user or properties
-      return;
-    }
-
-    setAnalyticsLoading(true);
-    fetch(`/api/dashboard/analytics?ownerId=${userId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setAnalyticsData(data);
-        setAnalyticsLoading(false);
-      })
-      .catch((err) => {
-        console.error("Analytics error:", err);
-        setAnalyticsError("Failed to load analytics");
-        setAnalyticsLoading(false);
-      });
-  }, [userId, properties.length]);
 
   // 1. Add skeleton loader components at the top of the file:
   function StatsOverviewSkeleton() {
@@ -2631,27 +2517,12 @@ export default function OwnerDashboard() {
                     placeholder="Search properties..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        // Focus will trigger any needed UI updates
-                      }
-                    }}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-500)] focus:border-transparent"
                   />
                 </div>
                 <button
+                  type="button"
                   className="px-6 py-3 bg-[var(--color-primary-500)] text-white rounded-xl hover:bg-[var(--color-primary-600)] transition-colors duration-200 flex items-center justify-center gap-2 font-medium min-w-[100px]"
-                  onClick={() => {
-                    // This will force a re-render with current filters
-                    // We're already using state for filters so this is enough
-                    const searchInput = document.querySelector(
-                      'input[placeholder="Search properties..."]'
-                    );
-                    if (searchInput instanceof HTMLInputElement) {
-                      searchInput.focus();
-                    }
-                  }}
                 >
                   <Search className="w-4 h-4" />
                   Search
@@ -2981,9 +2852,6 @@ export default function OwnerDashboard() {
                           </div>
                           {/* Floating Action Buttons */}
                           <div className="flex items-center gap-2 mt-2 md:absolute md:bottom-4 md:right-4 md:flex-col md:gap-2 md:opacity-0 md:group-hover:opacity-100 md:transition-opacity">
-                            <button className="p-2 bg-white rounded-full shadow hover:text-[var(--color-primary-600)] hover:bg-[var(--color-primary-50)] transition-colors duration-200">
-                              <Eye className="w-5 h-5" />
-                            </button>
                             <button
                               onClick={() =>
                                 setSelectedPropertyToEdit(property)
@@ -3059,7 +2927,10 @@ export default function OwnerDashboard() {
                   Quick Actions
                 </h3>
                 <div className="space-y-3">
-                  <button className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+                  <button
+                    onClick={() => setShowAddProperty(true)}
+                    className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-[var(--color-primary-100)] rounded-lg flex items-center justify-center">
                         <Plus className="w-5 h-5 text-[var(--color-primary-600)]" />
@@ -3074,7 +2945,11 @@ export default function OwnerDashboard() {
                       </div>
                     </div>
                   </button>
-                  <button className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+                  <button
+                    disabled
+                    title="Coming soon"
+                    className="w-full text-left p-3 rounded-xl opacity-50 cursor-not-allowed"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-[var(--color-secondary-100)] rounded-lg flex items-center justify-center">
                         <BarChart3 className="w-5 h-5 text-[var(--color-secondary-600)]" />
@@ -3089,7 +2964,11 @@ export default function OwnerDashboard() {
                       </div>
                     </div>
                   </button>
-                  <button className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+                  <button
+                    disabled
+                    title="Coming soon"
+                    className="w-full text-left p-3 rounded-xl opacity-50 cursor-not-allowed"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                         <MessageSquare className="w-5 h-5 text-blue-600" />
@@ -3104,7 +2983,11 @@ export default function OwnerDashboard() {
                       </div>
                     </div>
                   </button>
-                  <button className="w-full text-left p-3 rounded-xl hover:bg-gray-50 transition-colors duration-200">
+                  <button
+                    disabled
+                    title="Coming soon"
+                    className="w-full text-left p-3 rounded-xl opacity-50 cursor-not-allowed"
+                  >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
                         <CreditCard className="w-5 h-5 text-emerald-600" />
@@ -3161,12 +3044,14 @@ export default function OwnerDashboard() {
           </div>
         </div>
       </div>
-      <PropertyModal
-        open={showAddProperty}
-        onClose={() => setShowAddProperty(false)}
-        onSave={handleAddProperty}
-        mode="add"
-      />
+      {showAddProperty && (
+        <PropertyModal
+          open={showAddProperty}
+          onClose={() => setShowAddProperty(false)}
+          onSave={handleAddProperty}
+          mode="add"
+        />
+      )}
 
       {selectedPropertyToEdit && (
         <PropertyModal

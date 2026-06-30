@@ -1027,8 +1027,6 @@ export default function ListingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [displayCount, setDisplayCount] = useState(0);
-  const prevCountRef = useRef(0);
   const [selectedType, setSelectedType] = useState("All");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 75000]);
   const [showFilters, setShowFilters] = useState(false);
@@ -1269,42 +1267,6 @@ export default function ListingsPage() {
       matchesNearCampus && matchesFurnished && matchesPetFriendly && matchesAvailableNow;
   });
 
-  // Animate the count when results change
-  useEffect(() => {
-    if (isSearching) return;
-
-    const resultCount = filteredProperties.length;
-    const startCount = prevCountRef.current;
-    const endCount = resultCount;
-    const duration = 500; // ms
-    const frameDuration = 1000 / 60; // 60fps
-    const totalFrames = Math.round(duration / frameDuration);
-    let frame = 0;
-
-    prevCountRef.current = resultCount;
-
-    // Don't animate if it's the initial load
-    if (startCount === 0 && endCount > 0) {
-      setDisplayCount(endCount);
-      return;
-    }
-
-    // Animate the counter
-    const counter = setInterval(() => {
-      frame++;
-      const progress = frame / totalFrames;
-      const currentCount = Math.round(startCount + (endCount - startCount) * progress);
-
-      setDisplayCount(currentCount);
-
-      if (frame === totalFrames) {
-        clearInterval(counter);
-      }
-    }, frameDuration);
-
-    return () => clearInterval(counter);
-  }, [filteredProperties.length, isSearching]);
-
   // Fetch properties from API
   useEffect(() => {
     setLoading(true); // Start loading as soon as any filter changes
@@ -1341,8 +1303,14 @@ export default function ListingsPage() {
           throw new Error('Failed to fetch properties');
         }
 
+        // fetch() resolves even on HTTP errors (500 etc.), so check ok before
+        // parsing — otherwise data.properties is undefined and .map() throws.
+        if (!propertiesResponse.value.ok) {
+          throw new Error(`Failed to fetch properties (status ${propertiesResponse.value.status})`);
+        }
+
         const data = await propertiesResponse.value.json();
-        let properties = data.properties.map((property: Property) => ({
+        let properties = (data.properties ?? []).map((property: Property) => ({
           ...property,
           image: property.images[0]?.url || '',
           isFavorite: false, // Default to false, will update with user favorites
@@ -1546,6 +1514,11 @@ export default function ListingsPage() {
     }
 
     if (!selectedProperty) return;
+
+    if (userReview.rating < 1) {
+      showError('Please select a rating');
+      return;
+    }
 
     setIsSubmittingReview(true);
 
@@ -1853,20 +1826,29 @@ export default function ListingsPage() {
       // Track analytics event
       trackAnalyticsEvent('booking_request', selectedProperty.id);
 
-      // In a real app, this would send the booking to an API endpoint
-      // await fetch('/api/bookings', { 
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     propertyId: selectedProperty.id,
-      //     date: bookingDate,
-      //     time: bookingTime,
-      //     notes: bookingNote
-      //   })
-      // });
+      // Combine the chosen date + time into a single ISO datetime for the API,
+      // which expects { propertyId, startDate, notes } and computes amount
+      // server-side.
+      const startDate = new Date(`${bookingDate}T${bookingTime}`);
+      if (Number.isNaN(startDate.getTime())) {
+        showError('Please select a valid date and time');
+        return;
+      }
 
-      // For now, simulate success
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyId: selectedProperty.id,
+          startDate: startDate.toISOString(),
+          notes: bookingNote || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to submit booking request');
+      }
 
       showSuccess('Booking request submitted successfully!');
       setShowBookingModal(false);
@@ -1878,7 +1860,7 @@ export default function ListingsPage() {
 
     } catch (error) {
       console.error('Error submitting booking:', error);
-      showError('Failed to submit booking request');
+      showError(error instanceof Error ? error.message : 'Failed to submit booking request');
     } finally {
       setIsSubmittingBooking(false);
     }

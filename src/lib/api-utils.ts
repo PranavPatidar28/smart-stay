@@ -97,8 +97,12 @@ export async function requireStudent() {
 }
 
 export function validatePaginationParams(searchParams: URLSearchParams) {
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1'))
-  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '10')))
+  // Guard against non-numeric input: Math.max(1, parseInt('abc')) is NaN, which
+  // would propagate into skip/take and make Prisma throw a 500.
+  const rawPage = parseInt(searchParams.get('page') || '1', 10)
+  const page = Number.isNaN(rawPage) ? 1 : Math.max(1, rawPage)
+  const rawLimit = parseInt(searchParams.get('limit') || '10', 10)
+  const limit = Number.isNaN(rawLimit) ? 10 : Math.min(100, Math.max(1, rawLimit))
 
   return { page, limit, skip: (page - 1) * limit }
 }
@@ -125,7 +129,10 @@ export function createPaginationResponse(
 }
 
 export function sanitizeSearchQuery(query: string): string {
-  return query.trim().replace(/[^\w\s-]/g, '').substring(0, 100)
+  // Unicode-aware: keep letters/numbers from ANY script (Devanagari, accented
+  // Latin, etc.) so non-English queries aren't stripped to an empty string,
+  // which Prisma's `contains: ''` would treat as "match everything".
+  return query.trim().replace(/[^\p{L}\p{N}\s-]/gu, '').substring(0, 100)
 }
 
 export function validateId(id: string): boolean {
