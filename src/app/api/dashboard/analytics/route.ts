@@ -28,9 +28,14 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const period = searchParams.get('period') || '30' // days
+    // Clamp the period to a safe range. An unvalidated value yields either an
+    // Invalid Date (NaN -> 500 from Prisma) or an unbounded historical scan.
+    const parsedPeriod = parseInt(searchParams.get('period') || '30', 10)
+    const period = Number.isFinite(parsedPeriod)
+      ? Math.min(365, Math.max(1, parsedPeriod))
+      : 30
     const startDate = new Date()
-    startDate.setDate(startDate.getDate() - parseInt(period))
+    startDate.setDate(startDate.getDate() - period)
 
     // Get all properties owned by the user
     const properties = await prisma.property.findMany({
@@ -150,9 +155,8 @@ export async function GET(request: NextRequest) {
     }, {} as Record<string, number>)
 
     // Time series analytics for views, bookings, inquiries
-    const timeSeriesPeriod = parseInt(period);
     const timeSeriesStart = new Date();
-    timeSeriesStart.setDate(timeSeriesStart.getDate() - timeSeriesPeriod);
+    timeSeriesStart.setDate(timeSeriesStart.getDate() - period);
 
     // Views per day
     const viewEvents = await prisma.propertyViewEvent.findMany({
@@ -209,7 +213,7 @@ export async function GET(request: NextRequest) {
       inquiryStats: inquiryStatusStats,
       recentActivity,
       topProperties: decimalToNumber(topProperties),
-      period: parseInt(period),
+      period,
       timeSeries: {
         viewsByDay,
         bookingsByDay,

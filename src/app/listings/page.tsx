@@ -1407,17 +1407,13 @@ export default function ListingsPage() {
 
     // Get the current favorite state before toggling
     const wasAlreadyFavorite = property.isFavorite;
-    console.log(`Toggling favorite for property ${id}. Was favorite: ${wasAlreadyFavorite}`);
 
     // IMMEDIATELY update UI - don't wait for API response
-    setProperties(prev => {
-      // Create a new array to ensure state updates are detected
-      const updated = prev.map(p =>
+    setProperties(prev =>
+      prev.map(p =>
         p.id === id ? { ...p, isFavorite: !p.isFavorite } : p
-      );
-      console.log(`Updated properties state. Property ${id} isFavorite now: ${!wasAlreadyFavorite}`);
-      return updated;
-    });
+      )
+    );
 
     // If we also have a selected property in the modal that matches this ID, update it too
     if (selectedProperty && selectedProperty.id === id) {
@@ -1439,30 +1435,18 @@ export default function ListingsPage() {
     try {
       if (wasAlreadyFavorite) {
         // Remove from favorites
-        console.log(`Sending DELETE request for property ${id}`);
         fetch(`/api/favorites/${id}`, {
           method: 'DELETE',
-        }).then(response => {
-          console.log(`DELETE response status: ${response.status}`);
-          return response.json();
-        }).then(data => {
-          console.log('DELETE response data:', data);
         }).catch(err => {
           console.error('Error removing favorite:', err);
           // Silent failure - UI was already updated
         });
       } else {
         // Add to favorites
-        console.log(`Sending POST request for property ${id}`);
         fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ propertyId: id })
-        }).then(response => {
-          console.log(`POST response status: ${response.status}`);
-          return response.json();
-        }).then(data => {
-          console.log('POST response data:', data);
         }).catch(err => {
           console.error('Error adding favorite:', err);
           // Silent failure - UI was already updated
@@ -1646,12 +1630,12 @@ export default function ListingsPage() {
         {/* Image Section */}
         <div className={`relative ${isListView ? "lg:w-80 h-64 lg:h-auto" : "h-56"}`}>
           <img
-            src={property.images[0].url}
+            src={property.images?.[0]?.url || "/images/placeholder.png"}
             alt={property.title}
             className="w-full h-full object-cover rounded-3xl group-hover:scale-105 transition-transform duration-500"
           />
           {/* Mini-gallery thumbnails on hover (desktop only) */}
-          {property.images.length > 1 && (
+          {property.images?.length > 1 && (
             <div className={`hidden lg:flex absolute bottom-4 right-4 gap-2 z-10 ${hovered ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}>
               {property.images.slice(1, 4).map((img: any) => (
                 <img

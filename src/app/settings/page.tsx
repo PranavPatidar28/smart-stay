@@ -464,12 +464,14 @@ export default function SettingsPage() {
 
     setLoading(true);
 
-    try {
-      // In a real implementation, we would use FormData to upload the file
-      // For now, we'll use FileReader to convert the file to a data URL
-      const reader = new FileReader();
+    // FileReader is async: its onload/onerror fire AFTER readAsDataURL returns.
+    // All loading-state resets and error handling must live inside the callbacks
+    // — a try/finally around readAsDataURL would clear loading immediately and
+    // could not catch errors thrown from within onload.
+    const reader = new FileReader();
 
-      reader.onload = async (event) => {
+    reader.onload = async (event) => {
+      try {
         if (!event.target?.result) {
           throw new Error("Failed to read file");
         }
@@ -484,8 +486,7 @@ export default function SettingsPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            imageData: imageData,
-            imageUrl: imageData, // For this demo, we'll use the data URL directly
+            imageUrl: imageData,
           }),
         });
 
@@ -496,22 +497,25 @@ export default function SettingsPage() {
         }
 
         if (result.image) {
-          // Update session with new user data only if the image was actually changed
-          // Profile picture updated
-
           setSuccessMessage("Profile picture updated successfully!");
           setTimeout(() => setSuccessMessage(""), 3000);
         }
-      };
+      } catch (error) {
+        console.error('Error uploading profile picture:', error);
+        alert(error instanceof Error ? error.message : "Failed to upload profile picture. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      // Start reading the file
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      alert("Failed to upload profile picture. Please try again.");
-    } finally {
+    reader.onerror = () => {
+      console.error('Error reading file:', reader.error);
+      alert("Failed to read the selected file. Please try again.");
       setLoading(false);
-    }
+    };
+
+    // Start reading the file
+    reader.readAsDataURL(file);
   };
 
   // Handler for initiating role change

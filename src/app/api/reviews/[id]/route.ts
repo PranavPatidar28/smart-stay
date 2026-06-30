@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { getSession } from '@/lib/auth-server'
 
 const updateReviewSchema = z.object({
-  rating: z.number().min(1).max(5).optional(),
+  rating: z.number().int().min(1).max(5).optional(),
   comment: z.string().min(10).max(500).optional(),
 })
 

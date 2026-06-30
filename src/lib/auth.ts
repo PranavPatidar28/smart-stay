@@ -31,6 +31,13 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    // Account creation goes exclusively through the custom OTP-gated route
+    // (/api/auth/register), which verifies an email OTP before writing the
+    // user. Disabling Better Auth's native /sign-up/email endpoint closes two
+    // holes: (1) it stops anyone bypassing email verification entirely, and
+    // (2) combined with role `input: false` below, it prevents self-assigning
+    // a privileged role (e.g. ADMIN) at sign-up. Google OAuth is unaffected.
+    disableSignUp: true,
     minPasswordLength: 8,
     // Use bcrypt for hashing/verification so Better Auth matches the hashes
     // written by the custom register route and prisma/seed.ts (both bcryptjs).
@@ -56,7 +63,12 @@ export const auth = betterAuth({
         type: "string",
         required: false,
         defaultValue: null,
-        input: true,
+        // Server-settable only. Role must never be assignable from a raw
+        // client request (Better Auth's updateUser would otherwise accept any
+        // string, including "ADMIN"). The custom register route writes it via
+        // Prisma after validating the enum, and /api/auth/update-role updates
+        // it directly through Prisma against the validated STUDENT|LANDLORD set.
+        input: false,
       },
       phone: {
         type: "string",

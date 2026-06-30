@@ -5,7 +5,6 @@ import ToastProvider from "@/components/providers/ToastProvider";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from 'next'
-import { prefetchCriticalPages } from "@/lib/navigation"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,6 +18,13 @@ const spaceGrotesk = Space_Grotesk({
   weight: ["500", "600", "700"],
   variable: "--font-space-grotesk",
 });
+
+// Single source of truth for the canonical site origin. Drive it from the env
+// (set in Vercel) so metadata, Open Graph, JSON-LD, robots, and sitemap never
+// drift apart. Falls back to the deployed Vercel domain.
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_APP_URL || "https://smart-stay-navy.vercel.app"
+).replace(/\/$/, "");
 
 export const metadata: Metadata = {
   title: {
@@ -51,14 +57,14 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://smartstay.com'),
+  metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://smartstay.com',
+    url: SITE_URL,
     siteName: 'SmartStay',
     title: 'SmartStay - Find Your Perfect Student Accommodation',
     description: 'Discover verified hostels, PGs, and flats near your campus. SmartStay connects students with trusted accommodation options across India.',
@@ -111,7 +117,7 @@ export const metadata: Metadata = {
     'theme-color': '#8B5CF6',
   },
   icons: {
-    apple: '/houseLogo.png',
+    apple: '/apple-touch-icon.png',
     icon: '/houseLogo.png',
     shortcut: '/houseLogo.png',
   },
@@ -126,12 +132,12 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <head>
         <link rel="icon" href="/houseLogo.png" />
-        <link rel="apple-touch-icon" href="/houseLogo.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#8B5CF6" />
         <meta name="msapplication-TileColor" content="#8B5CF6" />
-        <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
+        <meta name="msapplication-TileImage" content="/houseLogo.png" />
         
         {/* Prefetch critical pages for instant navigation */}
         <link rel="prefetch" href="/listings" />
@@ -147,11 +153,11 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               "name": "SmartStay",
-              "url": "https://smartstay.com",
+              "url": SITE_URL,
               "description": "Find your perfect student accommodation near campus",
               "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://smartstay.com/listings?search={search_term_string}",
+                "target": `${SITE_URL}/listings?search={search_term_string}`,
                 "query-input": "required name=search_term_string"
               }
             })
@@ -165,8 +171,8 @@ export default function RootLayout({
               "@context": "https://schema.org",
                              "@type": "Organization",
                "name": "SmartStay",
-               "url": "https://smart-stay-navy.vercel.app",
-               "logo": "https://smart-stay-navy.vercel.app/houseLogo.png",
+               "url": SITE_URL,
+               "logo": `${SITE_URL}/houseLogo.png`,
                "description": "Student accommodation platform connecting students with verified properties",
                "founder": {
                  "@type": "Person",

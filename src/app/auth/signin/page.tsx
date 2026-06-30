@@ -189,7 +189,7 @@ export default function SignIn() {
               </div>
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.email}
                 </p>
               )}
@@ -220,7 +220,7 @@ export default function SignIn() {
               </div>
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-500 rounded-full"></div>
+                  <span className="w-1 h-1 bg-red-500 rounded-full"></span>
                   {errors.password}
                 </p>
               )}

@@ -5,7 +5,7 @@ import { getSession } from '@/lib/auth-server'
 
 const createReviewSchema = z.object({
   propertyId: z.string().cuid(),
-  rating: z.number().min(1).max(5),
+  rating: z.number().int().min(1).max(5),
   comment: z.string().min(10).max(500).optional(),
 })
 
