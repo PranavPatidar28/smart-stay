@@ -1957,7 +1957,7 @@ export default function OwnerDashboard() {
               image: imageUrl,
               status: property.status || "INACTIVE", // Ensure valid status
               views: property.views || 0,
-              inquiries: property.inquiries || 0,
+              inquiries: property._count?.inquiries ?? 0,
               rating: property.rating || 0,
               earnings: property.earnings || 0,
               occupancy: property.occupancy || 0,

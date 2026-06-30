@@ -3,6 +3,7 @@ import { Search, Shield, Star, CheckCircle } from "lucide-react";
 import DarkVeil from "@/components/animatedBackground/DarkVeil";
 import FAQSection from "@/components/ui/FAQSection";
 import Image from "next/image";
+import Link from "next/link";
 import InstantNavigationWrapper from "@/components/ui/InstantNavigationWrapper";
 import AmbientBackground from "@/components/landing/AmbientBackground";
 import FeaturesSection from "@/components/landing/FeaturesSection";
@@ -102,7 +103,7 @@ const HeroSection = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <Shield className="w-5 h-5 text-[#A78BFA]" aria-hidden="true" />
-                    <span>Verified listings onlys</span>
+                    <span>Verified listings only</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle className="w-5 h-5 text-[#818CF8]" aria-hidden="true" />
@@ -344,30 +345,30 @@ const Footer = () => {
           <nav aria-labelledby="footer-students">
             <h4 id="footer-students" className="font-semibold mb-4 text-white text-base lg:text-lg">For Students</h4>
             <ul className="space-y-2 text-gray-400 text-sm lg:text-base">
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Browse Properties</a></li>
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Find Roommates</a></li>
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Student Guide</a></li>
+              <li><Link href="/listings" className="hover:text-[#A78BFA] transition-colors">Browse Properties</Link></li>
+              <li><span>Find Roommates</span></li>
+              <li><span>Student Guide</span></li>
             </ul>
           </nav>
           <nav aria-labelledby="footer-landlords">
             <h4 id="footer-landlords" className="font-semibold mb-4 text-white text-base lg:text-lg">For Landlords</h4>
             <ul className="space-y-2 text-gray-400 text-sm lg:text-base">
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">List Property</a></li>
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Property Management</a></li>
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Landlord Guide</a></li>
+              <li><Link href="/owner-dashboard" className="hover:text-[#A78BFA] transition-colors">List Property</Link></li>
+              <li><span>Property Management</span></li>
+              <li><span>Landlord Guide</span></li>
             </ul>
           </nav>
           <nav aria-labelledby="footer-support">
             <h4 id="footer-support" className="font-semibold mb-4 text-white text-base lg:text-lg">Support</h4>
             <ul className="space-y-2 text-gray-400 text-sm lg:text-base">
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Contact Us</a></li>
-              <li><a href="#" className="hover:text-[#A78BFA] transition-colors">Safety Tips</a></li>
+              <li><span>Help Center</span></li>
+              <li><a href="mailto:support@smartstay.com" className="hover:text-[#A78BFA] transition-colors">Contact Us</a></li>
+              <li><span>Safety Tips</span></li>
             </ul>
           </nav>
         </div>
         <div className="border-t border-white/10 mt-10 pt-8 text-center text-gray-500 text-sm lg:text-base">
-          <p>&copy; 2025 SmartStay. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} SmartStay. All rights reserved.</p>
         </div>
       </div>
     </footer>

@@ -1303,19 +1303,27 @@ export default function FavoritesPage() {
 
     setIsSubmittingBooking(true);
     try {
+      // /api/bookings expects { propertyId, startDate (ISO), notes? } and
+      // computes amount server-side — combine the date + time into one ISO value.
+      const startDate = new Date(`${bookingDate}T${bookingTime}`);
+      if (Number.isNaN(startDate.getTime())) {
+        showError('Please select a valid date and time');
+        return;
+      }
+
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           propertyId: selectedProperty.id,
-          date: bookingDate,
-          time: bookingTime,
-          note: bookingNote
+          startDate: startDate.toISOString(),
+          notes: bookingNote || undefined,
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to book viewing');
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || 'Failed to book viewing');
       }
 
       showSuccess('Viewing booked successfully! The owner will contact you soon.');
@@ -1328,7 +1336,7 @@ export default function FavoritesPage() {
       trackAnalyticsEvent('booking_request', selectedProperty.id);
     } catch (error) {
       console.error('Error booking viewing:', error);
-      showError('Failed to book viewing. Please try again.');
+      showError(error instanceof Error ? error.message : 'Failed to book viewing. Please try again.');
     } finally {
       setIsSubmittingBooking(false);
     }
