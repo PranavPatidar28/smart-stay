@@ -1,10 +1,24 @@
 import "./globals.css";
+import { Inter, Space_Grotesk } from "next/font/google";
 import AuthProvider from "@/components/providers/AuthProvider";
 import ToastProvider from "@/components/providers/ToastProvider";
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import type { Metadata } from 'next'
 import { prefetchCriticalPages } from "@/lib/navigation"
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["500", "600", "700"],
+  variable: "--font-space-grotesk",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -109,7 +123,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
       <head>
         <link rel="icon" href="/houseLogo.png" />
         <link rel="apple-touch-icon" href="/houseLogo.png" />

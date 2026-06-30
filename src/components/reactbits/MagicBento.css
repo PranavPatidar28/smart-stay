@@ -1,0 +1,259 @@
+/* =========================================================================
+   Vendored ReactBits primitive styles (SmartStay)
+   One file, imported once from globals.css. Plain CSS custom properties —
+   no theme() calls, so the inverted Tailwind palette can't poison it.
+   ========================================================================= */
+
+/* ---- MagicBento glow-grid ---------------------------------------------- */
+.rb-bento-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+@media (min-width: 768px) {
+  .rb-bento-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+.rb-bento-card {
+  --rb-glow-x: 50;
+  --rb-glow-y: 50;
+  --rb-glow-opacity: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.015) 100%
+  );
+  backdrop-filter: blur(8px);
+  padding: 1.75rem;
+  transition: border-color 0.4s ease, transform 0.4s ease;
+}
+@media (min-width: 768px) {
+  .rb-bento-card {
+    grid-column: span 3;
+    padding: 2rem;
+  }
+}
+.rb-bento-card:hover {
+  border-color: color-mix(in srgb, var(--rb-card-accent) 45%, transparent);
+  transform: translateY(-4px);
+}
+
+/* radial glow that tracks the pointer (position fed by GSAP via CSS vars) */
+.rb-bento-card__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--rb-glow-opacity);
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    280px circle at calc(var(--rb-glow-x) * 1px) calc(var(--rb-glow-y) * 1px),
+    rgba(var(--rb-glow), 0.18),
+    transparent 60%
+  );
+}
+
+.rb-bento-card__content {
+  position: relative;
+  z-index: 1;
+}
+.rb-bento-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  color: #fff;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: transform 0.4s ease;
+}
+.rb-bento-card:hover .rb-bento-card__icon {
+  transform: scale(1.08) rotate(3deg);
+}
+.rb-bento-card__title {
+  font-family: var(--font-display, inherit);
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  color: #fff;
+  margin-bottom: 0.6rem;
+}
+.rb-bento-card__desc {
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* ---- SpotlightCard ----------------------------------------------------- */
+.rb-spotlight-card {
+  --rb-spot-x: 50%;
+  --rb-spot-y: 50%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+}
+.rb-spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  background: radial-gradient(
+    420px circle at var(--rb-spot-x) var(--rb-spot-y),
+    var(--rb-spot-color),
+    transparent 55%
+  );
+}
+.rb-spotlight-card:hover::before,
+.rb-spotlight-card:focus-within::before {
+  opacity: 1;
+}
+
+/* ---- StarBorder button ------------------------------------------------- */
+.rb-star-border {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  border-radius: 9999px;
+  padding: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  isolation: isolate;
+}
+.rb-star-border__trail {
+  position: absolute;
+  width: 320%;
+  height: 50%;
+  opacity: 0.7;
+  border-radius: 50%;
+  z-index: 0;
+}
+.rb-star-border__trail--bottom {
+  bottom: -12px;
+  right: -250%;
+  animation-name: rb-star-move-bottom;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.rb-star-border__trail--top {
+  top: -12px;
+  left: -250%;
+  animation-name: rb-star-move-top;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.rb-star-border__inner {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #1b1335, #0c1024);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.9rem 2rem;
+}
+@keyframes rb-star-move-bottom {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes rb-star-move-top {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(50%); }
+}
+
+/* ---- ShinyText --------------------------------------------------------- */
+.rb-shiny-text {
+  color: #b3a8d6;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0) 60%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  display: inline-block;
+  animation-name: rb-shine;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.rb-shiny-text--off {
+  animation: none;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+}
+@keyframes rb-shine {
+  0% { background-position: 100%; }
+  100% { background-position: -100%; }
+}
+
+/* ---- Marquee ----------------------------------------------------------- */
+.rb-marquee {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 12%,
+    #000 88%,
+    transparent
+  );
+}
+.rb-marquee__track {
+  display: flex;
+  width: max-content;
+  animation-name: rb-marquee-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.rb-marquee__group {
+  display: flex;
+  flex-shrink: 0;
+}
+.rb-marquee--pause:hover .rb-marquee__track {
+  animation-play-state: paused;
+}
+@keyframes rb-marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ---- Reduced motion: freeze CSS-driven primitives ---------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .rb-star-border__trail,
+  .rb-shiny-text,
+  .rb-marquee__track {
+    animation: none !important;
+  }
+  .rb-shiny-text {
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    color: #cbbef0;
+  }
+  /* drop the duplicated marquee copy so static content isn't doubled visually */
+  .rb-marquee__group[aria-hidden="true"] {
+    display: none;
+  }
+}
